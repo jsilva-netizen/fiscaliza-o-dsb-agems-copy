@@ -5,6 +5,9 @@ import Checklists from './pages/Checklists';
 import NovaFiscalizacao from './pages/NovaFiscalizacao';
 import ExecutarFiscalizacao from './pages/ExecutarFiscalizacao';
 import AdicionarUnidade from './pages/AdicionarUnidade';
+import VistoriarUnidade from './pages/VistoriarUnidade';
+import Fiscalizacoes from './pages/Fiscalizacoes';
+import Relatorios from './pages/Relatorios';
 
 
 export const PAGES = {
@@ -15,6 +18,9 @@ export const PAGES = {
     "NovaFiscalizacao": NovaFiscalizacao,
     "ExecutarFiscalizacao": ExecutarFiscalizacao,
     "AdicionarUnidade": AdicionarUnidade,
+    "VistoriarUnidade": VistoriarUnidade,
+    "Fiscalizacoes": Fiscalizacoes,
+    "Relatorios": Relatorios,
 }
 
 export const pagesConfig = {
