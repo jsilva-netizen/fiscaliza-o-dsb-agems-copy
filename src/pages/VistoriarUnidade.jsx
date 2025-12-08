@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import ChecklistItem from '@/components/fiscalizacao/ChecklistItem';
 import PhotoGrid from '@/components/fiscalizacao/PhotoGrid';
+import RelatorioUnidade from '@/components/fiscalizacao/RelatorioUnidade';
 
 export default function VistoriarUnidade() {
     const queryClient = useQueryClient();
@@ -553,19 +554,31 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
 
             {/* Bottom Bar */}
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-50">
-                <div className="max-w-4xl mx-auto">
-                    <Button 
-                        className="w-full h-12 bg-green-600 hover:bg-green-700"
-                        onClick={() => finalizarUnidadeMutation.mutate()}
-                        disabled={finalizarUnidadeMutation.isPending}
-                    >
-                        {finalizarUnidadeMutation.isPending ? (
-                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                        ) : (
-                            <Save className="h-5 w-5 mr-2" />
-                        )}
-                        Finalizar Vistoria
-                    </Button>
+                <div className="max-w-4xl mx-auto space-y-2">
+                    {unidade?.status === 'finalizada' ? (
+                        <RelatorioUnidade
+                            unidade={unidade}
+                            fiscalizacao={fiscalizacao}
+                            respostas={respostasExistentes}
+                            ncs={ncsExistentes}
+                            determinacoes={determinacoesExistentes}
+                            recomendacoes={recomendacoesExistentes}
+                            fotos={fotos}
+                        />
+                    ) : (
+                        <Button 
+                            className="w-full h-12 bg-green-600 hover:bg-green-700"
+                            onClick={() => finalizarUnidadeMutation.mutate()}
+                            disabled={finalizarUnidadeMutation.isPending}
+                        >
+                            {finalizarUnidadeMutation.isPending ? (
+                                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                            ) : (
+                                <Save className="h-5 w-5 mr-2" />
+                            )}
+                            Finalizar Vistoria
+                        </Button>
+                    )}
                 </div>
             </div>
 
