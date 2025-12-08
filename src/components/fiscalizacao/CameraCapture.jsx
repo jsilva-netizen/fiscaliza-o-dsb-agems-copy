@@ -16,15 +16,12 @@ export default function CameraCapture({ onCapture, onCancel, minPhotos = 1, curr
     const startCamera = async () => {
         try {
             setError(null);
-            setIsCameraReady(false);
             const mediaStream = await navigator.mediaDevices.getUserMedia({
                 video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
             });
             setStream(mediaStream);
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
-                await videoRef.current.play();
-                setIsCameraReady(true);
             }
             
             // Obter localização
@@ -34,6 +31,9 @@ export default function CameraCapture({ onCapture, onCancel, minPhotos = 1, curr
                     () => console.log('Localização não disponível')
                 );
             }
+            
+            // Marcar câmera como pronta após pequeno delay
+            setTimeout(() => setIsCameraReady(true), 500);
         } catch (err) {
             setError('Não foi possível acessar a câmera. Verifique as permissões.');
         }
@@ -151,14 +151,14 @@ export default function CameraCapture({ onCapture, onCancel, minPhotos = 1, curr
             </div>
 
             {/* Controls */}
-            <div className="bg-black/80 p-6 flex justify-center gap-6 items-center min-h-[140px]">
+            <div className="bg-black p-6 flex flex-col items-center gap-4 pb-safe">
                 {capturedImage ? (
-                    <>
+                    <div className="flex gap-4">
                         <Button 
                             variant="outline" 
                             size="lg" 
                             onClick={retakePhoto}
-                            className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                            className="bg-white/10 border-white/30 text-white hover:bg-white/20 px-8"
                         >
                             <RotateCcw className="h-5 w-5 mr-2" />
                             Refazer
@@ -167,33 +167,26 @@ export default function CameraCapture({ onCapture, onCancel, minPhotos = 1, curr
                             size="lg" 
                             onClick={confirmPhoto}
                             disabled={isLoading}
-                            className="bg-green-600 hover:bg-green-700 text-white"
+                            className="bg-green-600 hover:bg-green-700 text-white px-8"
                         >
                             <Check className="h-5 w-5 mr-2" />
                             {isLoading ? 'Salvando...' : 'Confirmar'}
                         </Button>
-                    </>
-                ) : (
-                    <div className="flex flex-col items-center gap-3 w-full">
-                        {!isCameraReady && !error ? (
-                            <div className="text-white text-center">
-                                <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2"></div>
-                                <p className="text-sm">Iniciando câmera...</p>
-                            </div>
-                        ) : (
-                            <>
-                                <Button 
-                                    size="lg" 
-                                    onClick={capturePhoto}
-                                    disabled={!isCameraReady}
-                                    className="w-20 h-20 rounded-full bg-white hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                                >
-                                    <Camera className="h-8 w-8 text-black" />
-                                </Button>
-                                <p className="text-white text-sm font-medium">Toque para capturar</p>
-                            </>
-                        )}
                     </div>
+                ) : (
+                    <>
+                        <Button 
+                            size="lg" 
+                            onClick={capturePhoto}
+                            disabled={!stream || error}
+                            className="w-20 h-20 rounded-full bg-white hover:bg-gray-100 disabled:bg-gray-600 disabled:cursor-not-allowed shadow-lg"
+                        >
+                            <Camera className="h-10 w-10 text-black" />
+                        </Button>
+                        <p className="text-white text-sm">
+                            {error ? 'Erro ao acessar câmera' : stream ? 'Toque para capturar' : 'Carregando...'}
+                        </p>
+                    </>
                 )}
             </div>
         </div>
