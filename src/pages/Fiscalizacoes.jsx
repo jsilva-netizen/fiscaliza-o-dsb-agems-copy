@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import RelatorioFiscalizacao from '@/components/fiscalizacao/RelatorioFiscalizacao';
 
 export default function Fiscalizacoes() {
     const [search, setSearch] = useState('');
@@ -154,6 +155,13 @@ export default function Fiscalizacoes() {
                                                     <AlertTriangle className="h-3 w-3" />
                                                     {fisc.total_nao_conformidades || 0} NCs
                                                 </span>
+                                            </div>
+                                        )}
+
+                                        {/* Botão Relatório para finalizadas */}
+                                        {fisc.status === 'finalizada' && (
+                                            <div className="mt-3 pt-3 border-t">
+                                                <RelatorioFiscalizacao fiscalizacao={fisc} />
                                             </div>
                                         )}
                                     </CardContent>
