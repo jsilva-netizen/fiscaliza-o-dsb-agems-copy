@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Camera, Trash2, MapPin, Clock, X } from 'lucide-react';
+import { Camera, Trash2, MapPin, Clock, X, Image } from 'lucide-react';
 import CameraCapture from './CameraCapture';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { base44 } from '@/api/base44Client';
 
 export default function PhotoGrid({ 
     fotos = [], 
@@ -16,10 +17,46 @@ export default function PhotoGrid({
 }) {
     const [showCamera, setShowCamera] = useState(false);
     const [selectedFoto, setSelectedFoto] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef(null);
 
     const handleCapture = (fotoData) => {
         onAddFoto(fotoData);
         setShowCamera(false);
+    };
+
+    const handleFileSelect = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        try {
+            // Upload da foto
+            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+            
+            // Obter GPS atual
+            let location = null;
+            if (navigator.geolocation) {
+                location = await new Promise((resolve) => {
+                    navigator.geolocation.getCurrentPosition(
+                        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                        () => resolve(null)
+                    );
+                });
+            }
+
+            onAddFoto({
+                url: file_url,
+                latitude: location?.lat,
+                longitude: location?.lng,
+                data_hora: new Date().toISOString()
+            });
+        } catch (err) {
+            alert('Erro ao fazer upload da foto');
+        } finally {
+            setIsUploading(false);
+            e.target.value = '';
+        }
     };
 
     const faltam = Math.max(0, minFotos - fotos.length);
@@ -35,10 +72,28 @@ export default function PhotoGrid({
                         )}
                     </p>
                 </div>
-                <Button onClick={() => setShowCamera(true)} size="sm">
-                    <Camera className="h-4 w-4 mr-2" />
-                    Tirar Foto
-                </Button>
+                <div className="flex gap-2">
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                    />
+                    <Button 
+                        onClick={() => fileInputRef.current?.click()} 
+                        size="sm"
+                        variant="outline"
+                        disabled={isUploading}
+                    >
+                        <Image className="h-4 w-4 mr-2" />
+                        {isUploading ? 'Enviando...' : 'Galeria'}
+                    </Button>
+                    <Button onClick={() => setShowCamera(true)} size="sm">
+                        <Camera className="h-4 w-4 mr-2" />
+                        Câmera
+                    </Button>
+                </div>
             </div>
 
             {/* Grid de fotos */}
