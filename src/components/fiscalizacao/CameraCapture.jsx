@@ -23,9 +23,8 @@ export default function CameraCapture({ onCapture, onCancel, minPhotos = 1, curr
             setStream(mediaStream);
             if (videoRef.current) {
                 videoRef.current.srcObject = mediaStream;
-                videoRef.current.onloadedmetadata = () => {
-                    setIsCameraReady(true);
-                };
+                await videoRef.current.play();
+                setIsCameraReady(true);
             }
             
             // Obter localização
@@ -152,7 +151,7 @@ export default function CameraCapture({ onCapture, onCancel, minPhotos = 1, curr
             </div>
 
             {/* Controls */}
-            <div className="bg-black/80 p-6 flex justify-center gap-6 items-center">
+            <div className="bg-black/80 p-6 flex justify-center gap-6 items-center min-h-[140px]">
                 {capturedImage ? (
                     <>
                         <Button 
@@ -175,20 +174,24 @@ export default function CameraCapture({ onCapture, onCancel, minPhotos = 1, curr
                         </Button>
                     </>
                 ) : (
-                    <div className="flex flex-col items-center gap-3">
-                        {!isCameraReady && !error && (
-                            <p className="text-white text-sm">Iniciando câmera...</p>
-                        )}
-                        <Button 
-                            size="lg" 
-                            onClick={capturePhoto}
-                            disabled={!isCameraReady || error}
-                            className="w-20 h-20 rounded-full bg-white hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Camera className="h-8 w-8 text-black" />
-                        </Button>
-                        {isCameraReady && (
-                            <p className="text-white text-xs">Toque para capturar</p>
+                    <div className="flex flex-col items-center gap-3 w-full">
+                        {!isCameraReady && !error ? (
+                            <div className="text-white text-center">
+                                <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2"></div>
+                                <p className="text-sm">Iniciando câmera...</p>
+                            </div>
+                        ) : (
+                            <>
+                                <Button 
+                                    size="lg" 
+                                    onClick={capturePhoto}
+                                    disabled={!isCameraReady}
+                                    className="w-20 h-20 rounded-full bg-white hover:bg-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                    <Camera className="h-8 w-8 text-black" />
+                                </Button>
+                                <p className="text-white text-sm font-medium">Toque para capturar</p>
+                            </>
                         )}
                     </div>
                 )}
