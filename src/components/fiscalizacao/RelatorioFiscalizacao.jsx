@@ -60,11 +60,8 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 )
             );
 
-            const todasFotos = await Promise.all(
-                unidades.map(u => 
-                    base44.entities.FotoEvidencia.filter({ unidade_fiscalizada_id: u.id, tipo: 'unidade' }, 'created_date', 100)
-                )
-            );
+            // Fotos já estão no campo fotos_unidade
+            const todasFotos = unidades.map(u => u.fotos_unidade || []);
 
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pageWidth = pdf.internal.pageSize.getWidth();
@@ -321,10 +318,15 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                     const fotosBase64 = [];
                     for (const foto of fotos) {
                         try {
-                            const base64 = await loadImageAsBase64(foto.url);
-                            fotosBase64.push({ ...foto, base64 });
+                            const fotoUrl = typeof foto === 'string' ? foto : foto.url;
+                            const base64 = await loadImageAsBase64(fotoUrl);
+                            fotosBase64.push({ 
+                                url: fotoUrl,
+                                legenda: typeof foto === 'object' ? foto.legenda : null,
+                                base64 
+                            });
                         } catch (err) {
-                            console.error('Erro ao carregar imagem:', err);
+                            console.error('Erro ao carregar imagem:', err, foto);
                         }
                     }
 
