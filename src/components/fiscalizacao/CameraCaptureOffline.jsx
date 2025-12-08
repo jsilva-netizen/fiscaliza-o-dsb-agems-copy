@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Camera, X, Check, RotateCcw } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { savePhotoOffline } from '@/utils/offlineStorage';
+import { savePhotoOffline } from '../offline/offlineStorage';
 
 export default function CameraCaptureOffline({ onCapture, onCancel, fiscalizacaoId, unidadeId }) {
     const videoRef = useRef(null);

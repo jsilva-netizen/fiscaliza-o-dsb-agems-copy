@@ -17,6 +17,7 @@ import {
 import ChecklistItem from '@/components/fiscalizacao/ChecklistItem';
 import PhotoGrid from '@/components/fiscalizacao/PhotoGrid';
 import RelatorioUnidade from '@/components/fiscalizacao/RelatorioUnidade';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
 export default function VistoriarUnidade() {
     const queryClient = useQueryClient();
@@ -363,6 +364,8 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
 
     return (
         <div className="min-h-screen bg-gray-100 pb-24">
+            <OfflineIndicator />
+            
             {/* Header */}
             <div className="bg-blue-900 text-white sticky top-0 z-40">
                 <div className="max-w-4xl mx-auto px-4 py-3">
@@ -455,6 +458,8 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                             onRemoveFoto={handleRemoveFoto}
                             onUpdateLegenda={handleUpdateLegenda}
                             titulo="Fotos da Unidade"
+                            fiscalizacaoId={unidade?.fiscalizacao_id}
+                            unidadeId={unidadeId}
                         />
                     </TabsContent>
 
@@ -499,6 +504,8 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                                                     typeof f === 'string' ? { url: f } : f
                                                 )}
                                                 minFotos={1}
+                                                fiscalizacaoId={unidade?.fiscalizacao_id}
+                                                unidadeId={unidadeId}
                                                 onAddFoto={(fotoData) => {
                                                     const fotosAtuais = (nc.fotos || []).map(f => typeof f === 'string' ? { url: f } : f);
                                                     const novasFotos = [...fotosAtuais, fotoData];

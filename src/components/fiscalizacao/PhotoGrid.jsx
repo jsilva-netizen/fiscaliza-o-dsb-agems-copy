@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Camera, Trash2, MapPin, Clock, X, Image } from 'lucide-react';
-import CameraCapture from './CameraCapture';
+import CameraCaptureOffline from './CameraCaptureOffline';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { base44 } from '@/api/base44Client';
@@ -13,7 +13,9 @@ export default function PhotoGrid({
     onAddFoto, 
     onRemoveFoto,
     onUpdateLegenda,
-    titulo = "Fotos da Unidade"
+    titulo = "Fotos da Unidade",
+    fiscalizacaoId,
+    unidadeId
 }) {
     const [showCamera, setShowCamera] = useState(false);
     const [selectedFoto, setSelectedFoto] = useState(null);
@@ -146,11 +148,11 @@ export default function PhotoGrid({
 
             {/* Camera modal */}
             {showCamera && (
-                <CameraCapture
+                <CameraCaptureOffline
                     onCapture={handleCapture}
                     onCancel={() => setShowCamera(false)}
-                    minPhotos={minFotos}
-                    currentPhotos={fotos.length}
+                    fiscalizacaoId={fiscalizacaoId}
+                    unidadeId={unidadeId}
                 />
             )}
 

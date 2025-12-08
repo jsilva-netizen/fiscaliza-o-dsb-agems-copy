@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Wifi, WifiOff, Loader2, Cloud, CloudOff } from 'lucide-react';
-import { useOfflineSync } from '@/utils/useOfflineSync';
+import { useOfflineSync } from './offline/useOfflineSync';
 
 export default function OfflineIndicator() {
     const { isOnline, isSyncing, pendingCount } = useOfflineSync();
