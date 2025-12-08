@@ -2,7 +2,6 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { FileText, Loader2 } from 'lucide-react';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -17,192 +16,223 @@ export default function RelatorioUnidade({
 }) {
     const [isGenerating, setIsGenerating] = React.useState(false);
 
+    const loadImageAsBase64 = async (url) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/jpeg', 0.8));
+            };
+            img.onerror = reject;
+            img.src = url;
+        });
+    };
+
     const gerarRelatorio = async () => {
         setIsGenerating(true);
         try {
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            const margin = 15;
+            const margin = 10;
             let yPos = margin;
 
-            // Função para adicionar nova página se necessário
-            const checkPageBreak = (heightNeeded) => {
-                if (yPos + heightNeeded > pageHeight - margin) {
-                    pdf.addPage();
-                    yPos = margin;
-                    return true;
+            const tableWidth = pageWidth - 2 * margin;
+            const rowHeight = 7;
+            
+            // Desenhar célula
+            const drawCell = (text, x, y, width, height, bold = false, center = false, fillColor = null) => {
+                if (fillColor) {
+                    pdf.setFillColor(fillColor[0], fillColor[1], fillColor[2]);
+                    pdf.rect(x, y, width, height, 'F');
                 }
-                return false;
+                pdf.setDrawColor(0);
+                pdf.rect(x, y, width, height, 'S');
+                
+                pdf.setFont('helvetica', bold ? 'bold' : 'normal');
+                const textY = y + height / 2 + 1.5;
+                if (center) {
+                    pdf.text(text, x + width / 2, textY, { align: 'center' });
+                } else {
+                    pdf.text(text, x + 2, textY);
+                }
             };
 
-            // Cabeçalho
-            pdf.setFillColor(200, 200, 200);
-            pdf.rect(margin, yPos, pageWidth - 2 * margin, 10, 'F');
-            pdf.setFontSize(14);
+            // Cabeçalho - TIPO DE UNIDADE
+            pdf.setFillColor(192, 192, 192);
+            pdf.rect(margin, yPos, tableWidth, rowHeight, 'F');
+            pdf.setDrawColor(0);
+            pdf.rect(margin, yPos, tableWidth, rowHeight, 'S');
+            pdf.setFontSize(11);
             pdf.setFont('helvetica', 'bold');
-            pdf.text(unidade.tipo_unidade_nome.toUpperCase(), pageWidth / 2, yPos + 7, { align: 'center' });
-            yPos += 12;
+            pdf.text(unidade.tipo_unidade_nome.toUpperCase(), pageWidth / 2, yPos + 4.5, { align: 'center' });
+            yPos += rowHeight;
 
-            // ID e Localização
-            pdf.setFontSize(10);
-            pdf.setFont('helvetica', 'bold');
-            pdf.text(`ID Unidade: ${unidade.codigo_unidade || unidade.nome_unidade || '-'}`, margin + 2, yPos);
-            yPos += 5;
-            pdf.text(`Localização: ${unidade.endereco || '-'}`, margin + 2, yPos);
-            yPos += 8;
-
-            // Município e Data
-            pdf.setFont('helvetica', 'normal');
-            pdf.text(`Município: ${fiscalizacao.municipio_nome}`, margin + 2, yPos);
-            yPos += 5;
-            pdf.text(`Data: ${format(new Date(unidade.data_hora_vistoria || unidade.created_date), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, margin + 2, yPos);
-            yPos += 10;
-
-            // Constatações
-            pdf.setFillColor(220, 220, 220);
-            pdf.rect(margin, yPos, pageWidth - 2 * margin, 7, 'F');
-            pdf.setFont('helvetica', 'bold');
-            pdf.text('Constatações', margin + 2, yPos + 5);
-            yPos += 9;
-
-            pdf.setFont('helvetica', 'normal');
+            // ID Unidade
             pdf.setFontSize(9);
-            
+            drawCell(`ID Unidade: ${unidade.codigo_unidade || unidade.nome_unidade || '-'}`, margin, yPos, tableWidth, rowHeight, true);
+            yPos += rowHeight;
+
+            // Localização
+            drawCell(`Localização: ${unidade.endereco || '-'}`, margin, yPos, tableWidth, rowHeight, true);
+            yPos += rowHeight;
+
+            // Constatações - Header
+            drawCell('Constatações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+            yPos += rowHeight;
+
             const constatacoes = respostas.filter(r => r.resposta === 'SIM' || r.resposta === 'NA');
             constatacoes.forEach((resp, idx) => {
-                checkPageBreak(10);
                 const texto = `C${idx + 1}. ${resp.pergunta}${resp.observacao ? ` - ${resp.observacao}` : ''}`;
-                const linhas = pdf.splitTextToSize(texto, pageWidth - 2 * margin - 4);
-                pdf.text(linhas, margin + 2, yPos);
-                yPos += linhas.length * 4 + 2;
+                const lines = pdf.splitTextToSize(texto, tableWidth - 4);
+                const cellHeight = Math.max(rowHeight, lines.length * 4 + 2);
+                
+                pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
+                pdf.setFont('helvetica', 'bold');
+                pdf.text(`C${idx + 1}.`, margin + 2, yPos + 5);
+                pdf.setFont('helvetica', 'normal');
+                const restText = texto.substring(texto.indexOf('.') + 2);
+                const restLines = pdf.splitTextToSize(restText, tableWidth - 15);
+                pdf.text(restLines, margin + 12, yPos + 5);
+                
+                yPos += cellHeight;
             });
-
-            yPos += 5;
 
             // Não Conformidades
             if (ncs.length > 0) {
-                checkPageBreak(15);
-                pdf.setFillColor(220, 220, 220);
-                pdf.rect(margin, yPos, pageWidth - 2 * margin, 7, 'F');
-                pdf.setFontSize(10);
-                pdf.setFont('helvetica', 'bold');
-                pdf.text('Não Conformidades', margin + 2, yPos + 5);
-                yPos += 9;
+                drawCell('Não Conformidade', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                yPos += rowHeight;
 
-                pdf.setFont('helvetica', 'normal');
-                pdf.setFontSize(9);
-                
                 ncs.forEach((nc) => {
-                    checkPageBreak(15);
-                    const texto = `${nc.numero_nc}. ${nc.descricao}${nc.artigo_portaria ? ` - ${nc.artigo_portaria}` : ''}`;
-                    const linhas = pdf.splitTextToSize(texto, pageWidth - 2 * margin - 4);
-                    pdf.text(linhas, margin + 2, yPos);
-                    yPos += linhas.length * 4 + 2;
+                    const texto = `${nc.numero_nc}. ${nc.descricao}${nc.artigo_portaria ? ` (${nc.artigo_portaria})` : ''}`;
+                    const lines = pdf.splitTextToSize(texto, tableWidth - 4);
+                    const cellHeight = Math.max(rowHeight, lines.length * 4 + 2);
+                    
+                    pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(nc.numero_nc + '.', margin + 2, yPos + 5);
+                    pdf.setFont('helvetica', 'normal');
+                    const restText = texto.substring(texto.indexOf('.') + 2);
+                    const restLines = pdf.splitTextToSize(restText, tableWidth - 15);
+                    pdf.text(restLines, margin + 12, yPos + 5);
+                    
+                    yPos += cellHeight;
                 });
-
-                yPos += 5;
             }
 
             // Recomendações
             if (recomendacoes.length > 0) {
-                checkPageBreak(15);
-                pdf.setFillColor(220, 220, 220);
-                pdf.rect(margin, yPos, pageWidth - 2 * margin, 7, 'F');
-                pdf.setFontSize(10);
-                pdf.setFont('helvetica', 'bold');
-                pdf.text('Recomendações', margin + 2, yPos + 5);
-                yPos += 9;
+                drawCell('Recomendações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                yPos += rowHeight;
 
-                pdf.setFont('helvetica', 'normal');
-                pdf.setFontSize(9);
-                
                 recomendacoes.forEach((rec) => {
-                    checkPageBreak(10);
                     const texto = `${rec.numero_recomendacao}. ${rec.descricao}`;
-                    const linhas = pdf.splitTextToSize(texto, pageWidth - 2 * margin - 4);
-                    pdf.text(linhas, margin + 2, yPos);
-                    yPos += linhas.length * 4 + 2;
+                    const lines = pdf.splitTextToSize(texto, tableWidth - 4);
+                    const cellHeight = Math.max(rowHeight, lines.length * 4 + 2);
+                    
+                    pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(rec.numero_recomendacao + '.', margin + 2, yPos + 5);
+                    pdf.setFont('helvetica', 'normal');
+                    const restText = texto.substring(texto.indexOf('.') + 2);
+                    const restLines = pdf.splitTextToSize(restText, tableWidth - 15);
+                    pdf.text(restLines, margin + 12, yPos + 5);
+                    
+                    yPos += cellHeight;
                 });
-
-                yPos += 5;
             }
 
             // Determinações
             if (determinacoes.length > 0) {
-                checkPageBreak(15);
-                pdf.setFillColor(220, 220, 220);
-                pdf.rect(margin, yPos, pageWidth - 2 * margin, 7, 'F');
-                pdf.setFontSize(10);
-                pdf.setFont('helvetica', 'bold');
-                pdf.text('Determinações', margin + 2, yPos + 5);
-                yPos += 9;
+                drawCell('Determinações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                yPos += rowHeight;
 
-                pdf.setFont('helvetica', 'normal');
-                pdf.setFontSize(9);
-                
                 determinacoes.forEach((det) => {
-                    checkPageBreak(12);
                     const texto = `${det.numero_determinacao}. ${det.descricao} Prazo: ${det.prazo_dias} dias.`;
-                    const linhas = pdf.splitTextToSize(texto, pageWidth - 2 * margin - 4);
-                    pdf.text(linhas, margin + 2, yPos);
-                    yPos += linhas.length * 4 + 2;
+                    const lines = pdf.splitTextToSize(texto, tableWidth - 4);
+                    const cellHeight = Math.max(rowHeight, lines.length * 4 + 2);
+                    
+                    pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(det.numero_determinacao + '.', margin + 2, yPos + 5);
+                    pdf.setFont('helvetica', 'normal');
+                    const restText = texto.substring(texto.indexOf('.') + 2);
+                    const restLines = pdf.splitTextToSize(restText, tableWidth - 15);
+                    pdf.text(restLines, margin + 12, yPos + 5);
+                    
+                    yPos += cellHeight;
                 });
-
-                yPos += 5;
             }
 
             // Registros Fotográficos
             if (fotos.length > 0) {
-                pdf.addPage();
-                yPos = margin;
+                drawCell('Registros Fotográficos', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                yPos += rowHeight;
 
-                pdf.setFillColor(220, 220, 220);
-                pdf.rect(margin, yPos, pageWidth - 2 * margin, 7, 'F');
-                pdf.setFontSize(10);
-                pdf.setFont('helvetica', 'bold');
-                pdf.text('Registros Fotográficos', margin + 2, yPos + 5);
-                yPos += 12;
+                // Converter todas as imagens para base64 primeiro
+                const fotosBase64 = [];
+                for (const foto of fotos) {
+                    try {
+                        const base64 = await loadImageAsBase64(foto.url);
+                        fotosBase64.push({ ...foto, base64 });
+                    } catch (err) {
+                        console.error('Erro ao carregar imagem:', err);
+                    }
+                }
 
-                // Adicionar fotos em grid 2x2
-                const imgWidth = (pageWidth - 3 * margin) / 2;
-                const imgHeight = 60;
-                let col = 0;
-                let row = 0;
+                // Adicionar fotos em grid 2x2 dentro da tabela
+                const cellPadding = 2;
+                const imgCellWidth = (tableWidth - cellPadding) / 2;
+                const imgWidth = imgCellWidth - 4;
+                const imgHeight = 70;
+                const captionHeight = 8;
+                const totalCellHeight = imgHeight + captionHeight;
 
-                for (let i = 0; i < fotos.length; i++) {
-                    if (yPos + imgHeight + 15 > pageHeight - margin) {
+                for (let i = 0; i < fotosBase64.length; i += 2) {
+                    // Verificar se precisa de nova página
+                    if (yPos + totalCellHeight + 10 > pageHeight - margin) {
                         pdf.addPage();
                         yPos = margin;
-                        col = 0;
-                        row = 0;
                     }
 
-                    const xPos = margin + col * (imgWidth + margin / 2);
-                    const currentYPos = yPos + row * (imgHeight + 15);
+                    // Desenhar células do grid 2x2
+                    const leftX = margin;
+                    const rightX = margin + imgCellWidth;
 
-                    try {
-                        // Adicionar imagem
-                        pdf.addImage(fotos[i].url, 'JPEG', xPos, currentYPos, imgWidth, imgHeight);
-                        
-                        // Adicionar legenda
-                        pdf.setFontSize(8);
-                        pdf.setFont('helvetica', 'normal');
-                        const legenda = fotos[i].legenda || `Figura ${i + 1}`;
-                        pdf.text(legenda, xPos + imgWidth / 2, currentYPos + imgHeight + 4, { align: 'center' });
-                    } catch (err) {
-                        console.error('Erro ao adicionar foto:', err);
-                    }
-
-                    col++;
-                    if (col === 2) {
-                        col = 0;
-                        row++;
-                        if (row === 2) {
-                            yPos += (imgHeight + 15) * 2;
-                            row = 0;
+                    // Célula esquerda
+                    pdf.rect(leftX, yPos, imgCellWidth, totalCellHeight, 'S');
+                    if (fotosBase64[i]?.base64) {
+                        try {
+                            pdf.addImage(fotosBase64[i].base64, 'JPEG', leftX + 2, yPos + 2, imgWidth, imgHeight);
+                            pdf.setFontSize(8);
+                            pdf.setFont('helvetica', 'normal');
+                            const legenda = fotosBase64[i].legenda || `Figura ${i + 1}`;
+                            pdf.text(legenda, leftX + imgCellWidth / 2, yPos + imgHeight + 6, { align: 'center' });
+                        } catch (err) {
+                            console.error('Erro ao adicionar foto:', err);
                         }
                     }
+
+                    // Célula direita
+                    pdf.rect(rightX, yPos, imgCellWidth, totalCellHeight, 'S');
+                    if (fotosBase64[i + 1]?.base64) {
+                        try {
+                            pdf.addImage(fotosBase64[i + 1].base64, 'JPEG', rightX + 2, yPos + 2, imgWidth, imgHeight);
+                            pdf.setFontSize(8);
+                            pdf.setFont('helvetica', 'normal');
+                            const legenda = fotosBase64[i + 1].legenda || `Figura ${i + 2}`;
+                            pdf.text(legenda, rightX + imgCellWidth / 2, yPos + imgHeight + 6, { align: 'center' });
+                        } catch (err) {
+                            console.error('Erro ao adicionar foto:', err);
+                        }
+                    }
+
+                    yPos += totalCellHeight;
                 }
             }
 
