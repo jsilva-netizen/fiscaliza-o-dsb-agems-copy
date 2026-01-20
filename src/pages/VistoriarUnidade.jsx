@@ -190,27 +190,18 @@ export default function VistoriarUnidade() {
                 });
 
                 if (item.gera_nc && data.resposta === 'NAO') {
-                    const numeroNC = `NC${ncsExistentes.length + 1}`;
-                    const determinacoes = determinacoesExistentes.filter(d => d.unidade_fiscalizada_id === unidadeId);
-                    const numeroD = `D${determinacoes.length + 1}`;
-
-                    const nc = await base44.entities.NaoConformidade.create({
-                        unidade_fiscalizada_id: unidadeId,
-                        resposta_checklist_id: novaResposta.id,
-                        numero_nc: numeroNC,
-                        artigo_portaria: item.artigo_portaria,
-                        descricao: `A Constatação ${numero} não cumpre o disposto no ${item.artigo_portaria || 'regulamento'}. ${item.texto_nc}`
-                    });
-
-                    // Usar backend function para criar determinação com data_limite automática
-                    await base44.functions.invoke('createDeterminacaoWithDataLimite', {
-                        unidade_fiscalizada_id: unidadeId,
-                        nao_conformidade_id: nc?.id,
-                        numero_determinacao: numeroD,
-                        descricao: item.texto_determinacao,
-                        prazo_dias: 30
-                    });
-                }
+                           // Usar backend function para criar NC + D atomicamente
+                           // Isso evita race conditions se responder muito rápido
+                           await base44.functions.invoke('criarNcComDeterminacao', {
+                               unidade_fiscalizada_id: unidadeId,
+                               resposta_checklist_id: novaResposta.id,
+                               numero_constatacao: numero,
+                               artigo_portaria: item.artigo_portaria,
+                               descricao_nc: `A Constatação ${numero} não cumpre o disposto no ${item.artigo_portaria || 'regulamento'}. ${item.texto_nc}`,
+                               descricao_determinacao: item.texto_determinacao,
+                               prazo_dias: 30
+                           });
+                       }
             }
         },
         onSuccess: () => {
