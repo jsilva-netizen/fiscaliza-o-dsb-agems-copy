@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
     ArrowLeft, ClipboardCheck, Camera, AlertTriangle, FileText, 
-    CheckCircle2, Loader2, Plus, Save, Sparkles
+    CheckCircle2, Loader2, Plus, Save
 } from 'lucide-react';
 import ChecklistItem from '@/components/fiscalizacao/ChecklistItem';
 import PhotoGrid from '@/components/fiscalizacao/PhotoGrid';
@@ -33,9 +33,6 @@ export default function VistoriarUnidade() {
     const [fotosNC, setFotosNC] = useState({});
     const [showAddRecomendacao, setShowAddRecomendacao] = useState(false);
     const [novaRecomendacao, setNovaRecomendacao] = useState('');
-    const [showIASugestao, setShowIASugestao] = useState(false);
-    const [iaSugestao, setIASugestao] = useState(null);
-    const [loadingIA, setLoadingIA] = useState(false);
 
     // Queries
     const { data: unidade, isLoading: loadingUnidade } = useQuery({
@@ -106,85 +103,11 @@ export default function VistoriarUnidade() {
         setRespostas(respostasMap);
     }, [unidade, respostasExistentes]);
 
-    // Função para obter sugestões da IA
-    const obterSugestoesIA = async (item, observacao) => {
-        setLoadingIA(true);
-        try {
-            const prompt = `Você é um especialista em fiscalização de saneamento da AGEMS (Agência Estadual de Regulação de Serviços Públicos de Mato Grosso do Sul).
 
-CONTEXTO DA FISCALIZAÇÃO:
-- Tipo de Unidade: ${unidade?.tipo_unidade_nome}
-- Serviço: ${fiscalizacao?.servico}
-- Município: ${fiscalizacao?.municipio_nome}
-
-ITEM DO CHECKLIST QUE GEROU NC:
-- Pergunta: ${item.pergunta}
-- Observação do fiscal: ${observacao || 'Nenhuma'}
-
-CONHECIMENTO REGULATÓRIO - PORTARIA AGEMS Nº 233/2022:
-A Portaria AGEMS nº 233, de 15 de dezembro de 2022, define as penalidades e infrações aplicáveis aos prestadores de serviços de saneamento.
-
-Principais artigos relevantes para Água e Esgoto:
-- Art. 18: Infrações de natureza LEVE (Grupo II)
-- Art. 20: Infrações de natureza GRAVE (Grupo IV) - obrigações operacionais críticas
-- Art. 21: Infrações de natureza GRAVÍSSIMA (Grupo V) - questões de qualidade e segurança
-
-Exemplos de obrigações conforme Art. 20 (GRAVE):
-- Inciso VII: Cumprir normas técnicas e procedimentos para operação das instalações
-- Inciso X: Realizar limpeza de reservatórios e redes conforme legislação
-- Inciso XI: Obter licenças ambientais necessárias
-
-Exemplos de obrigações conforme Art. 21 (GRAVÍSSIMA):
-- Inciso I: Dispor adequadamente água e resíduos de ETAs, Reservatórios e ETEs
-- Inciso IX: Atender requisitos de qualidade dos efluentes das ETEs conforme legislação
-
-FORMATO ESPERADO DO RELATÓRIO AGEMS:
-Baseado no modelo RFP-CATESA-CRES, o relatório deve conter:
-- Constatações (C1, C2, C3...)
-- Não Conformidades (NC1, NC2...) com artigo da portaria
-- Determinações (D1, D2...) com prazo específico
-- Recomendações (R1, R2...) quando aplicável
-
-TAREFA:
-Analisar esta não conformidade identificada durante a fiscalização e sugerir:
-
-1. **Artigo/Inciso da Portaria AGEMS nº 233/2022** mais adequado (especifique Art. XX, inciso Y)
-2. **Texto técnico da Não Conformidade** (padrão AGEMS: objetivo, técnico, referenciando a constatação)
-3. **Determinação** clara para correção (use linguagem imperativa: "Determina-se..." ou "Sanar...")
-4. **Prazo em dias** adequado (considere: 30 dias para questões administrativas, 60 dias para adequações operacionais, 90+ dias para obras)
-5. **Recomendações adicionais** baseadas em boas práticas (se aplicável)
-
-Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de relatórios da AGEMS.`;
-
-            const resultado = await base44.integrations.Core.InvokeLLM({
-                prompt,
-                response_json_schema: {
-                    type: "object",
-                    properties: {
-                        artigo_portaria: { type: "string" },
-                        texto_nc: { type: "string" },
-                        texto_determinacao: { type: "string" },
-                        prazo_dias: { type: "number" },
-                        recomendacoes: {
-                            type: "array",
-                            items: { type: "string" }
-                        }
-                    }
-                }
-            });
-
-            setIASugestao(resultado);
-            setShowIASugestao(true);
-        } catch (err) {
-            console.error('Erro ao obter sugestões da IA:', err);
-        } finally {
-            setLoadingIA(false);
-        }
-    };
 
     // Mutations with offline support
     const salvarRespostaMutation = useMutation({
-        mutationFn: async ({ itemId, data, usarIA }) => {
+        mutationFn: async ({ itemId, data }) => {
             const item = Array.isArray(itensChecklist) ? itensChecklist.find(i => i.id === itemId) : null;
             if (!item) return;
             const existente = respostasExistentes.find(r => r.item_checklist_id === itemId);
@@ -266,12 +189,6 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
             if (data.resposta === 'NAO' && item.gera_nc) {
                 const ncExistente = ncsExistentes.find(nc => nc.resposta_checklist_id === itemId);
                 if (!ncExistente) {
-                    // Chamar IA se solicitado
-                    if (usarIA) {
-                        await obterSugestoesIA(item, data.observacao);
-                        return; // Aguarda aprovação do usuário
-                    }
-
                     // Buscar TODAS as NCs do banco antes de numerar
                     const todasNCs = await base44.entities.NaoConformidade.filter(
                         { unidade_fiscalizada_id: unidadeId },
@@ -329,83 +246,7 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
         }
     });
 
-    const aplicarSugestaoIAMutation = useMutation({
-            mutationFn: async ({ itemId, sugestao, constatacaoNum }) => {
-                // Buscar TODAS as NCs do banco antes de numerar
-                const todasNCs = await base44.entities.NaoConformidade.filter(
-                    { unidade_fiscalizada_id: unidadeId },
-                    'created_date',
-                    500
-                );
-                const numerosNC = todasNCs
-                    .map(nc => parseInt(nc.numero_nc?.replace('NC', '') || '0'))
-                    .filter(n => !isNaN(n));
-                const ncNum = numerosNC.length > 0 ? Math.max(...numerosNC) + 1 : 1;
-                    // Verifica se o texto da IA já menciona o artigo
-                    const textoNC = sugestao.texto_nc.toLowerCase().includes('constatação') || sugestao.texto_nc.toLowerCase().includes('art.')
-                        ? sugestao.texto_nc.replace(/C\d+/g, constatacaoNum.toString()).replace(/Constatação\s+\d+/g, `Constatação ${constatacaoNum}`)
-                        : `A Constatação ${constatacaoNum} não cumpre o disposto no ${sugestao.artigo_portaria}. ${sugestao.texto_nc}`;
-                const nc = await base44.entities.NaoConformidade.create({
-                    unidade_fiscalizada_id: unidadeId,
-                    resposta_checklist_id: itemId,
-                    numero_nc: `NC${ncNum}`,
-                    artigo_portaria: sugestao.artigo_portaria,
-                    descricao: textoNC,
-                    fotos: []
-                });
 
-                // Buscar TODAS as determinações do banco antes de numerar
-                const todasDet = await base44.entities.Determinacao.filter(
-                    { unidade_fiscalizada_id: unidadeId },
-                    'created_date',
-                    500
-                );
-                const numerosDet = todasDet
-                    .map(d => parseInt(d.numero_determinacao?.replace('D', '') || '0'))
-                    .filter(n => !isNaN(n));
-                const detNum = numerosDet.length > 0 ? Math.max(...numerosDet) + 1 : 1;
-
-                const textoDeterminacao = sugestao.texto_determinacao.startsWith('Para sanar') 
-                    ? sugestao.texto_determinacao.replace(/Para sanar[^,]*,/, `Para sanar a NC${ncNum},`)
-                    : `Para sanar a NC${ncNum}, ${sugestao.texto_determinacao.charAt(0).toLowerCase()}${sugestao.texto_determinacao.slice(1)}`;
-
-                await base44.entities.Determinacao.create({
-                    unidade_fiscalizada_id: unidadeId,
-                    nao_conformidade_id: nc.id,
-                    numero_determinacao: `D${detNum}`,
-                    descricao: textoDeterminacao,
-                    prazo_dias: sugestao.prazo_dias || 30,
-                    status: 'pendente'
-                });
-
-            // Adicionar recomendações se houver
-            if (Array.isArray(sugestao.recomendacoes) && sugestao.recomendacoes.length > 0) {
-                for (let i = 0; i < sugestao.recomendacoes.length; i++) {
-                    const rec = sugestao.recomendacoes[i];
-                    // Pega o maior número de recomendação + 1
-                    const numerosRec = await base44.entities.Recomendacao.filter({ unidade_fiscalizada_id: unidadeId });
-                    const nums = numerosRec
-                        .map(r => parseInt(r.numero_recomendacao?.replace('R', '') || '0'))
-                        .filter(n => !isNaN(n));
-                    const recNum = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-                    await base44.entities.Recomendacao.create({
-                        unidade_fiscalizada_id: unidadeId,
-                        numero_recomendacao: `R${recNum}`,
-                        descricao: rec,
-                        origem: 'checklist'
-                    });
-                }
-            }
-
-            queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
-            queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
-            queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
-        },
-        onSuccess: () => {
-            setShowIASugestao(false);
-            setIASugestao(null);
-        }
-    });
 
     const salvarFotosMutation = useMutation({
         mutationFn: async (fotosUrls) => {
@@ -465,9 +306,9 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
         }
     });
 
-    const handleResponder = (itemId, data, usarIA = false) => {
+    const handleResponder = (itemId, data) => {
         setRespostas(prev => ({ ...prev, [itemId]: data }));
-        salvarRespostaMutation.mutate({ itemId, data, usarIA });
+        salvarRespostaMutation.mutate({ itemId, data });
     };
 
     const handleAddFoto = (fotoData) => {
@@ -579,9 +420,7 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                                     item={item}
                                     resposta={respostas[item.id]}
                                     onResponder={(data) => handleResponder(item.id, data)}
-                                    onResponderComIA={(data) => handleResponder(item.id, data, true)}
                                     numero={index + 1}
-                                    loadingIA={loadingIA}
                                 />
                             ))
                         )}
@@ -768,75 +607,7 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                 </DialogContent>
             </Dialog>
 
-            {/* Dialog Sugestão IA */}
-            <Dialog open={showIASugestao} onOpenChange={setShowIASugestao}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Sparkles className="h-5 w-5 text-purple-500" />
-                            Sugestões da IA
-                        </DialogTitle>
-                    </DialogHeader>
-                    {iaSugestao && (
-                        <div className="space-y-4">
-                            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                                <p className="text-xs text-purple-600 font-medium mb-2">Artigo da Portaria AGEMS</p>
-                                <p className="text-sm font-medium">{iaSugestao.artigo_portaria}</p>
-                            </div>
 
-                            <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                                <p className="text-xs text-red-600 font-medium mb-2">Texto da Não Conformidade</p>
-                                <p className="text-sm">{iaSugestao.texto_nc}</p>
-                            </div>
-
-                            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                <p className="text-xs text-blue-600 font-medium mb-2">Determinação</p>
-                                <p className="text-sm">{iaSugestao.texto_determinacao}</p>
-                                <p className="text-xs text-gray-500 mt-2">Prazo: {iaSugestao.prazo_dias} dias</p>
-                            </div>
-
-                            {Array.isArray(iaSugestao.recomendacoes) && iaSugestao.recomendacoes.length > 0 && (
-                                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                                    <p className="text-xs text-green-600 font-medium mb-2">Recomendações Adicionais</p>
-                                    <ul className="space-y-2">
-                                        {iaSugestao.recomendacoes.map((rec, i) => (
-                                            <li key={i} className="text-sm flex items-start gap-2">
-                                                <span className="text-green-600">•</span>
-                                                <span>{rec}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-
-                            <div className="flex gap-2 pt-4">
-                                <Button 
-                                    className="flex-1 bg-purple-600 hover:bg-purple-700"
-                                    onClick={() => {
-                                        const ultimaResposta = respostasExistentes[respostasExistentes.length - 1];
-                                        const itemId = ultimaResposta?.item_checklist_id;
-                                        const constatacaoNum = parseInt(ultimaResposta?.numero_constatacao?.replace('C', '') || '1');
-                                        if (itemId) {
-                                            aplicarSugestaoIAMutation.mutate({ itemId, sugestao: iaSugestao, constatacaoNum });
-                                        }
-                                    }}
-                                    disabled={aplicarSugestaoIAMutation.isPending}
-                                >
-                                    <Sparkles className="h-4 w-4 mr-2" />
-                                    {aplicarSugestaoIAMutation.isPending ? 'Aplicando...' : 'Aplicar Sugestões'}
-                                </Button>
-                                <Button variant="outline" onClick={() => setShowIASugestao(false)}>
-                                    Cancelar
-                                </Button>
-                            </div>
-
-                            <p className="text-xs text-gray-500 text-center">
-                                ⚠️ Revise as sugestões antes de aplicar. A IA é uma ferramenta de apoio.
-                            </p>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
         </div>
     );
 }
