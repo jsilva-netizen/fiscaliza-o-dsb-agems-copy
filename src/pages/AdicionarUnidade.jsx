@@ -274,6 +274,5 @@ export default function AdicionarUnidade() {
                 </form>
             </div>
             </div>
-        </SyncManager>
-    );
-}
+            );
+            }
