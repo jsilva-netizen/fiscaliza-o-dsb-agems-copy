@@ -171,37 +171,44 @@ export default function VistoriarUnidade() {
             if (!item) return;
 
             const resposta = respostasExistentes.find(r => r.item_checklist_id === itemId);
-            const numero = resposta?.numero_constatacao || `C${respostasExistentes.length + 1}`;
 
             if (resposta?.id) {
+                // Atualizar resposta existente
                 await base44.entities.RespostaChecklist.update(resposta.id, {
                     resposta: data.resposta,
                     observacao: data.observacao
                 });
             } else {
-                const novaResposta = await base44.entities.RespostaChecklist.create({
-                    unidade_fiscalizada_id: unidadeId,
-                    item_checklist_id: itemId,
-                    pergunta: item.pergunta,
-                    resposta: data.resposta,
-                    gera_nc: item.gera_nc,
-                    numero_constatacao: numero,
-                    observacao: data.observacao
+                // Contar respostas atuais para gerar número único
+                const respostasAtuais = await base44.entities.RespostaChecklist.filter({ 
+                    unidade_fiscalizada_id: unidadeId 
                 });
+                const numero = `C${respostasAtuais.length + 1}`;
 
                 if (item.gera_nc && data.resposta === 'NAO') {
-                           // Usar backend function para criar NC + D atomicamente
-                           // Isso evita race conditions se responder muito rápido
-                           await base44.functions.invoke('criarNcComDeterminacao', {
-                               unidade_fiscalizada_id: unidadeId,
-                               resposta_checklist_id: novaResposta.id,
-                               numero_constatacao: numero,
-                               artigo_portaria: item.artigo_portaria,
-                               descricao_nc: `A Constatação ${numero} não cumpre o disposto no ${item.artigo_portaria || 'regulamento'}. ${item.texto_nc}`,
-                               descricao_determinacao: item.texto_determinacao,
-                               prazo_dias: 30
-                           });
-                       }
+                    // Usar backend function para criar Resposta + NC + D atomicamente
+                    await base44.functions.invoke('criarNcComDeterminacao', {
+                        unidade_fiscalizada_id: unidadeId,
+                        item_checklist_id: itemId,
+                        pergunta: item.pergunta,
+                        numero_constatacao: numero,
+                        artigo_portaria: item.artigo_portaria,
+                        texto_nc: item.texto_nc,
+                        texto_determinacao: item.texto_determinacao,
+                        prazo_dias: 30
+                    });
+                } else {
+                    // Criar apenas a resposta se não gerar NC
+                    await base44.entities.RespostaChecklist.create({
+                        unidade_fiscalizada_id: unidadeId,
+                        item_checklist_id: itemId,
+                        pergunta: item.pergunta,
+                        resposta: data.resposta,
+                        gera_nc: item.gera_nc,
+                        numero_constatacao: numero,
+                        observacao: data.observacao
+                    });
+                }
             }
         },
         onSuccess: () => {

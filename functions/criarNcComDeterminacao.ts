@@ -11,47 +11,59 @@ Deno.serve(async (req) => {
 
         const { 
             unidade_fiscalizada_id,
-            resposta_checklist_id,
-            numero_constatacao,
+            item_checklist_id,
+            pergunta,
             artigo_portaria,
-            descricao_nc,
-            descricao_determinacao,
+            texto_nc,
+            texto_determinacao,
+            numero_constatacao,
             prazo_dias = 30
         } = await req.json();
 
-        // Buscar contagens ATUAIS do banco (não do frontend)
+        // 1. Criar RespostaChecklist (fonte da verdade para cada pergunta)
+        const resposta = await base44.entities.RespostaChecklist.create({
+            unidade_fiscalizada_id,
+            item_checklist_id,
+            pergunta,
+            resposta: 'NAO',
+            gera_nc: true,
+            numero_constatacao,
+            observacao: ''
+        });
+
+        // 2. Contar NCs ATUAIS para gerar número único no banco
         const ncsAtuais = await base44.entities.NaoConformidade.filter({ 
             unidade_fiscalizada_id 
         });
+        const numeroNC = `NC${ncsAtuais.length + 1}`;
+
+        // 3. Criar NC vinculada à RespostaChecklist
+        const nc = await base44.entities.NaoConformidade.create({
+            unidade_fiscalizada_id,
+            resposta_checklist_id: resposta.id,
+            numero_nc: numeroNC,
+            artigo_portaria,
+            descricao: texto_nc
+        });
+
+        // 4. Contar Determinações ATUAIS para gerar número único no banco
         const determinacoesAtuais = await base44.entities.Determinacao.filter({ 
             unidade_fiscalizada_id 
         });
-
-        // Gerar números sequenciais baseado na contagem atual
-        const numeroNC = `NC${ncsAtuais.length + 1}`;
         const numeroD = `D${determinacoesAtuais.length + 1}`;
 
-        // Calcular data_limite: hoje + prazo_dias
+        // 5. Calcular data_limite
         const hoje = new Date();
         const data_limite = new Date(hoje);
         data_limite.setDate(data_limite.getDate() + prazo_dias);
         const data_limite_str = data_limite.toISOString().split('T')[0];
 
-        // Criar NC atomicamente
-        const nc = await base44.entities.NaoConformidade.create({
-            unidade_fiscalizada_id,
-            resposta_checklist_id,
-            numero_nc: numeroNC,
-            artigo_portaria,
-            descricao: descricao_nc
-        });
-
-        // Criar Determinação atomicamente
+        // 6. Criar Determinação vinculada à NC
         const det = await base44.entities.Determinacao.create({
             unidade_fiscalizada_id,
             nao_conformidade_id: nc.id,
             numero_determinacao: numeroD,
-            descricao: descricao_determinacao,
+            descricao: texto_determinacao,
             prazo_dias,
             data_limite: data_limite_str,
             status: 'pendente'
@@ -59,6 +71,10 @@ Deno.serve(async (req) => {
 
         return Response.json({ 
             success: true,
+            resposta: {
+                id: resposta.id,
+                numero_constatacao
+            },
             nc: {
                 id: nc.id,
                 numero_nc: numeroNC
