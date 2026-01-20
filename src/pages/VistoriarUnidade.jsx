@@ -633,8 +633,6 @@ export default function VistoriarUnidade() {
                     </div>
                 </DialogContent>
             </Dialog>
-
-
             </div>
-    );
-}
+            );
+            }
