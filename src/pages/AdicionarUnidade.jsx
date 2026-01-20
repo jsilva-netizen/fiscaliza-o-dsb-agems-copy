@@ -136,18 +136,6 @@ export default function AdicionarUnidade() {
                 fotos_unidade: []
             };
 
-            // Suporte offline
-            if (!navigator.onLine) {
-                await addPendingOperation({
-                    operation: 'create',
-                    entity: 'UnidadeFiscalizada',
-                    data: unidadeData,
-                    priority: 9
-                });
-                // Retorna ID temporário para navegação
-                return { id: 'temp_' + Date.now() };
-            }
-
             return base44.entities.UnidadeFiscalizada.create(unidadeData);
         },
         onSuccess: (result) => {
