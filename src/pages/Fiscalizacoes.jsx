@@ -11,17 +11,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { 
     ArrowLeft, Search, MapPin, Calendar, CheckCircle2, 
-    Clock, AlertTriangle, ChevronRight, Plus, Filter, Trash2
+    Clock, AlertTriangle, ChevronRight, Plus, Filter, Trash2, FileDown
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import RelatorioFiscalizacao from '@/components/fiscalizacao/RelatorioFiscalizacao';
+import ExportarCSV from '@/components/fiscalizacao/ExportarCSV';
+import ExportarPDFConsolidado from '@/components/fiscalizacao/ExportarPDFConsolidado';
 
 export default function Fiscalizacoes() {
     const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('todos');
+    const [servicoFilter, setServicoFilter] = useState('todos');
+    const [dataInicio, setDataInicio] = useState('');
+    const [dataFim, setDataFim] = useState('');
     const [fiscalizacaoParaDeletar, setFiscalizacaoParaDeletar] = useState(null);
+    const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
     const { data: user } = useQuery({
         queryKey: ['user'],
@@ -81,8 +87,21 @@ export default function Fiscalizacoes() {
         const matchSearch = f.municipio_nome?.toLowerCase().includes(search.toLowerCase()) ||
             f.servico?.toLowerCase().includes(search.toLowerCase());
         const matchStatus = statusFilter === 'todos' || f.status === statusFilter;
-        return matchSearch && matchStatus;
+        const matchServico = servicoFilter === 'todos' || f.servico === servicoFilter;
+        
+        let matchData = true;
+        if (dataInicio && dataFim) {
+            const fiscData = new Date(f.data_inicio);
+            const inicio = new Date(dataInicio);
+            const fim = new Date(dataFim);
+            fim.setHours(23, 59, 59, 999);
+            matchData = fiscData >= inicio && fiscData <= fim;
+        }
+        
+        return matchSearch && matchStatus && matchServico && matchData;
     });
+
+    const servicos = [...new Set(fiscalizacoes.map(f => f.servico))].filter(Boolean);
 
     const emAndamento = fiscalizacoes.filter(f => f.status === 'em_andamento').length;
     const finalizadas = fiscalizacoes.filter(f => f.status === 'finalizada').length;
@@ -128,18 +147,91 @@ export default function Fiscalizacoes() {
                             className="pl-10"
                         />
                     </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-40">
-                            <Filter className="h-4 w-4 mr-2" />
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="todos">Todos</SelectItem>
-                            <SelectItem value="em_andamento">Em andamento</SelectItem>
-                            <SelectItem value="finalizada">Finalizadas</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={() => setMostrarFiltros(!mostrarFiltros)}
+                    >
+                        <Filter className="h-4 w-4" />
+                    </Button>
                 </div>
+
+                {/* Filtros Avançados */}
+                {mostrarFiltros && (
+                    <div className="space-y-2 p-4 bg-white rounded-lg border">
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <label className="text-xs text-gray-600 mb-1 block">Status</label>
+                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="todos">Todos</SelectItem>
+                                        <SelectItem value="em_andamento">Em andamento</SelectItem>
+                                        <SelectItem value="finalizada">Finalizadas</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-gray-600 mb-1 block">Serviço</label>
+                                <Select value={servicoFilter} onValueChange={setServicoFilter}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="todos">Todos</SelectItem>
+                                        {servicos.map(s => (
+                                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <label className="text-xs text-gray-600 mb-1 block">Data Início</label>
+                                <Input 
+                                    type="date" 
+                                    value={dataInicio}
+                                    onChange={(e) => setDataInicio(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-gray-600 mb-1 block">Data Fim</label>
+                                <Input 
+                                    type="date" 
+                                    value={dataFim}
+                                    onChange={(e) => setDataFim(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="w-full"
+                            onClick={() => {
+                                setStatusFilter('todos');
+                                setServicoFilter('todos');
+                                setDataInicio('');
+                                setDataFim('');
+                            }}
+                        >
+                            Limpar Filtros
+                        </Button>
+                    </div>
+                )}
+
+                {/* Exportação */}
+                {filtered.length > 0 && (
+                    <div className="flex gap-2">
+                        <ExportarCSV fiscalizacoes={filtered} />
+                        <ExportarPDFConsolidado fiscalizacoes={filtered} />
+                    </div>
+                )}
             </div>
 
             {/* List */}
