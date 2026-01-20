@@ -215,15 +215,16 @@ export default function VistoriarUnidade() {
     });
 
      const salvarFotosMutation = useMutation({
-        mutationFn: async (fotosData) => {
-            await base44.entities.UnidadeFiscalizada.update(unidadeId, {
-                fotos_unidade: fotosData
-            });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['unidade', unidadeId] });
-        }
-    });
+         mutationFn: async (fotosData) => {
+             const urlsApenas = fotosData.map(f => typeof f === 'string' ? f : f.url);
+             await base44.entities.UnidadeFiscalizada.update(unidadeId, {
+                 fotos_unidade: urlsApenas
+             });
+         },
+         onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ['unidade', unidadeId] });
+         }
+     });
 
     const adicionarRecomendacaoMutation = useMutation({
         mutationFn: async (texto) => {
@@ -290,9 +291,10 @@ export default function VistoriarUnidade() {
                  r.resposta === 'SIM' || r.resposta === 'NAO'
              ).length;
 
+             const urlsApenas = fotos.map(f => typeof f === 'string' ? f : f.url);
              await base44.entities.UnidadeFiscalizada.update(unidadeId, {
                  status: 'finalizada',
-                 fotos_unidade: fotos,
+                 fotos_unidade: urlsApenas,
                  total_constatacoes: totalConstatacoes,
                  total_ncs: ncsAtuais.length
              });
@@ -485,10 +487,10 @@ export default function VistoriarUnidade() {
                                                 fiscalizacaoId={unidade?.fiscalizacao_id}
                                                 unidadeId={unidadeId}
                                                 onAddFoto={(fotoData) => {
-                                                    const fotosAtuais = (nc.fotos || []).map(f => typeof f === 'string' ? { url: f } : f);
-                                                    const novasFotos = [...fotosAtuais, fotoData];
+                                                    const fotosAtuais = (nc.fotos || []);
+                                                    const urlsApenas = [...fotosAtuais, fotoData.url];
                                                     base44.entities.NaoConformidade.update(nc.id, {
-                                                        fotos: novasFotos,
+                                                        fotos: urlsApenas,
                                                         latitude_foto: fotoData.latitude,
                                                         longitude_foto: fotoData.longitude
                                                     }).then(() => {
@@ -505,13 +507,7 @@ export default function VistoriarUnidade() {
                                                     });
                                                 }}
                                                 onUpdateLegenda={(index, legenda) => {
-                                                    const fotosAtuais = (nc.fotos || []).map(f => typeof f === 'string' ? { url: f } : f);
-                                                    fotosAtuais[index] = { ...fotosAtuais[index], legenda };
-                                                    base44.entities.NaoConformidade.update(nc.id, {
-                                                        fotos: fotosAtuais
-                                                    }).then(() => {
-                                                        queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
-                                                    });
+                                                    // Legendas são armazenadas localmente no PhotoGrid, não no banco
                                                 }}
                                                 titulo={`Fotos da ${nc.numero_nc}`}
                                             />
