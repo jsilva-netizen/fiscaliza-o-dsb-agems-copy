@@ -410,7 +410,6 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
 
                     // Atualizar offset para próxima unidade
                     offsetGlobalFiguras += fotosBase64.length;
-                    }
                 }
             }
 
