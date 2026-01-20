@@ -367,8 +367,8 @@ export default function VistoriarUnidade() {
                     });
                 }
 
-                queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
-                queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+                await queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+                await queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
 
             } else if (!deveExistirNC && ncVinculada) {
                 // REMOVER NC e Determinações associadas
@@ -382,10 +382,14 @@ export default function VistoriarUnidade() {
 
                 await base44.entities.NaoConformidade.delete(ncVinculada.id);
 
-                queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
-                queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+                await queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+                await queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
             }
             // Se deveExistirNC && ncVinculada já existe = não faz nada (já está correto)
+        },
+        onSuccess: () => {
+            // Forçar refetch imediato após qualquer mudança
+            queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] });
         }
     });
 
