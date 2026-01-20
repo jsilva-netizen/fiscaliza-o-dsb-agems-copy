@@ -121,40 +121,7 @@ export default function VistoriarUnidade() {
         gcTime: 300000
     });
 
-    // Corrigir NCs antigas que não têm referência à constatação
-    useEffect(() => {
-        const corrigirNCs = async () => {
-            if (!ncsExistentes.length || !respostasExistentes.length) return;
-            
-            let houveCorrecao = false;
-            
-            for (const nc of ncsExistentes) {
-                // Se a NC não contém "Constatação" no texto, atualizar
-                if (!nc.descricao.includes('Constatação')) {
-                    // Buscar a resposta pelo ID correto
-                    const respostaRelacionada = respostasExistentes.find(
-                        r => r.id === nc.resposta_checklist_id
-                    );
-                    
-                    if (respostaRelacionada?.numero_constatacao) {
-                        const textoCorrigido = `A Constatação ${respostaRelacionada.numero_constatacao} não cumpre o disposto no ${nc.artigo_portaria || 'regulamento aplicável'}. ${nc.descricao}`;
-                        
-                        await base44.entities.NaoConformidade.update(nc.id, {
-                            descricao: textoCorrigido
-                        });
-                        houveCorrecao = true;
-                    }
-                }
-            }
-            
-            // Recarregar as NCs apenas se houve correção
-            if (houveCorrecao) {
-                queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
-            }
-        };
-        
-        corrigirNCs();
-    }, [ncsExistentes.length, respostasExistentes.length]);
+
 
     const { data: determinacoesExistentes = [] } = useQuery({
         queryKey: ['determinacoes', unidadeId],
@@ -214,13 +181,13 @@ export default function VistoriarUnidade() {
              const resposta = respostasExistentes.find(r => r.item_checklist_id === itemId);
              const numero = resposta?.numero_constatacao || `C${respostasExistentes.length + 1}`;
 
-             if (resposta) {
+             if (resposta?.id) {
                  await base44.entities.RespostaChecklist.update(resposta.id, {
                      resposta: data.resposta,
                      observacao: data.observacao
                  });
              } else {
-                 await base44.entities.RespostaChecklist.create({
+                 const novaResposta = await base44.entities.RespostaChecklist.create({
                      unidade_fiscalizada_id: unidadeId,
                      item_checklist_id: itemId,
                      pergunta: item.pergunta,
@@ -237,6 +204,7 @@ export default function VistoriarUnidade() {
 
                      await base44.entities.NaoConformidade.create({
                          unidade_fiscalizada_id: unidadeId,
+                         resposta_checklist_id: novaResposta.id,
                          numero_nc: numeroNC,
                          artigo_portaria: item.artigo_portaria,
                          descricao: `A Constatação ${numero} não cumpre o disposto no ${item.artigo_portaria || 'regulamento'}. ${item.texto_nc}`
