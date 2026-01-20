@@ -17,9 +17,7 @@ import {
 import ChecklistItem from '@/components/fiscalizacao/ChecklistItem';
 import PhotoGrid from '@/components/fiscalizacao/PhotoGrid';
 import RelatorioUnidade from '@/components/fiscalizacao/RelatorioUnidade';
-import useOfflineCache from '@/components/offline/useOfflineCache';
-import { preloadImages } from '@/components/offline/preloadImages';
-import { criarRespostaComNCDeterminacao } from '@/components/offline/respostaTransacao';
+
 
 // Wrapper para calcular offset das figuras
 function RelatorioUnidadeWrapper({ unidade, ...props }) {
@@ -93,12 +91,13 @@ export default function VistoriarUnidade() {
         gcTime: 300000
     });
 
-    // Use offline cache for checklist items
-    const { data: itensChecklist = [], fromCache: checklistFromCache } = useOfflineCache(
-        `checklist_${unidade?.tipo_unidade_id}`,
-        () => base44.entities.ItemChecklist.filter({ tipo_unidade_id: unidade?.tipo_unidade_id }, 'ordem', 100),
-        1440 // 24 hours cache
-    );
+    const { data: itensChecklist = [] } = useQuery({
+        queryKey: ['itensChecklist', unidade?.tipo_unidade_id],
+        queryFn: () => base44.entities.ItemChecklist.filter({ tipo_unidade_id: unidade?.tipo_unidade_id }, 'ordem', 100),
+        enabled: !!unidade?.tipo_unidade_id,
+        staleTime: 60000,
+        gcTime: 300000
+    });
 
     const { data: respostasExistentes = [] } = useQuery({
         queryKey: ['respostas', unidadeId],
@@ -187,11 +186,7 @@ export default function VistoriarUnidade() {
             );
             setFotos(fotosCarregadas);
             
-            // Pre-carregar imagens em cache
-            const urls = fotosCarregadas.map(f => f.url).filter(Boolean);
-            if (urls.length > 0) {
-                setTimeout(() => preloadImages(urls), 500);
-            }
+
         }
     }, [unidade?.fotos_unidade]);
 
@@ -206,52 +201,68 @@ export default function VistoriarUnidade() {
         }
     }, [respostasExistentes.length]);
 
-    // Pre-carregar imagens das NCs
-    useEffect(() => {
-        const ncUrls = [];
-        ncsExistentes.forEach(nc => {
-            if (nc.fotos) {
-                nc.fotos.forEach(foto => {
-                    const url = typeof foto === 'string' ? foto : foto.url;
-                    if (url) ncUrls.push(url);
-                });
-            }
-        });
-        if (ncUrls.length > 0) {
-            setTimeout(() => preloadImages(ncUrls), 1000);
-        }
-    }, [ncsExistentes.length]);
+
 
 
 
     // Mutations with atomic operations
      const salvarRespostaMutation = useMutation({
-             mutationFn: async ({ itemId, data }) => {
-                 const item = Array.isArray(itensChecklist) ? itensChecklist.find(i => i.id === itemId) : null;
-                 if (!item) return;
+         mutationFn: async ({ itemId, data }) => {
+             const item = itensChecklist.find(i => i.id === itemId);
+             if (!item) return;
 
-                 // Executar atomicamente (requer online)
-                 await criarRespostaComNCDeterminacao({
-                     base44,
-                     unidadeId,
-                     itemId,
-                     item,
-                     data,
-                     respostasExistentes,
-                     ncsExistentes,
-                     determinacoesExistentes
+             const resposta = respostasExistentes.find(r => r.item_checklist_id === itemId);
+             const numero = resposta?.numero_constatacao || `C${respostasExistentes.length + 1}`;
+
+             if (resposta) {
+                 await base44.entities.RespostaChecklist.update(resposta.id, {
+                     resposta: data.resposta,
+                     observacao: data.observacao
                  });
-             },
-             onSuccess: () => {
-                 // Invalidar tudo para recarregar do banco
-                 queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] });
-                 queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
-                 queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
-             },
-             onError: (err) => {
-                 alert(err.message);
+             } else {
+                 await base44.entities.RespostaChecklist.create({
+                     unidade_fiscalizada_id: unidadeId,
+                     item_checklist_id: itemId,
+                     pergunta: item.pergunta,
+                     resposta: data.resposta,
+                     gera_nc: item.gera_nc,
+                     numero_constatacao: numero,
+                     observacao: data.observacao
+                 });
+
+                 if (item.gera_nc && data.resposta === 'NAO') {
+                     const numeroNC = `NC${ncsExistentes.length + 1}`;
+                     const determinacoes = determinacoesExistentes.filter(d => d.unidade_fiscalizada_id === unidadeId);
+                     const numeroD = `D${determinacoes.length + 1}`;
+
+                     await base44.entities.NaoConformidade.create({
+                         unidade_fiscalizada_id: unidadeId,
+                         numero_nc: numeroNC,
+                         artigo_portaria: item.artigo_portaria,
+                         descricao: `A Constatação ${numero} não cumpre o disposto no ${item.artigo_portaria || 'regulamento'}. ${item.texto_nc}`
+                     });
+
+                     const nc = await base44.entities.NaoConformidade.filter({ numero_nc: numeroNC }).then(r => r[0]);
+
+                     await base44.entities.Determinacao.create({
+                         unidade_fiscalizada_id: unidadeId,
+                         nao_conformidade_id: nc?.id,
+                         numero_determinacao: numeroD,
+                         descricao: item.texto_determinacao,
+                         prazo_dias: 30
+                     });
+                 }
              }
-         });
+         },
+         onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] });
+             queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+             queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+         },
+         onError: (err) => {
+             alert(err.message);
+         }
+     });
 
 
 
