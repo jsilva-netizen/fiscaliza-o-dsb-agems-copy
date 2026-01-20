@@ -86,7 +86,7 @@ export default function RelatorioUnidade({
             drawCell('Constatações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
             yPos += rowHeight;
 
-            const constatacoes = respostas.filter(r => r.resposta !== 'NA');
+            const constatacoes = respostas.filter(r => r.resposta === 'NAO');
             constatacoes.forEach((resp, idx) => {
                 const numConst = resp.numero_constatacao || `C${idx + 1}`;
                 const texto = `${numConst}. ${resp.pergunta}${resp.observacao ? ` - ${resp.observacao}` : ''}`;

@@ -189,7 +189,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 drawCell('Constatações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
                 yPos += rowHeight;
 
-                const constatacoes = respostas.filter(r => r.resposta !== 'NA');
+                const constatacoes = respostas.filter(r => r.resposta === 'NAO');
                 constatacoes.forEach((resp, i) => {
                     const texto = `${resp.numero_constatacao || `C${i + 1}`}. ${resp.pergunta}${resp.observacao ? ` - ${resp.observacao}` : ''}`;
                     const lines = pdf.splitTextToSize(texto, tableWidth - 4);

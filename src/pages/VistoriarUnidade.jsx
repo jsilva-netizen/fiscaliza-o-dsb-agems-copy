@@ -216,7 +216,7 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                 await base44.entities.RespostaChecklist.create(payload);
             }
 
-            // Se NÃO e gera NC
+            // Apenas cria NC se resposta for NÃO (SIM não gera constatação nem NC)
             if (data.resposta === 'NAO' && item.gera_nc) {
                 const ncExistente = ncsExistentes.find(nc => nc.resposta_checklist_id === itemId);
                 if (!ncExistente) {
@@ -344,7 +344,7 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
 
             await base44.entities.UnidadeFiscalizada.update(unidadeId, {
                 status: 'finalizada',
-                total_constatacoes: Object.values(respostas).filter(r => r.resposta !== 'NA').length,
+                total_constatacoes: Object.values(respostas).filter(r => r.resposta === 'NAO').length,
                 total_ncs: ncsExistentes.length
             });
         },
