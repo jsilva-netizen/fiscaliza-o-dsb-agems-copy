@@ -118,17 +118,23 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
             pdf.text('RESUMO EXECUTIVO', margin + 2, yPos + 5.5);
             yPos += 10;
 
+            // Calcular totais reais
+            const totalConstatacoes = todasRespostas.flat().filter(r => r.resposta === 'NAO').length;
+            const totalNCs = todasNcs.flat().length;
+            const totalDeterminacoes = todasDeterminacoes.flat().length;
+            const totalRecomendacoes = todasRecomendacoes.flat().length;
+
             pdf.setFontSize(10);
             pdf.setFont('helvetica', 'normal');
             pdf.text(`• Unidades Vistoriadas: ${unidades.length}`, margin + 2, yPos);
             yPos += 6;
-            pdf.text(`• Total de Constatações: ${fiscalizacao.total_conformidades || 0}`, margin + 2, yPos);
+            pdf.text(`• Total de Constatações: ${totalConstatacoes}`, margin + 2, yPos);
             yPos += 6;
-            pdf.text(`• Total de Não Conformidades: ${fiscalizacao.total_nao_conformidades || 0}`, margin + 2, yPos);
+            pdf.text(`• Total de Não Conformidades: ${totalNCs}`, margin + 2, yPos);
             yPos += 6;
-            pdf.text(`• Total de Recomendações: ${fiscalizacao.total_recomendacoes || 0}`, margin + 2, yPos);
+            pdf.text(`• Total de Recomendações: ${totalRecomendacoes}`, margin + 2, yPos);
             yPos += 6;
-            pdf.text(`• Total de Determinações: ${fiscalizacao.total_determinacoes || 0}`, margin + 2, yPos);
+            pdf.text(`• Total de Determinações: ${totalDeterminacoes}`, margin + 2, yPos);
 
             const tableWidth = pageWidth - 2 * margin;
             const rowHeight = 7;

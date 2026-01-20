@@ -188,9 +188,9 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
             const item = Array.isArray(itensChecklist) ? itensChecklist.find(i => i.id === itemId) : null;
             if (!item) return;
             const existente = respostasExistentes.find(r => r.item_checklist_id === itemId);
-            
-            // Determinar o número da constatação
-            const constatacaoNum = respostasExistentes.length + 1;
+
+            // Determinar o número da constatação (conta apenas respostas NAO)
+            const constatacaoNum = respostasExistentes.filter(r => r.resposta === 'NAO').length + 1;
             
             // Determinar o texto da constatação baseado na resposta
             let textoConstatacao = '';
@@ -254,8 +254,11 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
 
                     // Criar NC normal
                     const ncNum = ncsExistentes.length + 1;
+                    // Verifica se o texto_nc já menciona o artigo para evitar duplicação
                     const textoNC = item.texto_nc 
-                        ? `A Constatação C${constatacaoNum} não cumpre o disposto no ${item.artigo_portaria || 'regulamento aplicável'}. ${item.texto_nc}`
+                        ? (item.texto_nc.toLowerCase().includes('constatação') || item.texto_nc.toLowerCase().includes('art.'))
+                            ? item.texto_nc.replace(/C\d+/g, `C${constatacaoNum}`) // Substitui numeração se já existe
+                            : `A Constatação C${constatacaoNum} não cumpre o disposto no ${item.artigo_portaria || 'regulamento aplicável'}. ${item.texto_nc}`
                         : `A Constatação C${constatacaoNum} não cumpre o disposto no ${item.artigo_portaria || 'regulamento aplicável'}.`;
 
                     const nc = await base44.entities.NaoConformidade.create({
@@ -289,8 +292,11 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
 
     const aplicarSugestaoIAMutation = useMutation({
             mutationFn: async ({ itemId, sugestao, constatacaoNum }) => {
-                const ncNum = ncsExistentes.length + 1;
-                const textoNC = `A Constatação C${constatacaoNum} não cumpre o disposto no ${sugestao.artigo_portaria}. ${sugestao.texto_nc}`;
+                    const ncNum = ncsExistentes.length + 1;
+                    // Verifica se o texto da IA já menciona o artigo
+                    const textoNC = sugestao.texto_nc.toLowerCase().includes('constatação') || sugestao.texto_nc.toLowerCase().includes('art.')
+                        ? sugestao.texto_nc.replace(/C\d+/g, `C${constatacaoNum}`)
+                        : `A Constatação C${constatacaoNum} não cumpre o disposto no ${sugestao.artigo_portaria}. ${sugestao.texto_nc}`;
                 const nc = await base44.entities.NaoConformidade.create({
                     unidade_fiscalizada_id: unidadeId,
                     resposta_checklist_id: itemId,
