@@ -2,33 +2,25 @@ import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Check, X, Minus, AlertTriangle, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Check, X, Minus, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 export default function ChecklistItem({ 
     item, 
     resposta, 
     onResponder,
-    onResponderComIA,
-    numero,
-    expanded,
-    onToggleExpand,
-    loadingIA 
+    numero
 }) {
     const [observacao, setObservacao] = React.useState(resposta?.observacao || '');
     const [showObs, setShowObs] = React.useState(false);
 
-    const handleResposta = (valor, usarIA = false) => {
+    const handleResposta = (valor) => {
         const data = {
             resposta: valor,
             observacao: observacao
         };
         
-        if (usarIA) {
-            onResponderComIA(data);
-        } else {
-            onResponder(data);
-        }
+        onResponder(data);
     };
 
     const handleObservacao = (texto) => {
@@ -109,26 +101,6 @@ export default function ChecklistItem({
                             {item.artigo_portaria && (
                                 <p className="text-red-600">Art. {item.artigo_portaria}</p>
                             )}
-                        </div>
-                    )}
-
-                    {/* Botão IA para NC */}
-                    {!resposta && item.gera_nc && (
-                        <div className="mt-2 pt-2 border-t">
-                            <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                className="w-full text-purple-600 border-purple-300 hover:bg-purple-50"
-                                onClick={() => handleResposta('NAO', true)}
-                                disabled={loadingIA}
-                            >
-                                <Sparkles className="h-4 w-4 mr-2" />
-                                {loadingIA ? 'Analisando com IA...' : 'Responder NÃO com Sugestão IA'}
-                            </Button>
-                            <p className="text-xs text-gray-500 mt-1 text-center">
-                                A IA sugerirá artigos, NC e determinações
-                            </p>
                         </div>
                     )}
 
