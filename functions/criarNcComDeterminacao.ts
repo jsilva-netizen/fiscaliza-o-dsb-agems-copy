@@ -49,13 +49,13 @@ Deno.serve(async (req) => {
             descricao: texto_nc
         });
 
-        // 5. Calcular data_limite
+        // 4. Calcular data_limite
         const hoje = new Date();
         const data_limite = new Date(hoje);
         data_limite.setDate(data_limite.getDate() + prazo_dias);
         const data_limite_str = data_limite.toISOString().split('T')[0];
 
-        // 6. Criar Determinação vinculada à NC
+        // 5. Criar Determinação vinculada à NC
         const det = await base44.entities.Determinacao.create({
             unidade_fiscalizada_id,
             nao_conformidade_id: nc.id,
