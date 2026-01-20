@@ -5,6 +5,7 @@ import { Camera, Trash2, MapPin, Clock, X, Image } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { base44 } from '@/api/base44Client';
+import OptimizedImage from './OptimizedImage';
 
 export default function PhotoGrid({ 
     fotos = [], 
@@ -112,7 +113,7 @@ export default function PhotoGrid({
                             key={index} 
                             className="relative group rounded-lg overflow-hidden border"
                         >
-                            <img 
+                            <OptimizedImage 
                                 src={foto.url} 
                                 alt={`Foto ${index + 1}`}
                                 className="w-full h-32 object-cover cursor-pointer"
@@ -161,7 +162,7 @@ export default function PhotoGrid({
                         </Button>
                     </div>
                     <div className="flex-1 flex items-center justify-center p-4">
-                        <img 
+                        <OptimizedImage 
                             src={selectedFoto.url} 
                             alt="Foto ampliada" 
                             className="max-w-full max-h-full object-contain"

@@ -30,7 +30,9 @@ export default function Fiscalizacoes() {
 
     const { data: fiscalizacoes = [], isLoading } = useQuery({
         queryKey: ['fiscalizacoes'],
-        queryFn: () => base44.entities.Fiscalizacao.list('-created_date', 100)
+        queryFn: () => base44.entities.Fiscalizacao.list('-created_date', 100),
+        staleTime: 60000,
+        gcTime: 300000
     });
 
     const deletarFiscalizacaoMutation = useMutation({

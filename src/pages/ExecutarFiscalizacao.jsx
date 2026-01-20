@@ -23,18 +23,24 @@ export default function ExecutarFiscalizacao() {
     const { data: fiscalizacao, isLoading: loadingFiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', fiscalizacaoId],
         queryFn: () => base44.entities.Fiscalizacao.filter({ id: fiscalizacaoId }).then(r => r[0]),
-        enabled: !!fiscalizacaoId
+        enabled: !!fiscalizacaoId,
+        staleTime: 60000,
+        gcTime: 300000
     });
 
     const { data: unidades = [], isLoading: loadingUnidades } = useQuery({
         queryKey: ['unidades-fiscalizacao', fiscalizacaoId],
         queryFn: () => base44.entities.UnidadeFiscalizada.filter({ fiscalizacao_id: fiscalizacaoId }, '-created_date', 50),
-        enabled: !!fiscalizacaoId
+        enabled: !!fiscalizacaoId,
+        staleTime: 30000,
+        gcTime: 300000
     });
 
     const { data: tipos = [] } = useQuery({
         queryKey: ['tipos-unidade'],
-        queryFn: () => base44.entities.TipoUnidade.list('nome', 100)
+        queryFn: () => base44.entities.TipoUnidade.list('nome', 100),
+        staleTime: 3600000,
+        gcTime: 86400000
     });
 
     const finalizarMutation = useMutation({

@@ -20,6 +20,7 @@ import RelatorioUnidade from '@/components/fiscalizacao/RelatorioUnidade';
 import OfflineIndicator from '@/components/OfflineIndicator';
 import useOfflineCache from '@/components/offline/useOfflineCache';
 import { addPendingOperation } from '@/components/offline/offlineStorage';
+import { preloadImages } from '@/components/offline/preloadImages';
 
 // Wrapper para calcular offset das figuras
 function RelatorioUnidadeWrapper({ unidade, ...props }) {
@@ -102,7 +103,9 @@ export default function VistoriarUnidade() {
             const result = await base44.entities.RespostaChecklist.filter({ unidade_fiscalizada_id: unidadeId }, 'created_date', 200);
             return Array.isArray(result) ? result : [];
         },
-        enabled: !!unidadeId
+        enabled: !!unidadeId,
+        staleTime: 30000,
+        gcTime: 300000
     });
 
     const { data: ncsExistentes = [] } = useQuery({
@@ -111,7 +114,9 @@ export default function VistoriarUnidade() {
             const result = await base44.entities.NaoConformidade.filter({ unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
-        enabled: !!unidadeId
+        enabled: !!unidadeId,
+        staleTime: 30000,
+        gcTime: 300000
     });
 
     // Corrigir NCs antigas que não têm referência à constatação
@@ -155,7 +160,9 @@ export default function VistoriarUnidade() {
             const result = await base44.entities.Determinacao.filter({ unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
-        enabled: !!unidadeId
+        enabled: !!unidadeId,
+        staleTime: 30000,
+        gcTime: 300000
     });
 
     const { data: recomendacoesExistentes = [] } = useQuery({
@@ -164,7 +171,9 @@ export default function VistoriarUnidade() {
             const result = await base44.entities.Recomendacao.filter({ unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
-        enabled: !!unidadeId
+        enabled: !!unidadeId,
+        staleTime: 30000,
+        gcTime: 300000
     });
 
     // Load existing data - sincronizar apenas na inicialização
@@ -174,6 +183,12 @@ export default function VistoriarUnidade() {
                 typeof foto === 'string' ? { url: foto } : foto
             );
             setFotos(fotosCarregadas);
+            
+            // Pre-carregar imagens em cache
+            const urls = fotosCarregadas.map(f => f.url).filter(Boolean);
+            if (urls.length > 0) {
+                setTimeout(() => preloadImages(urls), 500);
+            }
         }
     }, [unidade?.fotos_unidade]);
 
@@ -187,6 +202,22 @@ export default function VistoriarUnidade() {
             setRespostas(respostasMap);
         }
     }, [respostasExistentes.length]);
+
+    // Pre-carregar imagens das NCs
+    useEffect(() => {
+        const ncUrls = [];
+        ncsExistentes.forEach(nc => {
+            if (nc.fotos) {
+                nc.fotos.forEach(foto => {
+                    const url = typeof foto === 'string' ? foto : foto.url;
+                    if (url) ncUrls.push(url);
+                });
+            }
+        });
+        if (ncUrls.length > 0) {
+            setTimeout(() => preloadImages(ncUrls), 1000);
+        }
+    }, [ncsExistentes.length]);
 
 
 
