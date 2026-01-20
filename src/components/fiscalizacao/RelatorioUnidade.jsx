@@ -96,13 +96,19 @@ export default function RelatorioUnidade({
                 const numB = parseInt(b.numero_constatacao?.replace('C', '') || '999');
                 return numA - numB;
             });
-            
+
             constatacoes.forEach((resp, idx) => {
                 const numConst = resp.numero_constatacao || `C${idx + 1}`;
                 const textoConstatacao = resp.pergunta;
                 const texto = `${textoConstatacao}${resp.observacao ? ` Observação: ${resp.observacao}` : ''}`;
                 const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
                 const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
+
+                // Verificar se precisa de nova página
+                if (yPos + cellHeight > pageHeight - margin) {
+                    pdf.addPage();
+                    yPos = margin;
+                }
 
                 pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
                 pdf.setFont('helvetica', 'bold');
@@ -121,6 +127,12 @@ export default function RelatorioUnidade({
                     return numA - numB;
                 });
 
+                // Verificar se precisa de nova página antes do header
+                if (yPos + rowHeight > pageHeight - margin) {
+                    pdf.addPage();
+                    yPos = margin;
+                }
+
                 drawCell('Não Conformidades', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
                 yPos += rowHeight;
 
@@ -137,6 +149,12 @@ export default function RelatorioUnidade({
 
                     const restLines = pdf.splitTextToSize(textoNC, tableWidth - 15);
                     const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
+
+                    // Verificar se precisa de nova página
+                    if (yPos + cellHeight > pageHeight - margin) {
+                        pdf.addPage();
+                        yPos = margin;
+                    }
 
                     pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
                     pdf.setFont('helvetica', 'bold');
@@ -155,13 +173,25 @@ export default function RelatorioUnidade({
                     const numB = parseInt(b.numero_recomendacao?.replace('R', '') || '999');
                     return numA - numB;
                 });
-                
+
+                // Verificar se precisa de nova página antes do header
+                if (yPos + rowHeight > pageHeight - margin) {
+                    pdf.addPage();
+                    yPos = margin;
+                }
+
                 drawCell('Recomendações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
                 yPos += rowHeight;
 
                 recsSorted.forEach((rec) => {
                     const restLines = pdf.splitTextToSize(rec.descricao, tableWidth - 15);
                     const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
+
+                    // Verificar se precisa de nova página
+                    if (yPos + cellHeight > pageHeight - margin) {
+                        pdf.addPage();
+                        yPos = margin;
+                    }
 
                     pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
                     pdf.setFont('helvetica', 'bold');
@@ -180,7 +210,13 @@ export default function RelatorioUnidade({
                     const numB = parseInt(b.numero_determinacao?.replace('D', '') || '999');
                     return numA - numB;
                 });
-                
+
+                // Verificar se precisa de nova página antes do header
+                if (yPos + rowHeight > pageHeight - margin) {
+                    pdf.addPage();
+                    yPos = margin;
+                }
+
                 drawCell('Determinações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
                 yPos += rowHeight;
 
@@ -188,6 +224,12 @@ export default function RelatorioUnidade({
                     const texto = `${det.descricao} Prazo: ${det.prazo_dias} dias.`;
                     const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
                     const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
+
+                    // Verificar se precisa de nova página
+                    if (yPos + cellHeight > pageHeight - margin) {
+                        pdf.addPage();
+                        yPos = margin;
+                    }
 
                     pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
                     pdf.setFont('helvetica', 'bold');
@@ -201,6 +243,12 @@ export default function RelatorioUnidade({
 
             // Registros Fotográficos
             if (fotos.length > 0) {
+                // Verificar se precisa de nova página antes do header
+                if (yPos + rowHeight > pageHeight - margin) {
+                    pdf.addPage();
+                    yPos = margin;
+                }
+
                 drawCell('Registros Fotográficos', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
                 yPos += rowHeight;
 
