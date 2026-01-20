@@ -236,30 +236,45 @@ export default function VistoriarUnidade() {
 
     const adicionarRecomendacaoMutation = useMutation({
         mutationFn: async (texto) => {
-            // Buscar TODAS as unidades da fiscalização
-            const todasUnidades = await base44.entities.UnidadeFiscalizada.filter(
-                { fiscalizacao_id: unidade.fiscalizacao_id },
-                'created_date',
-                500
-            );
-            const idsUnidades = todasUnidades.map(u => u.id);
+            let proximoNumero = 1;
             
-            // Buscar TODAS as recomendações de TODA a fiscalização
-            const todasRec = await base44.entities.Recomendacao.list('created_date', 1000);
-            const recsDaFiscalizacao = todasRec.filter(r => idsUnidades.includes(r.unidade_fiscalizada_id));
-            const numerosRec = recsDaFiscalizacao
-                .map(r => parseInt(r.numero_recomendacao?.replace('R', '') || '0'))
-                .filter(n => !isNaN(n));
-            const num = numerosRec.length > 0 ? Math.max(...numerosRec) + 1 : 1;
+            // Usar cache se disponível, senão buscar
+            if (recomendacoesCache !== null) {
+                const numerosRec = recomendacoesCache
+                    .map(r => parseInt(r.numero_recomendacao?.replace('R', '') || '0'))
+                    .filter(n => !isNaN(n));
+                proximoNumero = numerosRec.length > 0 ? Math.max(...numerosRec) + 1 : 1;
+            } else {
+                // Primeira vez: buscar do banco
+                const todasUnidades = await base44.entities.UnidadeFiscalizada.filter(
+                    { fiscalizacao_id: unidade.fiscalizacao_id },
+                    'created_date',
+                    500
+                );
+                const idsUnidades = todasUnidades.map(u => u.id);
+                
+                const todasRec = await base44.entities.Recomendacao.list('created_date', 1000);
+                const recsDaFiscalizacao = todasRec.filter(r => idsUnidades.includes(r.unidade_fiscalizada_id));
+                
+                // Cachear resultado
+                setRecomendacoesCache(recsDaFiscalizacao);
+                
+                const numerosRec = recsDaFiscalizacao
+                    .map(r => parseInt(r.numero_recomendacao?.replace('R', '') || '0'))
+                    .filter(n => !isNaN(n));
+                proximoNumero = numerosRec.length > 0 ? Math.max(...numerosRec) + 1 : 1;
+            }
+            
             await base44.entities.Recomendacao.create({
                 unidade_fiscalizada_id: unidadeId,
-                numero_recomendacao: `R${num}`,
+                numero_recomendacao: `R${proximoNumero}`,
                 descricao: texto,
                 origem: 'manual'
             });
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
+            setRecomendacoesCache(null); // Limpar cache para recarregar na próxima
             setNovaRecomendacao('');
             setShowAddRecomendacao(false);
         }
