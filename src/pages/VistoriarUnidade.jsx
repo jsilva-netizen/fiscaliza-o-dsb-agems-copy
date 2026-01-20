@@ -636,6 +636,5 @@ export default function VistoriarUnidade() {
 
 
             </div>
-        </SyncManager>
     );
 }
