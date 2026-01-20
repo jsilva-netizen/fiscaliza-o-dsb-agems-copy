@@ -315,16 +315,21 @@ export default function VistoriarUnidade() {
 
             // Apenas cria NC se resposta for NÃO (SIM não gera constatação nem NC)
             if (data.resposta === 'NAO' && item.gera_nc) {
-                // Buscar NC pelo ID correto da resposta
-                const ncExistente = ncsExistentes.find(nc => nc.resposta_checklist_id === respostaId);
+                // Buscar NC existente pelo ID da resposta
+                const todasNCs = await base44.entities.NaoConformidade.filter({ 
+                    unidade_fiscalizada_id: unidadeId 
+                });
+                const ncExistente = todasNCs.find(nc => nc.resposta_checklist_id === respostaId);
+
                 if (!ncExistente) {
-                    // Buscar TODAS as NCs de TODA a fiscalização
-                    const todasNCs = await base44.entities.NaoConformidade.list('created_date', 1000);
-                    const ncsDaFiscalizacao = todasNCs.filter(nc => idsUnidades.includes(nc.unidade_fiscalizada_id));
+                    // Buscar TODAS as NCs de TODA a fiscalização para numeração correta
+                    const todasNcsFiscalizacao = await base44.entities.NaoConformidade.list('created_date', 1000);
+                    const ncsDaFiscalizacao = todasNcsFiscalizacao.filter(nc => idsUnidades.includes(nc.unidade_fiscalizada_id));
                     const numerosNC = ncsDaFiscalizacao
                         .map(nc => parseInt(nc.numero_nc?.replace('NC', '') || '0'))
                         .filter(n => !isNaN(n));
                     const ncNum = numerosNC.length > 0 ? Math.max(...numerosNC) + 1 : 1;
+
                     // Construir texto da NC sempre incluindo referência à constatação
                     const textoNC = item.texto_nc 
                         ? `A Constatação C${constatacaoNum} não cumpre o disposto no ${item.artigo_portaria || 'regulamento aplicável'}. ${item.texto_nc}`
@@ -341,8 +346,8 @@ export default function VistoriarUnidade() {
 
                     if (item.texto_determinacao) {
                         // Buscar TODAS as determinações de TODA a fiscalização
-                        const todasDet = await base44.entities.Determinacao.list('created_date', 1000);
-                        const detsDaFiscalizacao = todasDet.filter(d => idsUnidades.includes(d.unidade_fiscalizada_id));
+                        const todasDetFiscalizacao = await base44.entities.Determinacao.list('created_date', 1000);
+                        const detsDaFiscalizacao = todasDetFiscalizacao.filter(d => idsUnidades.includes(d.unidade_fiscalizada_id));
                         const numerosDet = detsDaFiscalizacao
                             .map(d => parseInt(d.numero_determinacao?.replace('D', '') || '0'))
                             .filter(n => !isNaN(n));
@@ -358,14 +363,34 @@ export default function VistoriarUnidade() {
                             status: 'pendente'
                         });
                     }
+
+                    // Invalidar queries imediatamente após criar NC/D
+                    queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+                    queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+                }
+            } else if (data.resposta !== 'NAO') {
+                // Se mudou de NAO para SIM/NA, remover NC se existir
+                const todasNCs = await base44.entities.NaoConformidade.filter({ 
+                    unidade_fiscalizada_id: unidadeId 
+                });
+                const ncExistente = todasNCs.find(nc => nc.resposta_checklist_id === respostaId);
+
+                if (ncExistente) {
+                    // Remover determinações associadas
+                    const detsAssociadas = await base44.entities.Determinacao.filter({
+                        nao_conformidade_id: ncExistente.id
+                    });
+                    for (const det of detsAssociadas) {
+                        await base44.entities.Determinacao.delete(det.id);
+                    }
+                    // Remover NC
+                    await base44.entities.NaoConformidade.delete(ncExistente.id);
+
+                    // Invalidar queries
+                    queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+                    queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
                 }
             }
-
-            // Invalidar queries em background sem refetch imediato
-            setTimeout(() => {
-                queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
-                queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
-            }, 100);
         }
     });
 
