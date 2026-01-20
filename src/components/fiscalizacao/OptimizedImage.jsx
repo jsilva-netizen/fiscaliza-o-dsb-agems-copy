@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCachedImage, cacheImage } from '@/components/offline/offlineStorage.js';
+import { getCachedImage, cacheImage } from '@/components/offline/offlineStorage';
 
 export default function OptimizedImage({ src, alt, className, ...props }) {
     const [imgSrc, setImgSrc] = useState(null);

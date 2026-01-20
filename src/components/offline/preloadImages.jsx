@@ -1,5 +1,5 @@
 import React from 'react';
-import { cacheImage, getCachedImage } from './offlineStorage.js';
+import { cacheImage, getCachedImage } from './offlineStorage';
 
 // Pre-carregar imagens em background
 export const preloadImages = async (urls) => {
