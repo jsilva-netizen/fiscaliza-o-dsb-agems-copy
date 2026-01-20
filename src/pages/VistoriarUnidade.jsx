@@ -59,25 +59,37 @@ export default function VistoriarUnidade() {
 
     const { data: respostasExistentes = [] } = useQuery({
         queryKey: ['respostas', unidadeId],
-        queryFn: () => base44.entities.RespostaChecklist.filter({ unidade_fiscalizada_id: unidadeId }, 'created_date', 200),
+        queryFn: async () => {
+            const result = await base44.entities.RespostaChecklist.filter({ unidade_fiscalizada_id: unidadeId }, 'created_date', 200);
+            return Array.isArray(result) ? result : [];
+        },
         enabled: !!unidadeId
     });
 
     const { data: ncsExistentes = [] } = useQuery({
         queryKey: ['ncs', unidadeId],
-        queryFn: () => base44.entities.NaoConformidade.filter({ unidade_fiscalizada_id: unidadeId }),
+        queryFn: async () => {
+            const result = await base44.entities.NaoConformidade.filter({ unidade_fiscalizada_id: unidadeId });
+            return Array.isArray(result) ? result : [];
+        },
         enabled: !!unidadeId
     });
 
     const { data: determinacoesExistentes = [] } = useQuery({
         queryKey: ['determinacoes', unidadeId],
-        queryFn: () => base44.entities.Determinacao.filter({ unidade_fiscalizada_id: unidadeId }),
+        queryFn: async () => {
+            const result = await base44.entities.Determinacao.filter({ unidade_fiscalizada_id: unidadeId });
+            return Array.isArray(result) ? result : [];
+        },
         enabled: !!unidadeId
     });
 
     const { data: recomendacoesExistentes = [] } = useQuery({
         queryKey: ['recomendacoes', unidadeId],
-        queryFn: () => base44.entities.Recomendacao.filter({ unidade_fiscalizada_id: unidadeId }),
+        queryFn: async () => {
+            const result = await base44.entities.Recomendacao.filter({ unidade_fiscalizada_id: unidadeId });
+            return Array.isArray(result) ? result : [];
+        },
         enabled: !!unidadeId
     });
 
@@ -278,7 +290,7 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
             });
 
             // Adicionar recomendações se houver
-            if (sugestao.recomendacoes && sugestao.recomendacoes.length > 0) {
+            if (Array.isArray(sugestao.recomendacoes) && sugestao.recomendacoes.length > 0) {
                 for (const rec of sugestao.recomendacoes) {
                     const recNum = recomendacoesExistentes.length + 1;
                     await base44.entities.Recomendacao.create({
@@ -686,7 +698,7 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                                 <p className="text-xs text-gray-500 mt-2">Prazo: {iaSugestao.prazo_dias} dias</p>
                             </div>
 
-                            {iaSugestao.recomendacoes && iaSugestao.recomendacoes.length > 0 && (
+                            {Array.isArray(iaSugestao.recomendacoes) && iaSugestao.recomendacoes.length > 0 && (
                                 <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                                     <p className="text-xs text-green-600 font-medium mb-2">Recomendações Adicionais</p>
                                     <ul className="space-y-2">
