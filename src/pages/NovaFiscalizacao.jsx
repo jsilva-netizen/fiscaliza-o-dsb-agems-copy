@@ -241,6 +241,7 @@ export default function NovaFiscalizacao() {
                     </Button>
                 </form>
             </div>
+            </div>
         </SyncManager>
     );
 }

@@ -289,6 +289,7 @@ export default function AdicionarUnidade() {
                     </Button>
                 </form>
             </div>
+            </div>
         </SyncManager>
     );
 }
