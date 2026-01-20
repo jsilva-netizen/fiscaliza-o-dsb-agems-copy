@@ -285,9 +285,9 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                     // Verifica se o texto_nc já menciona o artigo para evitar duplicação
                     const textoNC = item.texto_nc 
                         ? (item.texto_nc.toLowerCase().includes('constatação') || item.texto_nc.toLowerCase().includes('art.'))
-                            ? item.texto_nc.replace(/C\d+/g, `C${constatacaoNum}`) // Substitui numeração se já existe
-                            : `A Constatação C${constatacaoNum} não cumpre o disposto no ${item.artigo_portaria || 'regulamento aplicável'}. ${item.texto_nc}`
-                        : `A Constatação C${constatacaoNum} não cumpre o disposto no ${item.artigo_portaria || 'regulamento aplicável'}.`;
+                            ? item.texto_nc.replace(/C\d+/g, constatacaoNum.toString()).replace(/Constatação\s+\d+/g, `Constatação ${constatacaoNum}`)
+                            : `A Constatação ${constatacaoNum} não cumpre o disposto no ${item.artigo_portaria || 'regulamento aplicável'}. ${item.texto_nc}`
+                        : `A Constatação ${constatacaoNum} não cumpre o disposto no ${item.artigo_portaria || 'regulamento aplicável'}.`;
 
                     const nc = await base44.entities.NaoConformidade.create({
                         unidade_fiscalizada_id: unidadeId,
@@ -343,8 +343,8 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                 const ncNum = numerosNC.length > 0 ? Math.max(...numerosNC) + 1 : 1;
                     // Verifica se o texto da IA já menciona o artigo
                     const textoNC = sugestao.texto_nc.toLowerCase().includes('constatação') || sugestao.texto_nc.toLowerCase().includes('art.')
-                        ? sugestao.texto_nc.replace(/C\d+/g, `C${constatacaoNum}`)
-                        : `A Constatação C${constatacaoNum} não cumpre o disposto no ${sugestao.artigo_portaria}. ${sugestao.texto_nc}`;
+                        ? sugestao.texto_nc.replace(/C\d+/g, constatacaoNum.toString()).replace(/Constatação\s+\d+/g, `Constatação ${constatacaoNum}`)
+                        : `A Constatação ${constatacaoNum} não cumpre o disposto no ${sugestao.artigo_portaria}. ${sugestao.texto_nc}`;
                 const nc = await base44.entities.NaoConformidade.create({
                     unidade_fiscalizada_id: unidadeId,
                     resposta_checklist_id: itemId,

@@ -230,12 +230,12 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                         const numB = parseInt(b.numero_nc?.replace('NC', '') || '999');
                         return numA - numB;
                     });
-                    
+
                     if (yPos + rowHeight > pageHeight - margin) {
                         pdf.addPage();
                         yPos = margin;
                     }
-                    drawCell('Não Conformidade', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                    drawCell('Não Conformidades', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
                     yPos += rowHeight;
 
                     ncsSorted.forEach((nc) => {
