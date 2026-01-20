@@ -348,13 +348,6 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                 throw new Error('Mínimo de 2 fotos da unidade obrigatórias.');
             }
 
-            // Verificar fotos de NCs
-            for (const nc of ncsExistentes) {
-                if (!nc.fotos || nc.fotos.length === 0) {
-                    throw new Error(`NC ${nc.numero_nc} precisa de pelo menos 1 foto.`);
-                }
-            }
-
             await base44.entities.UnidadeFiscalizada.update(unidadeId, {
                 status: 'finalizada',
                 total_constatacoes: Object.values(respostas).filter(r => r.resposta === 'NAO').length,
@@ -545,7 +538,7 @@ Seja técnico, específico e baseado na Portaria AGEMS 233/2022 e no padrão de 
                                                 fotos={(nc.fotos || []).map((f, i) => 
                                                     typeof f === 'string' ? { url: f } : f
                                                 )}
-                                                minFotos={1}
+                                                minFotos={0}
                                                 fiscalizacaoId={unidade?.fiscalizacao_id}
                                                 unidadeId={unidadeId}
                                                 onAddFoto={(fotoData) => {
