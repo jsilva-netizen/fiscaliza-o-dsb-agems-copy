@@ -124,7 +124,17 @@ export default function RelatorioUnidade({
                 yPos += rowHeight;
 
                 ncsSorted.forEach((nc) => {
-                    const restLines = pdf.splitTextToSize(nc.descricao, tableWidth - 15);
+                    // Buscar a constatação relacionada
+                    const respostaRelacionada = respostas.find(r => r.item_checklist_id === nc.resposta_checklist_id);
+                    const numeroConstatacao = respostaRelacionada?.numero_constatacao || '';
+
+                    // Adicionar referência à constatação se não estiver no texto
+                    let textoNC = nc.descricao;
+                    if (numeroConstatacao && !textoNC.toLowerCase().includes('constatação')) {
+                        textoNC = `A Constatação ${numeroConstatacao} não cumpre o disposto no ${nc.artigo_portaria || 'regulamento aplicável'}. ${textoNC}`;
+                    }
+
+                    const restLines = pdf.splitTextToSize(textoNC, tableWidth - 15);
                     const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
 
                     pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
