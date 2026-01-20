@@ -72,6 +72,35 @@ export default function VistoriarUnidade() {
         enabled: !!unidadeId
     });
 
+    // Corrigir NCs antigas que não têm referência à constatação
+    useEffect(() => {
+        const corrigirNCs = async () => {
+            if (!ncsExistentes.length || !respostasExistentes.length) return;
+            
+            for (const nc of ncsExistentes) {
+                // Se a NC não contém "Constatação" no texto, atualizar
+                if (!nc.descricao.includes('Constatação')) {
+                    const respostaRelacionada = respostasExistentes.find(
+                        r => r.item_checklist_id === nc.resposta_checklist_id
+                    );
+                    
+                    if (respostaRelacionada?.numero_constatacao) {
+                        const textoCorrigido = `A Constatação ${respostaRelacionada.numero_constatacao} não cumpre o disposto no ${nc.artigo_portaria || 'regulamento aplicável'}. ${nc.descricao}`;
+                        
+                        await base44.entities.NaoConformidade.update(nc.id, {
+                            descricao: textoCorrigido
+                        });
+                    }
+                }
+            }
+            
+            // Recarregar as NCs após correção
+            queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+        };
+        
+        corrigirNCs();
+    }, [ncsExistentes.length, respostasExistentes.length]);
+
     const { data: determinacoesExistentes = [] } = useQuery({
         queryKey: ['determinacoes', unidadeId],
         queryFn: async () => {
