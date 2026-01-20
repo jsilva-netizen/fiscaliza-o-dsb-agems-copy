@@ -205,8 +205,8 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                     const numConst = resp.numero_constatacao || `C${i + 1}`;
                     const textoConstatacao = resp.pergunta;
                     const texto = `${textoConstatacao}${resp.observacao ? ` Observação: ${resp.observacao}` : ''}`;
-                    const lines = pdf.splitTextToSize(texto, tableWidth - 4);
-                    const cellHeight = Math.max(rowHeight, lines.length * 4 + 2);
+                    const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
+                    const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
 
                     // Check page break
                     if (yPos + cellHeight > pageHeight - margin) {
@@ -218,7 +218,6 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                     pdf.setFont('helvetica', 'bold');
                     pdf.text(numConst + '.', margin + 2, yPos + 5);
                     pdf.setFont('helvetica', 'normal');
-                    const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
                     pdf.text(restLines, margin + 12, yPos + 5);
 
                     yPos += cellHeight;
@@ -240,8 +239,8 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                     yPos += rowHeight;
 
                     ncsSorted.forEach((nc) => {
-                        const lines = pdf.splitTextToSize(nc.descricao, tableWidth - 4);
-                        const cellHeight = Math.max(rowHeight, lines.length * 4 + 2);
+                        const restLines = pdf.splitTextToSize(nc.descricao, tableWidth - 15);
+                        const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
 
                         if (yPos + cellHeight > pageHeight - margin) {
                             pdf.addPage();
@@ -252,7 +251,6 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                         pdf.setFont('helvetica', 'bold');
                         pdf.text(nc.numero_nc + '.', margin + 2, yPos + 5);
                         pdf.setFont('helvetica', 'normal');
-                        const restLines = pdf.splitTextToSize(nc.descricao, tableWidth - 15);
                         pdf.text(restLines, margin + 12, yPos + 5);
 
                         yPos += cellHeight;
@@ -275,21 +273,20 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                     yPos += rowHeight;
 
                     recsSorted.forEach((rec) => {
-                        const lines = pdf.splitTextToSize(rec.descricao, tableWidth - 4);
-                        const cellHeight = Math.max(rowHeight, lines.length * 4 + 2);
-                        
+                        const restLines = pdf.splitTextToSize(rec.descricao, tableWidth - 15);
+                        const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
+
                         if (yPos + cellHeight > pageHeight - margin) {
                             pdf.addPage();
                             yPos = margin;
                         }
-                        
+
                         pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
                         pdf.setFont('helvetica', 'bold');
                         pdf.text(rec.numero_recomendacao + '.', margin + 2, yPos + 5);
                         pdf.setFont('helvetica', 'normal');
-                        const restLines = pdf.splitTextToSize(rec.descricao, tableWidth - 15);
                         pdf.text(restLines, margin + 12, yPos + 5);
-                        
+
                         yPos += cellHeight;
                     });
                 }
@@ -311,8 +308,8 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
 
                     detsSorted.forEach((det) => {
                         const texto = `${det.descricao} Prazo: ${det.prazo_dias} dias.`;
-                        const lines = pdf.splitTextToSize(texto, tableWidth - 4);
-                        const cellHeight = Math.max(rowHeight, lines.length * 4 + 2);
+                        const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
+                        const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
 
                         if (yPos + cellHeight > pageHeight - margin) {
                             pdf.addPage();
@@ -323,7 +320,6 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                         pdf.setFont('helvetica', 'bold');
                         pdf.text(det.numero_determinacao + '.', margin + 2, yPos + 5);
                         pdf.setFont('helvetica', 'normal');
-                        const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
                         pdf.text(restLines, margin + 12, yPos + 5);
 
                         yPos += cellHeight;
