@@ -3,9 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import OfflineIndicator from '@/components/OfflineIndicator';
-import SyncManager from '@/components/offline/SyncManager';
-import { addPendingOperation } from '@/components/offline/offlineStorage';
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -82,18 +80,6 @@ export default function NovaFiscalizacao() {
                 status: 'em_andamento'
             };
 
-            // Suporte offline
-            if (!navigator.onLine) {
-                await addPendingOperation({
-                    operation: 'create',
-                    entity: 'Fiscalizacao',
-                    data: fiscalizacaoData,
-                    priority: 10
-                });
-                // Retorna ID temporário para navegação
-                return { id: 'temp_' + Date.now() };
-            }
-
             return base44.entities.Fiscalizacao.create(fiscalizacaoData);
         },
         onSuccess: (result) => {
@@ -113,9 +99,7 @@ export default function NovaFiscalizacao() {
     const municipioSelecionado = municipios.find(m => m.id === formData.municipio_id);
 
     return (
-        <SyncManager>
-            <OfflineIndicator />
-            <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50">
                 {/* Header */}
             <div className="bg-green-600 text-white">
                 <div className="max-w-lg mx-auto px-4 py-4">
@@ -241,7 +225,6 @@ export default function NovaFiscalizacao() {
                     </Button>
                 </form>
             </div>
-            </div>
-        </SyncManager>
+        </div>
     );
 }
