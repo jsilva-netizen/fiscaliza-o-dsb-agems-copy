@@ -19,8 +19,8 @@ import PhotoGrid from '@/components/fiscalizacao/PhotoGrid';
 import RelatorioUnidade from '@/components/fiscalizacao/RelatorioUnidade';
 import OfflineIndicator from '@/components/OfflineIndicator';
 import useOfflineCache from '@/components/offline/useOfflineCache';
-import { addPendingOperation } from '@/components/offline/offlineStorage';
-import { preloadImages } from '@/components/offline/preloadImages';
+import { addPendingOperation } from '@/components/offline/offlineStorage.js';
+import { preloadImages } from '@/components/offline/preloadImages.js';
 
 // Wrapper para calcular offset das figuras
 function RelatorioUnidadeWrapper({ unidade, ...props }) {
