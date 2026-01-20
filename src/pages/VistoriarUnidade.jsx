@@ -462,6 +462,7 @@ export default function VistoriarUnidade() {
                                     resposta={respostas[item.id]}
                                     onResponder={(data) => handleResponder(item.id, data)}
                                     numero={index + 1}
+                                    desabilitado={unidade?.status === 'finalizada'}
                                 />
                             ))
                         )}
