@@ -16,6 +16,7 @@ import PrestadoresServico from './pages/PrestadoresServico';
 import Relatorios from './pages/Relatorios';
 import TiposUnidade from './pages/TiposUnidade';
 import VistoriarUnidade from './pages/VistoriarUnidade';
+import GerenciarUsuarios from './pages/GerenciarUsuarios';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "Relatorios": Relatorios,
     "TiposUnidade": TiposUnidade,
     "VistoriarUnidade": VistoriarUnidade,
+    "GerenciarUsuarios": GerenciarUsuarios,
 }
 
 export const pagesConfig = {
