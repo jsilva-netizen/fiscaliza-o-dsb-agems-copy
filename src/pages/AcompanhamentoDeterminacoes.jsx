@@ -68,7 +68,7 @@ export default function AcompanhamentoDeterminacoes() {
             if (filtros.municipio && fisc?.municipio_id !== filtros.municipio) return false;
             
             // Filtro serviço
-            if (filtros.servico && fisc?.servico !== filtros.servico) return false;
+            if (filtros.servico && (!fisc?.servicos || !fisc.servicos.includes(filtros.servico))) return false;
             
             // Filtro prestador
             if (filtros.prestador && fisc?.prestador_servico_id !== filtros.prestador) return false;
