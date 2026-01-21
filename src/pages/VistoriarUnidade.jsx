@@ -264,6 +264,12 @@ export default function VistoriarUnidade() {
                 descricao: texto,
                 origem: 'manual'
             });
+            
+            // Incrementar contador de recomendações
+            setContadores(prev => ({
+                ...prev,
+                R: prev.R + 1
+            }));
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
