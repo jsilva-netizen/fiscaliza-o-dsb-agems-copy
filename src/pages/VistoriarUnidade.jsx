@@ -141,12 +141,19 @@ export default function VistoriarUnidade() {
                 });
                 const numero = `C${respostasAtuais.length + 1}`;
 
+                // Definir texto da constatação baseado na resposta
+                const textoConstatacao = data.resposta === 'SIM' 
+                    ? item.texto_constatacao_sim 
+                    : data.resposta === 'NAO' 
+                        ? item.texto_constatacao_nao 
+                        : item.pergunta;
+
                 if (item.gera_nc && data.resposta === 'NAO') {
                     // Usar backend function para criar Resposta + NC + D atomicamente
                     await base44.functions.invoke('criarNcComDeterminacao', {
                         unidade_fiscalizada_id: unidadeId,
                         item_checklist_id: itemId,
-                        pergunta: item.pergunta,
+                        pergunta: textoConstatacao,
                         numero_constatacao: numero,
                         artigo_portaria: item.artigo_portaria,
                         texto_nc: item.texto_nc,
@@ -158,7 +165,7 @@ export default function VistoriarUnidade() {
                     await base44.entities.RespostaChecklist.create({
                         unidade_fiscalizada_id: unidadeId,
                         item_checklist_id: itemId,
-                        pergunta: item.pergunta,
+                        pergunta: textoConstatacao,
                         resposta: data.resposta,
                         gera_nc: item.gera_nc,
                         numero_constatacao: numero,
