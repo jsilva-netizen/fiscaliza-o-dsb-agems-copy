@@ -89,7 +89,7 @@ export default function HistoricoFiscalizacoes({ fiscalizacoes, municipios }) {
                         </div>
                         <div className="text-xs text-gray-600 mt-2">
                             NCs: <span className="font-semibold">{fisc.total_nao_conformidades || 0}</span> | 
-                            Recomendações: <span className="font-semibold">{fisc.total_recomendacoes || 0}</span> | 
+                            Recomendações: <span className="font-semibold">{getRecomendacoesForFiscalizacao(fisc.id)}</span> | 
                             Determinações: <span className="font-semibold">{getDeterminacoesForFiscalizacao(fisc.id)}</span>
                         </div>
                     </CardContent>
