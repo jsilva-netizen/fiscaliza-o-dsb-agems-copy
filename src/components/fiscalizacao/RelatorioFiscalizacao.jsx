@@ -367,9 +367,10 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
 
                 // Registros Fotográficos
                 if (fotos.length > 0) {
-                    if (yPos + rowHeight > pageHeight - margin) {
+                    if (yPos + rowHeight > pageHeight - bottomMargin) {
                         pdf.addPage();
-                        yPos = margin;
+                        await addTimbradoToPage(pdf);
+                        yPos = topMargin;
                     }
                     drawCell('Registros Fotográficos', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
                     yPos += rowHeight;
