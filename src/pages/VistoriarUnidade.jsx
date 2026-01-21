@@ -190,9 +190,9 @@ export default function VistoriarUnidade() {
                         item_checklist_id: itemId,
                         pergunta: textoConstatacao,
                         numero_constatacao: numero,
-                        numero_nc: gerarNumeroNC(contadores),
-                        numero_determinacao: gerarNumeroDeterminacao(contadores),
-                        numero_recomendacao: gerarNumeroRecomendacao(contadores),
+                        numero_nc: gerarNumeroNC(contadoresAtuais),
+                        numero_determinacao: gerarNumeroDeterminacao(contadoresAtuais),
+                        numero_recomendacao: gerarNumeroRecomendacao(contadoresAtuais),
                         artigo_portaria: item.artigo_portaria,
                         texto_nc: item.texto_nc,
                         texto_determinacao: item.texto_determinacao,
@@ -200,7 +200,7 @@ export default function VistoriarUnidade() {
                         prazo_dias: item.prazo_dias || 30
                     });
                     
-                    // Incrementar contadores localmente após sucesso
+                    // Incrementar contadores localmente após sucesso (só a partir da 2ª resposta)
                     setContadores(prev => ({
                         ...prev,
                         C: prev.C + 1,
