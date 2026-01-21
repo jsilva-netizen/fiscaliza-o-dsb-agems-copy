@@ -33,6 +33,7 @@ export default function VistoriarUnidade() {
     const [recomendacoesCache, setRecomendacoesCache] = useState(null);
     const [showConfirmaSemFotos, setShowConfirmaSemFotos] = useState(false);
     const [contadores, setContadores] = useState(null);
+    const [contadoresCarregados, setContadoresCarregados] = useState(false);
 
     // Queries
     const { data: unidade, isLoading: loadingUnidade } = useQuery({
