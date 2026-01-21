@@ -184,30 +184,36 @@ export default function VistoriarUnidade() {
                 }
 
                 if (item.gera_nc && data.resposta === 'NAO') {
+                    // Gerar números ANTES de chamar a função (importante para ordem correta)
+                    const numeroNC = gerarNumeroNC(contadoresAtuais);
+                    const numeroDeterminacao = gerarNumeroDeterminacao(contadoresAtuais);
+                    const numeroRecomendacao = gerarNumeroRecomendacao(contadoresAtuais);
+                    
+                    // Incrementar contadores localmente ANTES da chamada (para sincronizar)
+                    const novoContadores = {
+                        C: contadoresAtuais.C + 1,
+                        NC: contadoresAtuais.NC + 1,
+                        D: contadoresAtuais.D + 1,
+                        R: contadoresAtuais.R + 1
+                    };
+                    setContadores(novoContadores);
+                    contadoresAtuais = novoContadores;
+                    
                     // Usar backend function para criar Resposta + NC + D/R atomicamente com números contínuos
                     await base44.functions.invoke('criarNcComDeterminacao', {
                         unidade_fiscalizada_id: unidadeId,
                         item_checklist_id: itemId,
                         pergunta: textoConstatacao,
                         numero_constatacao: numero,
-                        numero_nc: gerarNumeroNC(contadoresAtuais),
-                        numero_determinacao: gerarNumeroDeterminacao(contadoresAtuais),
-                        numero_recomendacao: gerarNumeroRecomendacao(contadoresAtuais),
+                        numero_nc: numeroNC,
+                        numero_determinacao: numeroDeterminacao,
+                        numero_recomendacao: numeroRecomendacao,
                         artigo_portaria: item.artigo_portaria,
                         texto_nc: item.texto_nc,
                         texto_determinacao: item.texto_determinacao,
                         texto_recomendacao: item.texto_recomendacao,
                         prazo_dias: item.prazo_dias || 30
                     });
-                    
-                    // Incrementar contadores localmente após sucesso (só a partir da 2ª resposta)
-                    setContadores(prev => ({
-                        ...prev,
-                        C: prev.C + 1,
-                        NC: prev.NC + 1,
-                        D: prev.D + 1,
-                        R: prev.R + 1
-                    }));
                 } else {
                     // Criar apenas a resposta se não gerar NC
                     await base44.entities.RespostaChecklist.create({
