@@ -271,11 +271,6 @@ export default function VistoriarUnidade() {
 
     const finalizarUnidadeMutation = useMutation({
     mutationFn: async () => {
-         // Validar fotos (estado local é fonte da verdade)
-         if (fotos.length < 2) {
-             throw new Error(`Mínimo de 2 fotos obrigatórias (você tem ${fotos.length}).`);
-         }
-
          // Recarregar dados do banco para contagens precisas
          const respostasAtuais = await base44.entities.RespostaChecklist.filter({ 
              unidade_fiscalizada_id: unidadeId 
@@ -303,13 +298,21 @@ export default function VistoriarUnidade() {
          });
          },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['unidades-fiscalizacao'] });
-            navigate(createPageUrl('ExecutarFiscalizacao') + `?id=${unidade.fiscalizacao_id}`);
-        },
-        onError: (err) => {
-            alert(err.message);
+             queryClient.invalidateQueries({ queryKey: ['unidades-fiscalizacao'] });
+             navigate(createPageUrl('ExecutarFiscalizacao') + `?id=${unidade.fiscalizacao_id}`);
+         },
+         onError: (err) => {
+             alert(err.message);
+         }
+     });
+
+    const handleFinalizarClick = () => {
+        if (fotos.length === 0) {
+            setShowConfirmaSemFotos(true);
+        } else {
+            finalizarUnidadeMutation.mutate();
         }
-    });
+    };
 
     const handleResponder = (itemId, data) => {
         salvarRespostaMutation.mutate({ itemId, data });
