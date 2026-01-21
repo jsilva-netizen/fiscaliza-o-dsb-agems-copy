@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
     ClipboardCheck, 
     Settings, 
-    FileText, 
     MapPin, 
     BarChart3, 
     Plus,
     History,
-    Building2
+    Building2,
+    Users
 } from 'lucide-react';
 
 export default function Home() {
@@ -107,46 +107,19 @@ export default function Home() {
                             </CardContent>
                         </Card>
                     </Link>
+
+                    <Link to={createPageUrl('PrestadoresServico')}>
+                        <Card className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer border-white/20 h-full">
+                            <CardContent className="p-4 text-center">
+                                <Users className="h-8 w-8 text-blue-300 mx-auto mb-2" />
+                                <h3 className="text-white font-medium text-sm">Prestadores</h3>
+                                <p className="text-blue-300 text-xs">Serviço e empresas</p>
+                            </CardContent>
+                        </Card>
+                    </Link>
                 </div>
 
-                {/* Info Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="bg-white/5 border-white/10">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-white text-sm flex items-center gap-2">
-                                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                                Sistema Online
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-blue-200 text-xs">
-                            Dados sincronizados com o servidor
-                        </CardContent>
-                    </Card>
 
-                    <Card className="bg-white/5 border-white/10">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-white text-sm flex items-center gap-2">
-                                <MapPin className="h-4 w-4 text-blue-300" />
-                                Mato Grosso do Sul
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-blue-200 text-xs">
-                            79 municípios pré-cadastrados
-                        </CardContent>
-                    </Card>
-
-                    <Card className="bg-white/5 border-white/10">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-white text-sm flex items-center gap-2">
-                                <FileText className="h-4 w-4 text-blue-300" />
-                                Portaria AGEMS
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-blue-200 text-xs">
-                            Normativos vinculados automaticamente
-                        </CardContent>
-                    </Card>
-                </div>
             </div>
 
             {/* Footer */}
