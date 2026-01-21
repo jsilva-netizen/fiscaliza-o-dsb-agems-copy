@@ -140,16 +140,6 @@ export default function Home() {
                         </Card>
                     </Link>
 
-                    <Link to={createPageUrl('CamaraJulgamento')}>
-                        <Card className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer border-white/20 h-full">
-                            <CardContent className="p-4 text-center">
-                                <Users className="h-8 w-8 text-blue-300 mx-auto mb-2" />
-                                <h3 className="text-white font-medium text-sm">Julgamento</h3>
-                                <p className="text-blue-300 text-xs">Câmara</p>
-                            </CardContent>
-                        </Card>
-                    </Link>
-
                     <Link to={createPageUrl('PrestadoresServico')}>
                         <Card className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer border-white/20 h-full">
                             <CardContent className="p-4 text-center">
