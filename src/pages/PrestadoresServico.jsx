@@ -113,26 +113,33 @@ export default function PrestadoresServico() {
 
             {/* Content */}
             <div className="max-w-4xl mx-auto px-4 py-6">
-                <div className="flex justify-end mb-6">
-                    <Button onClick={() => { resetForm(); setShowForm(true); }} className="bg-blue-600 hover:bg-blue-700">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Novo Prestador
-                    </Button>
-                </div>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
+                    <TabsList>
+                        <TabsTrigger value="prestadores">Prestadores de Serviço ({prestadoresServico.length})</TabsTrigger>
+                        <TabsTrigger value="titulares">Titulares ({titulares.length})</TabsTrigger>
+                    </TabsList>
 
-                {isLoading ? (
-                    <div className="flex justify-center py-12">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                    </div>
-                ) : prestadores.length === 0 ? (
-                    <Card>
-                        <CardContent className="p-6 text-center text-gray-500">
-                            <p>Nenhum prestador de serviço cadastrado.</p>
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <div className="grid gap-4">
-                        {prestadores.map(prestador => (
+                    <TabsContent value="prestadores" className="space-y-4">
+                        <div className="flex justify-end">
+                            <Button onClick={() => { resetForm(); setFormData({...formData, tipo: 'prestador_servico'}); setShowForm(true); }} className="bg-blue-600 hover:bg-blue-700">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Novo Prestador
+                            </Button>
+                        </div>
+
+                        {isLoading ? (
+                            <div className="flex justify-center py-12">
+                                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                            </div>
+                        ) : prestadoresServico.length === 0 ? (
+                            <Card>
+                                <CardContent className="p-6 text-center text-gray-500">
+                                    <p>Nenhum prestador de serviço cadastrado.</p>
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <div className="grid gap-4">
+                                {prestadoresServico.map(prestador => (
                             <Card key={prestador.id}>
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-lg">{prestador.nome}</CardTitle>
