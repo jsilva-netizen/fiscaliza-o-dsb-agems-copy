@@ -115,16 +115,24 @@ export default function VistoriarUnidade() {
         }
     }, [unidade?.fotos_unidade]);
 
-    // Carregar contadores na montagem
+    // Carregar contadores apenas na primeira resposta do checklist
     useEffect(() => {
-        const carregarContadores = async () => {
-            if (unidade?.fiscalizacao_id) {
+        const carregarContadoresNaPrimeiraResposta = async () => {
+            // Se ainda não temos respostas, continua aguardando
+            if (respostasExistentes.length === 0 || contadoresCarregados) return;
+
+            // Primeira vez que teremos dados do banco, carrega contadores globais
+            if (!contadoresCarregados) {
                 const contadoresCalc = await calcularProximaNumeracao(unidade.fiscalizacao_id, unidadeId, base44);
                 setContadores(contadoresCalc);
+                setContadoresCarregados(true);
             }
         };
-        carregarContadores();
-    }, [unidade?.fiscalizacao_id, unidadeId]);
+        
+        if (unidade?.fiscalizacao_id && respostasExistentes.length > 0) {
+            carregarContadoresNaPrimeiraResposta();
+        }
+    }, [unidade?.fiscalizacao_id, unidadeId, respostasExistentes.length, contadoresCarregados]);
 
     // Carregar respostas apenas uma vez
     useEffect(() => {
