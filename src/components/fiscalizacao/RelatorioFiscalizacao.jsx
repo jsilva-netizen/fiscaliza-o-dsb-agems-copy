@@ -195,7 +195,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
 
                 // Nova página para cada unidade
                 pdf.addPage();
-                await addTimbradoToPage(pdf);
+                addTimbradoToPage(pdf, timbradoBase64);
                 yPos = topMargin;
 
                 pdf.setFontSize(9);
