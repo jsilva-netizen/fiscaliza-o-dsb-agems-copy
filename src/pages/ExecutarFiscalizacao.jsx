@@ -53,10 +53,6 @@ export default function ExecutarFiscalizacao() {
             
             // Verificar se todas as unidades estão completas
             for (const unidade of unidadesAtualizadas) {
-                const fotos = Array.isArray(unidade.fotos_unidade) ? unidade.fotos_unidade : [];
-                if (fotos.length < 2) {
-                    throw new Error(`Unidade "${unidade.nome_unidade || unidade.tipo_unidade_nome}" precisa de pelo menos 2 fotos (tem ${fotos.length}).`);
-                }
                 if (unidade.status !== 'finalizada') {
                     throw new Error(`Finalize a vistoria da unidade "${unidade.nome_unidade || unidade.tipo_unidade_nome}" antes de finalizar a fiscalização.`);
                 }
