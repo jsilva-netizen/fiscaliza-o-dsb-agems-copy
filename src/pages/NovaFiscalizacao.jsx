@@ -17,7 +17,7 @@ export default function NovaFiscalizacao() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         municipio_id: '',
-        servico: '',
+        servicos: [],
         prestador_servico_id: ''
     });
     const [location, setLocation] = useState(null);
