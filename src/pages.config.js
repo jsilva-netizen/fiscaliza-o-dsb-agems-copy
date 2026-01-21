@@ -12,6 +12,9 @@ import PrestadoresServico from './pages/PrestadoresServico';
 import AcompanhamentoDeterminacoes from './pages/AcompanhamentoDeterminacoes';
 import AnalisarResposta from './pages/AnalisarResposta';
 import AnaliseManifestacao from './pages/AnaliseManifestacao';
+import GerenciarTermos from './pages/GerenciarTermos';
+import GestaoAutos from './pages/GestaoAutos';
+import CamaraJulgamento from './pages/CamaraJulgamento';
 import __Layout from './Layout.jsx';
 
 
@@ -30,6 +33,9 @@ export const PAGES = {
     "AcompanhamentoDeterminacoes": AcompanhamentoDeterminacoes,
     "AnalisarResposta": AnalisarResposta,
     "AnaliseManifestacao": AnaliseManifestacao,
+    "GerenciarTermos": GerenciarTermos,
+    "GestaoAutos": GestaoAutos,
+    "CamaraJulgamento": CamaraJulgamento,
 }
 
 export const pagesConfig = {
