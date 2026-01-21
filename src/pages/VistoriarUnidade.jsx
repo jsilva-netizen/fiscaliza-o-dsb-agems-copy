@@ -113,6 +113,17 @@ export default function VistoriarUnidade() {
         }
     }, [unidade?.fotos_unidade]);
 
+    // Carregar contadores na montagem
+    useEffect(() => {
+        const carregarContadores = async () => {
+            if (unidade?.fiscalizacao_id) {
+                const contadoresCalc = await calcularProximaNumeracao(unidade.fiscalizacao_id, unidadeId, base44);
+                setContadores(contadoresCalc);
+            }
+        };
+        carregarContadores();
+    }, [unidade?.fiscalizacao_id, unidadeId]);
+
     // Carregar respostas apenas uma vez
     useEffect(() => {
         if (respostasExistentes.length > 0) {
