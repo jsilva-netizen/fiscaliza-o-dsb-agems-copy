@@ -23,9 +23,22 @@ export default function HistoricoFiscalizacoes({ fiscalizacoes, municipios }) {
         enabled: unidades.length > 0
     });
 
+    const { data: recomendacoes = [] } = useQuery({
+        queryKey: ['recomendacoes-historico', unidades.map(u => u.id).join(',')],
+        queryFn: () => base44.entities.Recomendacao.list('id', 500).then(rs =>
+            rs.filter(r => unidades.some(u => u.id === r.unidade_fiscalizada_id))
+        ),
+        enabled: unidades.length > 0
+    });
+
     const getDeterminacoesForFiscalizacao = (fiscId) => {
         const unidadesDoFisc = unidades.filter(u => u.fiscalizacao_id === fiscId);
         return determinacoes.filter(d => unidadesDoFisc.some(u => u.id === d.unidade_fiscalizada_id)).length;
+    };
+
+    const getRecomendacoesForFiscalizacao = (fiscId) => {
+        const unidadesDoFisc = unidades.filter(u => u.fiscalizacao_id === fiscId);
+        return recomendacoes.filter(r => unidadesDoFisc.some(u => u.id === r.unidade_fiscalizada_id)).length;
     };
     if (!fiscalizacoes || fiscalizacoes.length === 0) {
         return (
