@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, MapPin, Loader2, Navigation, AlertCircle } from 'lucide-react';
 
-const SERVICOS = ['Água', 'Esgoto', 'Resíduos', 'Limpeza Urbana', 'Drenagem'];
+const SERVICOS = ['Abastecimento de Água', 'Esgotamento Sanitário', 'Manejo de Resíduos Sólidos', 'Limpeza Urbana', 'Drenagem'];
 
 export default function NovaFiscalizacao() {
     const navigate = useNavigate();
