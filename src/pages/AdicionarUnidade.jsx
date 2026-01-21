@@ -82,7 +82,8 @@ export default function AdicionarUnidade() {
     }, []);
 
     const tiposFiltrados = tipos.filter(t => 
-        t.servicos_aplicaveis && fiscalizacao?.servico && t.servicos_aplicaveis.includes(fiscalizacao.servico)
+        t.servicos_aplicaveis && fiscalizacao?.servicos && 
+        t.servicos_aplicaveis.some(s => fiscalizacao.servicos.includes(s))
     );
 
     // Mapeamento de siglas por tipo de unidade
