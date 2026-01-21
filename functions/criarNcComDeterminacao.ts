@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
             },
             nc: {
                 id: nc.id,
-                numero_nc: numeroNC
+                numero_nc
             }
         };
 
