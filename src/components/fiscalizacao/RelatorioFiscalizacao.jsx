@@ -259,20 +259,20 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 });
 
                 // Não Conformidades
+                if (yPos + rowHeight > pageHeight - bottomMargin) {
+                    pdf.addPage();
+                    addTimbradoToPage(pdf, timbradoBase64);
+                    yPos = topMargin;
+                }
+                drawCell('Não Conformidades', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
+                yPos += rowHeight;
+
                 if (ncs.length > 0) {
                     const ncsSorted = [...ncs].sort((a, b) => {
                         const numA = parseInt(a.numero_nc?.replace('NC', '') || '999');
                         const numB = parseInt(b.numero_nc?.replace('NC', '') || '999');
                         return numA - numB;
                     });
-
-                    if (yPos + rowHeight > pageHeight - bottomMargin) {
-                        pdf.addPage();
-                        addTimbradoToPage(pdf, timbradoBase64);
-                        yPos = topMargin;
-                    }
-                    drawCell('Não Conformidades', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
-                    yPos += rowHeight;
 
                     ncsSorted.forEach((nc) => {
                         // Encontrar resposta relacionada para pegar número da constatação
@@ -301,6 +301,12 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
 
                         yPos += cellHeight;
                     });
+                } else {
+                    const cellHeight = rowHeight;
+                    pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.text('Não se aplica.', margin + 12, yPos + 4.5);
+                    yPos += cellHeight;
                 }
 
                 // Recomendações
