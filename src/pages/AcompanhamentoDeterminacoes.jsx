@@ -40,11 +40,6 @@ export default function AcompanhamentoDeterminacoes() {
         queryFn: () => base44.entities.Municipio.list()
     });
 
-    const { data: julgamentos = [] } = useQuery({
-        queryKey: ['julgamentos'],
-        queryFn: () => base44.entities.Julgamento.list()
-    });
-
     // Calcular KPIs
     const determVencidas = determinacoes.filter(d => {
         const hoje = new Date();
@@ -157,7 +152,7 @@ export default function AcompanhamentoDeterminacoes() {
                 {/* Análises */}
                 <div className="mb-8">
                     <h2 className="text-xl font-semibold mb-4">Análises</h2>
-                    <AnaliseTemposMedios determinacoes={determinacoes} respostas={respostas} julgamentos={julgamentos} />
+                    <AnaliseTemposMedios determinacoes={determinacoes} respostas={respostas} />
                 </div>
 
                 {/* Gráficos */}
