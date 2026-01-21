@@ -77,9 +77,16 @@ export default function Checklists() {
 
         setImporting(true);
         try {
-            const csv_content = await file.text();
+            // Ler arquivo como base64
+            const arrayBuffer = await file.arrayBuffer();
+            const bytes = new Uint8Array(arrayBuffer);
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            const file_base64 = btoa(binary);
 
-            const response = await base44.functions.invoke('importarChecklist', { csv_content });
+            const response = await base44.functions.invoke('importarChecklist', { file_base64 });
             
             if (response.data.sucesso) {
                 alert(`✅ Importação concluída!\n${response.data.itens_importados} itens importados\n${response.data.tipos_criados} tipos processados`);
@@ -143,13 +150,13 @@ export default function Checklists() {
                             <div className="pt-6">
                                 <input
                                     type="file"
-                                    accept=".csv"
+                                    accept=".xlsx,.xls"
                                     onChange={handleImport}
                                     disabled={importing}
-                                    id="importar-csv"
+                                    id="importar-xlsx"
                                     className="hidden"
                                 />
-                                <label htmlFor="importar-csv">
+                                <label htmlFor="importar-xlsx">
                                     <Button 
                                         type="button" 
                                         variant="outline" 
@@ -165,7 +172,7 @@ export default function Checklists() {
                                             ) : (
                                                 <>
                                                     <Upload className="h-4 w-4 mr-2" />
-                                                    Importar CSV
+                                                    Importar Excel
                                                 </>
                                             )}
                                         </span>

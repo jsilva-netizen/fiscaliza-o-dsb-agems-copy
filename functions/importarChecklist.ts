@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import * as XLSX from 'npm:xlsx@0.18.5';
 
 Deno.serve(async (req) => {
     try {
@@ -9,27 +10,33 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Acesso negado. Apenas administradores podem importar checklists.' }, { status: 403 });
         }
 
-        const { csv_content } = await req.json();
+        const { file_base64 } = await req.json();
 
-        if (!csv_content) {
-            return Response.json({ error: 'Conteúdo CSV não fornecido' }, { status: 400 });
+        if (!file_base64) {
+            return Response.json({ error: 'Arquivo não fornecido' }, { status: 400 });
         }
 
-        const csvText = csv_content;
-        
-        // Detectar delimitador (ponto-e-vírgula ou vírgula)
-        const lines = csvText.split('\n').filter(line => line.trim());
+        // Decodificar base64 para ArrayBuffer
+        const binaryString = atob(file_base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
 
-        if (lines.length < 2) {
+        // Ler arquivo Excel
+        const workbook = XLSX.read(bytes, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Converter para array de objetos
+        const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        if (data.length < 2) {
             return Response.json({ error: 'Arquivo vazio ou sem dados' }, { status: 400 });
         }
 
-        // Detectar delimitador da primeira linha
-        const primeiraLinha = lines[0];
-        const delimitador = primeiraLinha.includes(';') ? ';' : ',';
-
         // Ignorar cabeçalho
-        const dataLines = lines.slice(1);
+        const dataLines = data.slice(1);
 
         const tiposCache = new Map();
         const itensImportados = [];
@@ -39,11 +46,9 @@ Deno.serve(async (req) => {
             try {
                 const linha = dataLines[i];
                 
-                // Parse CSV considerando possíveis aspas
-                const colunas = linha.split(delimitador).map(c => c.trim().replace(/^"(.*)"$/, '$1'));
-
-                if (colunas.length < 11) {
-                    erros.push(`Linha ${i + 2}: Número insuficiente de colunas (${colunas.length}/11). Esperado: serviço;tipo_unidade_codigo;tipo_unidade_nome;ordem;pergunta;texto_constatacao_sim;texto_constatacao_nao;artigo_portaria;texto_nc;texto_determinacao;prazo_dias`);
+                // Linha é um array de células
+                if (!Array.isArray(linha) || linha.length < 11) {
+                    erros.push(`Linha ${i + 2}: Número insuficiente de colunas (${linha?.length || 0}/11). Esperado: serviço | tipo_unidade_codigo | tipo_unidade_nome | ordem | pergunta | texto_constatacao_sim | texto_constatacao_nao | artigo_portaria | texto_nc | texto_determinacao | prazo_dias`);
                     continue;
                 }
 
@@ -59,7 +64,7 @@ Deno.serve(async (req) => {
                     texto_nc,
                     texto_determinacao,
                     prazo_dias
-                ] = colunas;
+                ] = linha.map(c => c ? String(c).trim() : '');
 
                 // Validações básicas
                 if (!pergunta || !tipo_unidade_nome) {
