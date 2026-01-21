@@ -92,22 +92,22 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 console.error('Erro ao carregar timbrado:', err);
             }
 
-            // Adicionar timbrado na primeira página
-            addTimbradoToPage(pdf, timbradoBase64);
+            // Cabeçalho azul com título
+            pdf.setFillColor(25, 75, 145); // Azul
+            pdf.rect(0, 0, pageWidth, 40, 'F');
             
             pdf.setTextColor(255, 255, 255);
             pdf.setFontSize(20);
             pdf.setFont('helvetica', 'bold');
-            pdf.text('RELATÓRIO DE FISCALIZAÇÃO', pageWidth / 2, topMargin + 5, { align: 'center' });
+            pdf.text('RELATÓRIO DE FISCALIZAÇÃO', pageWidth / 2, 15, { align: 'center' });
             
             pdf.setFontSize(11);
             pdf.setFont('helvetica', 'normal');
-            pdf.text(`Município: ${fiscalizacao.municipio_nome}`, pageWidth / 2, topMargin + 15, { align: 'center' });
-            pdf.text(`Serviços: ${fiscalizacao.servicos.join(', ')}`, pageWidth / 2, topMargin + 21, { align: 'center' });
-            pdf.text(`Prestador: ${fiscalizacao.prestador_servico_nome}`, pageWidth / 2, topMargin + 27, { align: 'center' });
+            pdf.text(fiscalizacao.municipio_nome, pageWidth / 2, 25, { align: 'center' });
+            pdf.text(fiscalizacao.servicos.join(', '), pageWidth / 2, 33, { align: 'center' });
 
             pdf.setTextColor(0, 0, 0);
-            yPos = topMargin + 38;
+            yPos = 45;
 
             // Informações da Fiscalização
             pdf.setFontSize(12);
