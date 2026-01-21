@@ -136,7 +136,12 @@ export default function PhotoGrid({
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (editingLegenda[index]) {
-                                            onUpdateLegenda(index, tempLegendas[index] ?? foto.legenda ?? '');
+                                            let legenda = tempLegendas[index] ?? foto.legenda ?? '';
+                                            // Adicionar ponto final se não tiver
+                                            if (legenda && !legenda.trim().endsWith('.')) {
+                                                legenda = legenda.trim() + '.';
+                                            }
+                                            onUpdateLegenda(index, legenda);
                                             setEditingLegenda(prev => ({ ...prev, [index]: false }));
                                         } else {
                                             setEditingLegenda(prev => ({ ...prev, [index]: true }));
