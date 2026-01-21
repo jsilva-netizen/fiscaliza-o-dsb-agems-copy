@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit2, Trash2, Loader2, ArrowLeft } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, ArrowLeft, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -20,9 +20,11 @@ export default function PrestadoresServico() {
         endereco: '',
         cidade: '',
         telefone: '',
+        email_contato: '',
         cnpj: '',
         responsavel: '',
-        cargo: ''
+        cargo: '',
+        tipo: 'prestador_servico'
     });
 
     const { data: prestadores = [], isLoading } = useQuery({
@@ -62,9 +64,11 @@ export default function PrestadoresServico() {
             endereco: '',
             cidade: '',
             telefone: '',
+            email_contato: '',
             cnpj: '',
             responsavel: '',
-            cargo: ''
+            cargo: '',
+            tipo: 'prestador_servico'
         });
         setEditingId(null);
     };
@@ -164,7 +168,18 @@ export default function PrestadoresServico() {
                                             <span className="font-medium">Cargo:</span> {prestador.cargo}
                                         </p>
                                     )}
+                                    {prestador.email_contato && (
+                                        <p className="text-sm text-gray-600 mt-2">
+                                            <span className="font-medium">Email:</span> {prestador.email_contato}
+                                        </p>
+                                    )}
                                     <div className="flex gap-2 mt-4">
+                                        <Link to={createPageUrl(`DetalhePrestador?id=${prestador.id}`)}>
+                                            <Button size="sm" variant="outline">
+                                                <Eye className="h-4 w-4 mr-1" />
+                                                Detalhes
+                                            </Button>
+                                        </Link>
                                         <Button
                                             size="sm"
                                             variant="outline"
@@ -243,6 +258,33 @@ export default function PrestadoresServico() {
                             value={formData.cargo}
                             onChange={(e) => setFormData({ ...formData, cargo: e.target.value })}
                         />
+                        <Input
+                            placeholder="Email de Contato"
+                            type="email"
+                            value={formData.email_contato}
+                            onChange={(e) => setFormData({ ...formData, email_contato: e.target.value })}
+                        />
+                        <div>
+                            <p className="text-sm font-medium mb-1">Tipo</p>
+                            <div className="flex gap-2">
+                                <Button
+                                    size="sm"
+                                    variant={formData.tipo === 'prestador_servico' ? 'default' : 'outline'}
+                                    onClick={() => setFormData({ ...formData, tipo: 'prestador_servico' })}
+                                    className="flex-1"
+                                >
+                                    Prestador
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant={formData.tipo === 'titular' ? 'default' : 'outline'}
+                                    onClick={() => setFormData({ ...formData, tipo: 'titular' })}
+                                    className="flex-1"
+                                >
+                                    Titular
+                                </Button>
+                            </div>
+                        </div>
                         <div className="flex gap-2">
                             <Button
                                 className="flex-1 bg-blue-600 hover:bg-blue-700"

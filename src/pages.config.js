@@ -15,6 +15,7 @@ import AnaliseManifestacao from './pages/AnaliseManifestacao';
 import GerenciarTermos from './pages/GerenciarTermos';
 import GestaoAutos from './pages/GestaoAutos';
 import CamaraJulgamento from './pages/CamaraJulgamento';
+import DetalhePrestador from './pages/DetalhePrestador';
 import __Layout from './Layout.jsx';
 
 
@@ -36,6 +37,7 @@ export const PAGES = {
     "GerenciarTermos": GerenciarTermos,
     "GestaoAutos": GestaoAutos,
     "CamaraJulgamento": CamaraJulgamento,
+    "DetalhePrestador": DetalhePrestador,
 }
 
 export const pagesConfig = {
