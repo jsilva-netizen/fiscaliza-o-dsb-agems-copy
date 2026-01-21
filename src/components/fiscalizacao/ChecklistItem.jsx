@@ -1,8 +1,7 @@
 import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Check, X, Minus, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, X, Minus, AlertTriangle } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 export default function ChecklistItem({ 
@@ -12,26 +11,13 @@ export default function ChecklistItem({
     numero,
     desabilitado = false
 }) {
-    const [observacao, setObservacao] = React.useState(resposta?.observacao || '');
-    const [showObs, setShowObs] = React.useState(false);
-
     const handleResposta = (valor) => {
         const data = {
             resposta: valor,
-            observacao: observacao
+            observacao: ''
         };
         
         onResponder(data);
-    };
-
-    const handleObservacao = (texto) => {
-        setObservacao(texto);
-        if (resposta) {
-            onResponder({
-                ...resposta,
-                observacao: texto
-            });
-        }
     };
 
     const getButtonStyle = (tipo) => {
@@ -103,30 +89,9 @@ export default function ChecklistItem({
                                 Gera Não Conformidade
                             </div>
                             {item.artigo_portaria && (
-                                <p className="text-red-600">Art. {item.artigo_portaria}</p>
+                                <p className="text-red-600">{item.artigo_portaria}</p>
                             )}
                         </div>
-                    )}
-
-                    {/* Toggle observação */}
-                    <button
-                        type="button"
-                        onClick={() => setShowObs(!showObs)}
-                        className="text-xs text-blue-600 mt-2 flex items-center"
-                    >
-                        {showObs ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                        {showObs ? 'Ocultar observação' : 'Adicionar observação'}
-                    </button>
-
-                    {showObs && (
-                        <Textarea
-                            placeholder="Observação (opcional)"
-                            value={observacao}
-                            onChange={(e) => handleObservacao(e.target.value)}
-                            className="mt-2 text-sm"
-                            rows={2}
-                            disabled={desabilitado}
-                        />
                     )}
                 </div>
             </div>
