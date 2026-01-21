@@ -307,9 +307,9 @@ export default function VistoriarUnidade() {
     };
 
     const handleAddFoto = async (fotoData) => {
-        const novasFotos = [...fotos, fotoData];
-        setFotos(novasFotos);
-        await salvarFotosMutation.mutateAsync(novasFotos);
+        const novasFoto = [...fotos, fotoData];
+        setFotos(novasFoto);
+        setFotosParaSalvar(prev => [...prev, fotoData]);
     };
 
     const handleRemoveFoto = async (index) => {
