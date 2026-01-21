@@ -17,7 +17,6 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import RelatorioFiscalizacao from '@/components/fiscalizacao/RelatorioFiscalizacao';
-import ExportarCSV from '@/components/fiscalizacao/ExportarCSV';
 import ExportarPDFConsolidado from '@/components/fiscalizacao/ExportarPDFConsolidado';
 
 export default function Fiscalizacoes() {
@@ -228,10 +227,7 @@ export default function Fiscalizacoes() {
 
                 {/* Exportação */}
                 {filtered.length > 0 && (
-                    <div className="flex gap-2">
-                        <ExportarCSV fiscalizacoes={filtered} />
-                        <ExportarPDFConsolidado fiscalizacoes={filtered} />
-                    </div>
+                    <ExportarPDFConsolidado fiscalizacoes={filtered} />
                 )}
             </div>
 
