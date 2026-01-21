@@ -216,6 +216,19 @@ export default function PrestadoresServico() {
                                             <span className="font-medium">Email:</span> {prestador.email_contato}
                                         </p>
                                     )}
+                                    <div className="text-xs text-gray-500 mt-3 pt-3 border-t">
+                                        {(() => {
+                                            const stats = getStatsForPrestador(prestador.id);
+                                            return (
+                                                <div className="flex gap-4">
+                                                    <span>NCs: {stats.ncs}</span>
+                                                    <span>Recomendações: {stats.recomendacoes}</span>
+                                                    <span>Determinações: {stats.determinacoes}</span>
+                                                    <span>Autos: {stats.autos}</span>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
                                     <div className="flex gap-2 mt-4">
                                         <Link to={createPageUrl(`DetalhePrestador?id=${prestador.id}`)}>
                                             <Button size="sm" variant="outline">
