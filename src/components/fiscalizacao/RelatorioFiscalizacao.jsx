@@ -79,11 +79,12 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
             const margin = 10;
-            let yPos = margin;
+            const topMargin = 35;
+            const bottomMargin = 25;
+            let yPos = topMargin;
 
-            // Capa - Resumo Executivo
-            pdf.setFillColor(30, 64, 175);
-            pdf.rect(0, 0, pageWidth, 60, 'F');
+            // Adicionar timbrado na primeira página
+            await addTimbradoToPage(pdf);
             
             pdf.setTextColor(255, 255, 255);
             pdf.setFontSize(20);
