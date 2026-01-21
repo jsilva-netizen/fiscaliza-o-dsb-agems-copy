@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ArrowLeft, Plus, ClipboardCheck, Edit, Trash2, AlertTriangle, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, ClipboardCheck, Edit, Trash2, AlertTriangle, GripVertical, Upload, Loader2 } from 'lucide-react';
 import ItemChecklistForm from '@/components/admin/ItemChecklistForm';
 
 export default function Checklists() {
@@ -19,6 +19,7 @@ export default function Checklists() {
     const [selectedTipo, setSelectedTipo] = useState(tipoIdFromUrl || '');
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState(null);
+    const [importing, setImporting] = useState(false);
 
     const { data: tipos = [] } = useQuery({
         queryKey: ['tipos-unidade'],
@@ -70,6 +71,35 @@ export default function Checklists() {
         setShowForm(true);
     };
 
+    const handleImport = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setImporting(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await base44.functions.invoke('importarChecklist', formData);
+            
+            if (response.data.sucesso) {
+                alert(`✅ Importação concluída!\n${response.data.itens_importados} itens importados\n${response.data.tipos_criados} tipos processados`);
+                queryClient.invalidateQueries({ queryKey: ['itens-checklist'] });
+                queryClient.invalidateQueries({ queryKey: ['tipos-unidade'] });
+            }
+            
+            if (response.data.erros) {
+                console.warn('Erros na importação:', response.data.erros);
+                alert(`⚠️ Alguns erros ocorreram:\n${response.data.erros.slice(0, 5).join('\n')}`);
+            }
+        } catch (error) {
+            alert(`❌ Erro ao importar: ${error.message}`);
+        } finally {
+            setImporting(false);
+            e.target.value = '';
+        }
+    };
+
     const tipoSelecionado = tipos.find(t => t.id === selectedTipo);
 
     return (
@@ -95,19 +125,55 @@ export default function Checklists() {
             <div className="max-w-4xl mx-auto px-4 py-4">
                 <Card>
                     <CardContent className="p-4">
-                        <label className="text-sm font-medium mb-2 block">Selecione o Tipo de Unidade:</label>
-                        <Select value={selectedTipo} onValueChange={setSelectedTipo}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Escolha um tipo de unidade..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {tipos.map(tipo => (
-                                    <SelectItem key={tipo.id} value={tipo.id}>
-                                        {tipo.nome}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-4">
+                            <div className="flex-1">
+                                <label className="text-sm font-medium mb-2 block">Selecione o Tipo de Unidade:</label>
+                                <Select value={selectedTipo} onValueChange={setSelectedTipo}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Escolha um tipo de unidade..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {tipos.map(tipo => (
+                                            <SelectItem key={tipo.id} value={tipo.id}>
+                                                {tipo.nome}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="pt-6">
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={handleImport}
+                                    disabled={importing}
+                                    id="importar-csv"
+                                    className="hidden"
+                                />
+                                <label htmlFor="importar-csv">
+                                    <Button 
+                                        type="button" 
+                                        variant="outline" 
+                                        disabled={importing}
+                                        asChild
+                                    >
+                                        <span className="cursor-pointer">
+                                            {importing ? (
+                                                <>
+                                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                    Importando...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Upload className="h-4 w-4 mr-2" />
+                                                    Importar CSV
+                                                </>
+                                            )}
+                                        </span>
+                                    </Button>
+                                </label>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
