@@ -90,14 +90,44 @@ export default function Relatorios() {
 
     const totalConformidades = fiscalizacoesAno.reduce((acc, f) => acc + (f.total_conformidades || 0), 0);
 
-    // Dados por serviço
+    // Dados por serviço (contando corretamente)
     const porServico = {};
     fiscalizacoesAno.forEach(f => {
         if (!porServico[f.servico]) {
-            porServico[f.servico] = { servico: f.servico, quantidade: 0, ncs: 0 };
+            porServico[f.servico] = { 
+                servico: f.servico, 
+                quantidade: 0, 
+                constatacoes: 0,
+                ncs: 0,
+                determinacoes: 0,
+                recomendacoes: 0
+            };
         }
         porServico[f.servico].quantidade++;
-        porServico[f.servico].ncs += f.total_nao_conformidades || 0;
+        
+        // Contar por unidades desta fiscalização
+        const unidadesServico = unidadesFiscalizacoesAno.filter(u => u.fiscalizacao_id === f.id);
+        
+        // Constatações
+        porServico[f.servico].constatacoes += respostas.filter(r =>
+            unidadesServico.some(u => u.id === r.unidade_fiscalizada_id) &&
+            (r.resposta === 'SIM' || r.resposta === 'NAO')
+        ).length;
+        
+        // NCs
+        porServico[f.servico].ncs += ncs.filter(nc =>
+            unidadesServico.some(u => u.id === nc.unidade_fiscalizada_id)
+        ).length;
+        
+        // Determinações
+        porServico[f.servico].determinacoes += determinacoes.filter(d =>
+            unidadesServico.some(u => u.id === d.unidade_fiscalizada_id)
+        ).length;
+        
+        // Recomendações
+        porServico[f.servico].recomendacoes += recomendacoes.filter(r =>
+            unidadesServico.some(u => u.id === r.unidade_fiscalizada_id)
+        ).length;
     });
     const dadosServico = Object.values(porServico);
 
@@ -316,14 +346,18 @@ export default function Relatorios() {
                         </CardHeader>
                         <CardContent>
                             {dadosServico.length > 0 ? (
-                                <ResponsiveContainer width="100%" height={250}>
+                                <ResponsiveContainer width="100%" height={300}>
                                     <BarChart data={dadosServico}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="servico" tick={{ fontSize: 10 }} />
+                                        <XAxis dataKey="servico" tick={{ fontSize: 9 }} angle={-15} textAnchor="end" height={80} />
                                         <YAxis />
                                         <Tooltip />
+                                        <Legend />
                                         <Bar dataKey="quantidade" fill="#3b82f6" name="Fiscalizações" />
+                                        <Bar dataKey="constatacoes" fill="#f59e0b" name="Constatações" />
                                         <Bar dataKey="ncs" fill="#ef4444" name="NCs" />
+                                        <Bar dataKey="determinacoes" fill="#eab308" name="Determinações" />
+                                        <Bar dataKey="recomendacoes" fill="#06b6d4" name="Recomendações" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
