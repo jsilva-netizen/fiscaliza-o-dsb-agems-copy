@@ -396,7 +396,7 @@ export default function VistoriarUnidade() {
                         <TabsTrigger value="fotos" className="text-xs">
                             <Camera className="h-4 w-4 mr-1" />
                             Fotos
-                            {fotos.length < 2 && <span className="ml-1 text-red-500">!</span>}
+                            {fotos.length === 0 && <span className="ml-1 text-red-500">!</span>}
                         </TabsTrigger>
                         <TabsTrigger value="ncs" className="text-xs">
                             <AlertTriangle className="h-4 w-4 mr-1" />
