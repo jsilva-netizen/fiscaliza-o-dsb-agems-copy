@@ -34,6 +34,9 @@ export default function PrestadoresServico() {
         queryFn: () => base44.entities.PrestadorServico.list('nome', 200)
     });
 
+    const prestadoresServico = prestadores.filter(p => p.tipo === 'prestador_servico');
+    const titulares = prestadores.filter(p => p.tipo === 'titular');
+
     const criarMutation = useMutation({
         mutationFn: (data) => base44.entities.PrestadorServico.create(data),
         onSuccess: () => {
