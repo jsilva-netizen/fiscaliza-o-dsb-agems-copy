@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, AlertCircle, CheckCircle, Clock, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import ChartEvolucaoStatus from '@/components/determinacoes/ChartEvolucaoStatus';
+import AnaliseTemposMedios from '@/components/determinacoes/AnaliseTemposMedios';
+import MapaDistribuicao from '@/components/determinacoes/MapaDistribuicao';
 
 export default function AcompanhamentoDeterminacoes() {
     const [selectedDeterminacao, setSelectedDeterminacao] = useState(null);
@@ -35,6 +38,11 @@ export default function AcompanhamentoDeterminacoes() {
     const { data: municipios = [] } = useQuery({
         queryKey: ['municipios'],
         queryFn: () => base44.entities.Municipio.list()
+    });
+
+    const { data: julgamentos = [] } = useQuery({
+        queryKey: ['julgamentos'],
+        queryFn: () => base44.entities.Julgamento.list()
     });
 
     // Calcular KPIs
@@ -144,6 +152,18 @@ export default function AcompanhamentoDeterminacoes() {
                             </div>
                         </CardContent>
                     </Card>
+                </div>
+
+                {/* Análises */}
+                <div className="mb-8">
+                    <h2 className="text-xl font-semibold mb-4">Análises</h2>
+                    <AnaliseTemposMedios determinacoes={determinacoes} respostas={respostas} julgamentos={julgamentos} />
+                </div>
+
+                {/* Gráficos */}
+                <div className="grid grid-cols-2 gap-6 mb-8">
+                    <ChartEvolucaoStatus determinacoes={determinacoes} respostas={respostas} />
+                    <MapaDistribuicao determinacoes={determinacoes} autos={autos} municipios={municipios} />
                 </div>
 
                 {/* Tabs */}
