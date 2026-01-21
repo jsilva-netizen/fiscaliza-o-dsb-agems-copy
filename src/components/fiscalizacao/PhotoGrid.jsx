@@ -35,11 +35,14 @@ export default function PhotoGrid({
         setUploadProgress(0);
 
         try {
+            const fotosCarregadas = [];
             let processados = 0;
+
+            // Upload todas as imagens
             for (const file of Array.from(files)) {
                 const { file_url } = await base44.integrations.Core.UploadFile({ file: file });
                 
-                await onAddFoto({
+                fotosCarregadas.push({
                     url: file_url,
                     data_hora: new Date().toISOString()
                 });
@@ -47,6 +50,9 @@ export default function PhotoGrid({
                 processados++;
                 setUploadProgress(processados);
             }
+
+            // Adicionar todas de uma vez
+            fotosCarregadas.forEach(foto => onAddFoto(foto));
         } catch (err) {
             console.error('Erro upload:', err);
             alert('Erro ao fazer upload: ' + err.message);
