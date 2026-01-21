@@ -31,6 +31,51 @@ export default function PrestadoresServico() {
         queryFn: () => base44.entities.PrestadorServico.list('nome', 200)
     });
 
+    const { data: fiscalizacoes = [] } = useQuery({
+        queryKey: ['fiscalizacoes-todos'],
+        queryFn: () => base44.entities.Fiscalizacao.list('data_inicio', 500)
+    });
+
+    const { data: unidades = [] } = useQuery({
+        queryKey: ['unidades-todas'],
+        queryFn: () => base44.entities.UnidadeFiscalizada.list('id', 500)
+    });
+
+    const { data: ncs = [] } = useQuery({
+        queryKey: ['ncs-todos'],
+        queryFn: () => base44.entities.NaoConformidade.list('id', 500)
+    });
+
+    const { data: determinacoes = [] } = useQuery({
+        queryKey: ['determinacoes-todos'],
+        queryFn: () => base44.entities.Determinacao.list('id', 500)
+    });
+
+    const { data: autos = [] } = useQuery({
+        queryKey: ['autos-todos'],
+        queryFn: () => base44.entities.AutoInfracao.list('id', 500)
+    });
+
+    const { data: recomendacoes = [] } = useQuery({
+        queryKey: ['recomendacoes-todas'],
+        queryFn: () => base44.entities.Recomendacao.list('id', 500)
+    });
+
+    const getStatsForPrestador = (prestadorId) => {
+        const prestadorFiscalizacoes = fiscalizacoes.filter(f => f.prestador_servico_id === prestadorId);
+        const unidadeIds = unidades
+            .filter(u => prestadorFiscalizacoes.some(f => f.id === u.fiscalizacao_id))
+            .map(u => u.id);
+
+        return {
+            fiscalizacoes: prestadorFiscalizacoes.length,
+            ncs: ncs.filter(nc => unidadeIds.includes(nc.unidade_fiscalizada_id)).length,
+            recomendacoes: recomendacoes.filter(r => unidadeIds.includes(r.unidade_fiscalizada_id)).length,
+            determinacoes: determinacoes.filter(d => unidadeIds.includes(d.unidade_fiscalizada_id)).length,
+            autos: autos.filter(a => a.prestador_servico_id === prestadorId).length
+        };
+    };
+
     const criarMutation = useMutation({
         mutationFn: (data) => base44.entities.PrestadorServico.create(data),
         onSuccess: () => {
