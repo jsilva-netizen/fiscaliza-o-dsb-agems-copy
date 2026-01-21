@@ -34,30 +34,44 @@ export default function DetalhePrestador() {
 
     const { data: fiscalizacoes = [] } = useQuery({
         queryKey: ['fiscalizacoes-prestador', prestadorId],
-        queryFn: () => base44.entities.Fiscalizacao.list().then(fs => fs.filter(f => f.prestador_servico_id === prestadorId))
+        queryFn: () => base44.entities.Fiscalizacao.list('id', 500).then(fs => fs.filter(f => f.prestador_servico_id === prestadorId))
+    });
+
+    const { data: unidades = [] } = useQuery({
+        queryKey: ['unidades-fiscalizacoes', prestadorId],
+        queryFn: async () => {
+            if (fiscalizacoes.length === 0) return [];
+            return base44.entities.UnidadeFiscalizada.list('id', 500).then(us => 
+                us.filter(u => fiscalizacoes.some(f => f.id === u.fiscalizacao_id))
+            );
+        },
+        enabled: fiscalizacoes.length > 0
     });
 
     const { data: determinacoes = [] } = useQuery({
         queryKey: ['determinacoes-prestador', prestadorId],
-        queryFn: () => base44.entities.Determinacao.list().then(ds => 
-            ds.filter(d => d.prestador_servico_id === prestadorId || 
-                  determinacoes.some(det => det.id === d.id))
-        )
+        queryFn: async () => {
+            if (unidades.length === 0) return [];
+            return base44.entities.Determinacao.list('id', 500).then(ds => 
+                ds.filter(d => unidades.some(u => u.id === d.unidade_fiscalizada_id))
+            );
+        },
+        enabled: unidades.length > 0
     });
 
     const { data: respostas = [] } = useQuery({
         queryKey: ['respostas-determinacoes'],
-        queryFn: () => base44.entities.RespostaDeterminacao.list()
+        queryFn: () => base44.entities.RespostaDeterminacao.list('id', 500)
     });
 
     const { data: autos = [] } = useQuery({
         queryKey: ['autos-prestador', prestadorId],
-        queryFn: () => base44.entities.AutoInfracao.list().then(as => as.filter(a => a.prestador_servico_id === prestadorId))
+        queryFn: () => base44.entities.AutoInfracao.list('id', 500).then(as => as.filter(a => a.prestador_servico_id === prestadorId))
     });
 
     const { data: municipios = [] } = useQuery({
         queryKey: ['municipios'],
-        queryFn: () => base44.entities.Municipio.list()
+        queryFn: () => base44.entities.Municipio.list('nome', 500)
     });
 
     const atualizarMutation = useMutation({
