@@ -194,8 +194,8 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 drawCell(`Localidade: ${fiscalizacao.municipio_nome}`, margin, yPos, tableWidth, rowHeight, true);
                 yPos += rowHeight;
 
-                // Localização
-                drawCell(`Localização: ${unidade.endereco || '-'}`, margin, yPos, tableWidth, rowHeight, true);
+                // Endereço
+                drawCell(`Endereço: ${unidade.endereco || '-'}`, margin, yPos, tableWidth, rowHeight, true);
                 yPos += rowHeight;
 
                 // Constatações - Header
