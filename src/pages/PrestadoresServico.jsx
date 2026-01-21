@@ -69,6 +69,7 @@ export default function PrestadoresServico() {
 
         return {
             fiscalizacoes: prestadorFiscalizacoes.length,
+            fiscalizacoesFinalizado: prestadorFiscalizacoes.filter(f => f.status === 'finalizada').length,
             ncs: ncs.filter(nc => unidadeIds.includes(nc.unidade_fiscalizada_id)).length,
             recomendacoes: recomendacoes.filter(r => unidadeIds.includes(r.unidade_fiscalizada_id)).length,
             determinacoes: determinacoes.filter(d => unidadeIds.includes(d.unidade_fiscalizada_id)).length,
