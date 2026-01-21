@@ -336,9 +336,10 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                         return numA - numB;
                     });
                     
-                    if (yPos + rowHeight > pageHeight - margin) {
+                    if (yPos + rowHeight > pageHeight - bottomMargin) {
                         pdf.addPage();
-                        yPos = margin;
+                        await addTimbradoToPage(pdf);
+                        yPos = topMargin;
                     }
                     drawCell('Determinações', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
                     yPos += rowHeight;
