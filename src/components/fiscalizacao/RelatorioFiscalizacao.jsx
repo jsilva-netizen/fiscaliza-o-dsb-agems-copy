@@ -347,20 +347,20 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 }
 
                 // Determinações
+                if (yPos + rowHeight > pageHeight - bottomMargin) {
+                    pdf.addPage();
+                    addTimbradoToPage(pdf, timbradoBase64);
+                    yPos = topMargin;
+                }
+                drawCell('Determinações', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
+                yPos += rowHeight;
+
                 if (determinacoes.length > 0) {
                     const detsSorted = [...determinacoes].sort((a, b) => {
                         const numA = parseInt(a.numero_determinacao?.replace('D', '') || '999');
                         const numB = parseInt(b.numero_determinacao?.replace('D', '') || '999');
                         return numA - numB;
                     });
-                    
-                    if (yPos + rowHeight > pageHeight - bottomMargin) {
-                        pdf.addPage();
-                        addTimbradoToPage(pdf, timbradoBase64);
-                        yPos = topMargin;
-                    }
-                    drawCell('Determinações', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
-                    yPos += rowHeight;
 
                     detsSorted.forEach((det) => {
                         const texto = `${det.descricao} Prazo: ${det.prazo_dias} dias.`;
@@ -381,6 +381,12 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
 
                         yPos += cellHeight;
                     });
+                } else {
+                    const cellHeight = rowHeight;
+                    pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.text('Não se aplica.', margin + 12, yPos + 4.5);
+                    yPos += cellHeight;
                 }
 
                 // Registros Fotográficos
