@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
     ArrowLeft, ClipboardCheck, Camera, AlertTriangle, FileText, 
-    CheckCircle2, Loader2, Plus, Save
+    CheckCircle2, Loader2, Plus, Save, AlertCircle
 } from 'lucide-react';
 import ChecklistItem from '@/components/fiscalizacao/ChecklistItem';
 import PhotoGrid from '@/components/fiscalizacao/PhotoGrid';
