@@ -174,11 +174,25 @@ export default function VistoriarUnidade() {
                     });
                 }
             }
+            
+            return { itemId, data };
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] });
-            queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
-            queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+        onSuccess: async ({ itemId, data }) => {
+            // Aguardar invalidação e refetch das queries
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] }),
+                queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] }),
+                queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] }),
+                queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] })
+            ]);
+            
+            // Aguardar refetch completar
+            await queryClient.refetchQueries({ queryKey: ['respostas', unidadeId] });
+            await queryClient.refetchQueries({ queryKey: ['ncs', unidadeId] });
+            await queryClient.refetchQueries({ queryKey: ['determinacoes', unidadeId] });
+            
+            // Atualizar estado local APENAS após tudo ser recarregado
+            setRespostas(prev => ({ ...prev, [itemId]: data }));
         },
         onError: (err) => {
             alert(err.message);
@@ -292,7 +306,6 @@ export default function VistoriarUnidade() {
     });
 
     const handleResponder = (itemId, data) => {
-        setRespostas(prev => ({ ...prev, [itemId]: data }));
         salvarRespostaMutation.mutate({ itemId, data });
     };
 
@@ -403,7 +416,7 @@ export default function VistoriarUnidade() {
                                 // Verificar se é o primeiro item OU se o item anterior já foi respondido
                                 const itemAnterior = index > 0 ? itensChecklist[index - 1] : null;
                                 const itemAnteriorRespondido = !itemAnterior || respostas[itemAnterior.id]?.resposta;
-                                const liberado = itemAnteriorRespondido;
+                                const liberado = itemAnteriorRespondido && !salvarRespostaMutation.isPending;
                                 
                                 return (
                                     <ChecklistItem
@@ -412,7 +425,7 @@ export default function VistoriarUnidade() {
                                         resposta={respostas[item.id]}
                                         onResponder={(data) => handleResponder(item.id, data)}
                                         numero={index + 1}
-                                        desabilitado={unidade?.status === 'finalizada' || !liberado}
+                                        desabilitado={unidade?.status === 'finalizada' || !liberado || salvarRespostaMutation.isPending}
                                     />
                                 );
                             })
