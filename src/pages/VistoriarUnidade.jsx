@@ -250,7 +250,6 @@ export default function VistoriarUnidade() {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
-            setRecomendacoesCache(null); // Limpar cache para recarregar na próxima
             setNovaRecomendacao('');
             setShowAddRecomendacao(false);
         }
