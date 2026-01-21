@@ -9,8 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
     ArrowLeft, BarChart3, MapPin, CheckCircle2, AlertTriangle, 
-    TrendingUp, Building2, FileText, Download
+    TrendingUp, Building2, FileText, Download, FileJson, Share2
 } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const COLORS = ['#22c55e', '#ef4444', '#3b82f6', '#f59e0b'];
@@ -80,6 +82,51 @@ export default function Relatorios() {
 
     const anos = ['2024', '2025', '2026'];
 
+    const exportarPDF = async () => {
+        const element = document.getElementById('relatorio-completo');
+        const canvas = await html2canvas(element, { scale: 2 });
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 210;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+        pdf.save(`Relatorio-Fiscalizacoes-${anoFiltro}.pdf`);
+    };
+
+    const exportarJSON = () => {
+        const dados = {
+            ano: anoFiltro,
+            data_geracao: new Date().toLocaleString('pt-BR'),
+            resumo: {
+                totalFiscalizacoes,
+                finalizadas,
+                totalNCs,
+                totalConformidades,
+                municipiosFiscalizados: municipiosFiscalizados.size
+            },
+            por_servico: dadosServico,
+            top_municipios: topMunicipios,
+            fiscalizacoes_detalhes: fiscalizacoesAno.map(f => ({
+                id: f.id,
+                municipio: f.municipio_nome,
+                prestador: f.prestador_servico_nome,
+                servico: f.servico,
+                status: f.status,
+                total_ncs: f.total_nao_conformidades,
+                total_conformidades: f.total_conformidades
+            }))
+        };
+        
+        const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Relatorio-Fiscalizacoes-${anoFiltro}.json`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -97,22 +144,34 @@ export default function Relatorios() {
                                 <p className="text-blue-200 text-sm">Visão geral das fiscalizações</p>
                             </div>
                         </div>
-                        <Select value={anoFiltro} onValueChange={setAnoFiltro}>
-                            <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {anos.map(ano => (
-                                    <SelectItem key={ano} value={ano}>{ano}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <div className="flex gap-2">
+                            <Select value={anoFiltro} onValueChange={setAnoFiltro}>
+                                <SelectTrigger className="w-32 bg-white/10 border-white/20 text-white">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {anos.map(ano => (
+                                        <SelectItem key={ano} value={ano}>{ano}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button onClick={exportarPDF} size="sm" className="bg-white/20 hover:bg-white/30 text-white gap-1">
+                                <Download className="h-4 w-4" />
+                                PDF
+                            </Button>
+                            <Button onClick={exportarJSON} size="sm" className="bg-white/20 hover:bg-white/30 text-white gap-1">
+                                <FileJson className="h-4 w-4" />
+                                JSON
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            {/* Content */}
+            <div id="relatorio-completo" className="max-w-6xl mx-auto px-4 py-6 bg-white">
             {/* Stats Cards */}
-            <div className="max-w-6xl mx-auto px-4 py-6">
+            <div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <Card>
                         <CardContent className="p-4">
@@ -292,6 +351,7 @@ export default function Relatorios() {
                         </div>
                     </CardContent>
                 </Card>
+            </div>
             </div>
         </div>
     );
