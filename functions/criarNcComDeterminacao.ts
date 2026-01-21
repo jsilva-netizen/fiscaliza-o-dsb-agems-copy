@@ -92,33 +92,16 @@ Deno.serve(async (req) => {
         }
         // 5. Se tem texto_recomendacao, criar Recomendação
         else if (texto_recomendacao) {
-            // Buscar todas as recomendações da fiscalização para numeração contínua
-            const unidade = await base44.entities.UnidadeFiscalizada.filter({ id: unidade_fiscalizada_id }).then(r => r[0]);
-            const todasUnidades = await base44.entities.UnidadeFiscalizada.filter(
-                { fiscalizacao_id: unidade.fiscalizacao_id },
-                'created_date',
-                500
-            );
-            const idsUnidades = todasUnidades.map(u => u.id);
-
-            const todasRec = await base44.entities.Recomendacao.list('created_date', 1000);
-            const recsDaFiscalizacao = todasRec.filter(r => idsUnidades.includes(r.unidade_fiscalizada_id));
-
-            const numerosRec = recsDaFiscalizacao
-                .map(r => parseInt(r.numero_recomendacao?.replace('R', '') || '0'))
-                .filter(n => !isNaN(n));
-            const proximoNumero = numerosRec.length > 0 ? Math.max(...numerosRec) + 1 : 1;
-
             const rec = await base44.entities.Recomendacao.create({
                 unidade_fiscalizada_id,
-                numero_recomendacao: `R${proximoNumero}`,
+                numero_recomendacao,
                 descricao: texto_recomendacao,
                 origem: 'checklist'
             });
 
             resultado.recomendacao = {
                 id: rec.id,
-                numero_recomendacao: `R${proximoNumero}`
+                numero_recomendacao
             };
         }
 
