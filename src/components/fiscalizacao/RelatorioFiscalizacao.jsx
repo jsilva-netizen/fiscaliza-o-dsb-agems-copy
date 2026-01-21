@@ -268,6 +268,16 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
             // Reset do contador de figuras
             let offsetGlobalFiguras = 0;
 
+            // Para cada unidade (segundo loop para renderização)
+            for (let idx = 0; idx < unidades.length; idx++) {
+                const unidade = unidades[idx];
+                const respostas = todasRespostas[idx] || [];
+                const ncs = todasNcs[idx] || [];
+                const determinacoes = todasDeterminacoes[idx] || [];
+                const recomendacoes = todasRecomendacoes[idx] || [];
+                const fotos = todasFotos[idx] || [];
+                const mapeamento = mapeamentosNumeracao[idx];
+
                 // Nova página para cada unidade
                 pdf.addPage();
                 addTimbradoToPage(pdf, timbradoBase64);
@@ -308,8 +318,9 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                     return numA - numB;
                 });
                 
-                constatacoes.forEach((resp, i) => {
-                    const numConst = resp.numero_constatacao || `C${i + 1}`;
+                constatacoes.forEach((resp) => {
+                    const novoNum = mapeamento.constatacoes[resp.id];
+                    const numConst = `C${novoNum}`;
                     const textoConstatacao = resp.pergunta;
                     const texto = `${textoConstatacao}${resp.observacao ? ` Observação: ${resp.observacao}` : ''}`;
                     const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
