@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, MapPin, Loader2, Navigation, AlertCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Loader2, Navigation, AlertCircle, Plus } from 'lucide-react';
 
 const SERVICOS = ['Abastecimento de Água', 'Esgotamento Sanitário', 'Manejo de Resíduos Sólidos', 'Limpeza Urbana', 'Drenagem'];
 
@@ -16,7 +16,8 @@ export default function NovaFiscalizacao() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         municipio_id: '',
-        servico: ''
+        servico: '',
+        prestador_servico_id: ''
     });
     const [location, setLocation] = useState(null);
     const [locationError, setLocationError] = useState(null);
@@ -26,6 +27,11 @@ export default function NovaFiscalizacao() {
     const { data: municipios = [], isLoading: loadingMunicipios } = useQuery({
         queryKey: ['municipios'],
         queryFn: () => base44.entities.Municipio.list('nome', 100)
+    });
+
+    const { data: prestadores = [] } = useQuery({
+        queryKey: ['prestadores'],
+        queryFn: () => base44.entities.PrestadorServico.filter({ ativo: true }, 'nome', 200)
     });
 
     useEffect(() => {
@@ -69,9 +75,11 @@ export default function NovaFiscalizacao() {
     const createMutation = useMutation({
         mutationFn: async (data) => {
             const municipio = municipios.find(m => m.id === data.municipio_id);
+            const prestador = prestadores.find(p => p.id === data.prestador_servico_id);
             const fiscalizacaoData = {
                 ...data,
                 municipio_nome: municipio?.nome,
+                prestador_servico_nome: prestador?.nome,
                 fiscal_nome: user?.full_name || 'Fiscal',
                 fiscal_email: user?.email,
                 data_inicio: new Date().toISOString(),
@@ -89,7 +97,7 @@ export default function NovaFiscalizacao() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!formData.municipio_id || !formData.servico) {
+        if (!formData.municipio_id || !formData.servico || !formData.prestador_servico_id) {
             alert('Preencha todos os campos obrigatórios');
             return;
         }
@@ -196,6 +204,31 @@ export default function NovaFiscalizacao() {
                         </Select>
                     </div>
 
+                    {/* Prestador de Serviço */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <Label>Prestador de Serviço *</Label>
+                            <Link to={createPageUrl('PrestadoresServico')}>
+                                <Button type="button" size="sm" variant="outline">
+                                    <Plus className="h-3 w-3" />
+                                </Button>
+                            </Link>
+                        </div>
+                        <Select 
+                            value={formData.prestador_servico_id} 
+                            onValueChange={(v) => setFormData({...formData, prestador_servico_id: v})}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione o prestador..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {prestadores.map(p => (
+                                    <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
                     {/* Fiscal Info */}
                     {user && (
                         <Card className="bg-blue-50 border-blue-200">
@@ -212,7 +245,7 @@ export default function NovaFiscalizacao() {
                     <Button 
                         type="submit" 
                         className="w-full h-14 text-lg bg-green-600 hover:bg-green-700"
-                        disabled={createMutation.isPending || !formData.municipio_id || !formData.servico}
+                        disabled={createMutation.isPending || !formData.municipio_id || !formData.servico || !formData.prestador_servico_id}
                     >
                         {createMutation.isPending ? (
                             <>
