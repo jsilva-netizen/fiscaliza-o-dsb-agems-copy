@@ -142,11 +142,16 @@ export default function VistoriarUnidade() {
                 const numero = `C${respostasAtuais.length + 1}`;
 
                 // Definir texto da constatação baseado na resposta
-                const textoConstatacao = data.resposta === 'SIM' 
+                let textoConstatacao = data.resposta === 'SIM' 
                     ? item.texto_constatacao_sim 
                     : data.resposta === 'NAO' 
                         ? item.texto_constatacao_nao 
                         : item.pergunta;
+                
+                // Adicionar ';' ao final se não existir
+                if (textoConstatacao && !textoConstatacao.trim().endsWith(';')) {
+                    textoConstatacao = textoConstatacao.trim() + ';';
+                }
 
                 if (item.gera_nc && data.resposta === 'NAO') {
                     // Usar backend function para criar Resposta + NC + D/R atomicamente
