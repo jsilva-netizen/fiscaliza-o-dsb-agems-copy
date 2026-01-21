@@ -287,7 +287,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
 
                         if (yPos + cellHeight > pageHeight - bottomMargin) {
                             pdf.addPage();
-                            await addTimbradoToPage(pdf);
+                            addTimbradoToPage(pdf, timbradoBase64);
                             yPos = topMargin;
                         }
 
