@@ -181,6 +181,15 @@ export default function VistoriarUnidade() {
                         texto_recomendacao: item.texto_recomendacao,
                         prazo_dias: item.prazo_dias || 30
                     });
+                    
+                    // Incrementar contadores localmente após sucesso
+                    setContadores(prev => ({
+                        ...prev,
+                        C: prev.C + 1,
+                        NC: prev.NC + 1,
+                        D: prev.D + 1,
+                        R: prev.R + 1
+                    }));
                 } else {
                     // Criar apenas a resposta se não gerar NC
                     await base44.entities.RespostaChecklist.create({
@@ -192,6 +201,12 @@ export default function VistoriarUnidade() {
                         numero_constatacao: numero,
                         observacao: data.observacao
                     });
+                    
+                    // Incrementar apenas o contador de constatações
+                    setContadores(prev => ({
+                        ...prev,
+                        C: prev.C + 1
+                    }));
                 }
             }
             
