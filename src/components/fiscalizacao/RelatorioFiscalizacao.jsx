@@ -83,8 +83,17 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
             const bottomMargin = 25;
             let yPos = topMargin;
 
+            // Carregar timbrado uma vez
+            let timbradoBase64 = null;
+            try {
+                const timbradoUrl = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69331445067a2821c02acff8/4fe7a4846_timbrado.pdf';
+                timbradoBase64 = await loadImageAsBase64(timbradoUrl);
+            } catch (err) {
+                console.error('Erro ao carregar timbrado:', err);
+            }
+
             // Adicionar timbrado na primeira página
-            await addTimbradoToPage(pdf);
+            addTimbradoToPage(pdf, timbradoBase64);
             
             pdf.setTextColor(255, 255, 255);
             pdf.setFontSize(20);
