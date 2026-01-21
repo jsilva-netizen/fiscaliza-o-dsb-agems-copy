@@ -166,7 +166,7 @@ export default function AdicionarUnidade() {
                         </Link>
                         <div>
                             <h1 className="text-xl font-bold">Adicionar Unidade</h1>
-                            <p className="text-blue-200 text-sm">{fiscalizacao?.municipio_nome} • {fiscalizacao?.servico}</p>
+                            <p className="text-blue-200 text-sm">{fiscalizacao?.municipio_nome} • {fiscalizacao?.servicos?.join(', ')}</p>
                         </div>
                     </div>
                 </div>
