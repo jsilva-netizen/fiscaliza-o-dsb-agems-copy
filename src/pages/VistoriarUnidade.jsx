@@ -159,8 +159,17 @@ export default function VistoriarUnidade() {
                     observacao: data.observacao
                 });
             } else {
+                // Carregar contadores globais na primeira resposta (se não carregou)
+                let contadoresAtuais = contadores;
+                if (!contadoresCarregados && !contadoresAtuais) {
+                    const contadoresCalc = await calcularProximaNumeracao(unidade.fiscalizacao_id, unidadeId, base44);
+                    contadoresAtuais = contadoresCalc;
+                    setContadores(contadoresCalc);
+                    setContadoresCarregados(true);
+                }
+
                 // Usar contadores para numeração contínua
-                const numero = gerarNumeroConstatacao(contadores);
+                const numero = gerarNumeroConstatacao(contadoresAtuais);
 
                 // Definir texto da constatação baseado na resposta
                 let textoConstatacao = data.resposta === 'SIM' 
