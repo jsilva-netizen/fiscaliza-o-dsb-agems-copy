@@ -111,7 +111,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
             yPos += 8;
 
             // Resumo Executivo
-            pdf.setFillColor(220, 220, 220);
+            pdf.setFillColor(189, 214, 238);
             pdf.rect(margin, yPos, pageWidth - 2 * margin, 8, 'F');
             pdf.setFontSize(12);
             pdf.setFont('helvetica', 'bold');
@@ -176,7 +176,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 pdf.setFontSize(9);
 
                 // Cabeçalho - TIPO DE UNIDADE
-                pdf.setFillColor(192, 192, 192);
+                pdf.setFillColor(189, 214, 238);
                 pdf.rect(margin, yPos, tableWidth, rowHeight, 'F');
                 pdf.setDrawColor(0);
                 pdf.rect(margin, yPos, tableWidth, rowHeight, 'S');
@@ -199,7 +199,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 yPos += rowHeight;
 
                 // Constatações - Header
-                drawCell('Constatações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                drawCell('Constatações', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
                 yPos += rowHeight;
 
                 const constatacoes = respostas.filter(r => r.resposta === 'SIM' || r.resposta === 'NAO').sort((a, b) => {
@@ -242,7 +242,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                         pdf.addPage();
                         yPos = margin;
                     }
-                    drawCell('Não Conformidades', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                    drawCell('Não Conformidades', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
                     yPos += rowHeight;
 
                     ncsSorted.forEach((nc) => {
@@ -285,7 +285,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                         pdf.addPage();
                         yPos = margin;
                     }
-                    drawCell('Recomendações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                    drawCell('Recomendações', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
                     yPos += rowHeight;
 
                     recsSorted.forEach((rec) => {
@@ -319,7 +319,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                         pdf.addPage();
                         yPos = margin;
                     }
-                    drawCell('Determinações', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                    drawCell('Determinações', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
                     yPos += rowHeight;
 
                     detsSorted.forEach((det) => {
@@ -348,7 +348,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                         pdf.addPage();
                         yPos = margin;
                     }
-                    drawCell('Registros Fotográficos', margin, yPos, tableWidth, rowHeight, true, true, [192, 192, 192]);
+                    drawCell('Registros Fotográficos', margin, yPos, tableWidth, rowHeight, true, true, [189, 214, 238]);
                     yPos += rowHeight;
 
                     // Converter todas as imagens para base64 primeiro
