@@ -571,6 +571,36 @@ export default function VistoriarUnidade() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Dialog Confirmação Sem Fotos */}
+            <Dialog open={showConfirmaSemFotos} onOpenChange={setShowConfirmaSemFotos}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-yellow-700">
+                            <AlertCircle className="h-5 w-5" />
+                            Nenhuma Foto Registrada
+                        </DialogTitle>
+                        <DialogDescription>
+                            Esta unidade será finalizada sem nenhuma foto. Tem certeza que deseja continuar?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex gap-2">
+                        <Button 
+                            className="flex-1 bg-yellow-600 hover:bg-yellow-700"
+                            onClick={() => {
+                                setShowConfirmaSemFotos(false);
+                                finalizarUnidadeMutation.mutate();
+                            }}
+                            disabled={finalizarUnidadeMutation.isPending}
+                        >
+                            Sim, Finalizar
+                        </Button>
+                        <Button variant="outline" onClick={() => setShowConfirmaSemFotos(false)}>
+                            Cancelar
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
             </div>
             );
             }
