@@ -113,7 +113,7 @@ export default function Home() {
                             <CardContent className="p-4 text-center">
                                 <Users className="h-8 w-8 text-blue-300 mx-auto mb-2" />
                                 <h3 className="text-white font-medium text-sm">Prestadores</h3>
-                                <p className="text-blue-300 text-xs">Serviço e empresas</p>
+                                <p className="text-blue-300 text-xs">Titulares e Empresas</p>
                             </CardContent>
                         </Card>
                     </Link>
