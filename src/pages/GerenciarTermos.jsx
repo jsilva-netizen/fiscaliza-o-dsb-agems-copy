@@ -1000,7 +1000,7 @@ export default function GerenciarTermos() {
                                                     onClick={() => window.open(termo.arquivo_protocolo_url)}
                                                 >
                                                     <Download className="h-4 w-4 mr-1" />
-                                                    Baixar Protocolo
+                                                    Baixar Arquivo de Protocolo
                                                 </Button>
                                             )}
 
