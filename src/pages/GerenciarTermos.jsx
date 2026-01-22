@@ -40,13 +40,13 @@ export default function GerenciarTermos() {
     });
     const [uploadingFile, setUploadingFile] = useState(false);
     const [uploadingProtocoloData, setUploadingProtocoloData] = useState(false);
-    const [uploadingProtocoloArquivo, setUploadingProtocoloArquivo] = useState(false);
+
     const [uploadingResposta, setUploadingResposta] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, termoId: null, step: 1, inputValue: '' });
     const [termoDetalhes, setTermoDetalhes] = useState(null);
     const [termoAssinadoTemp, setTermoAssinadoTemp] = useState(null);
     const [dataProtocoloOpen, setDataProtocoloOpen] = useState(false);
-    const [arquivoProtocoloOpen, setArquivoProtocoloOpen] = useState(false);
+
     const [respostaOpenId, setRespostaOpenId] = useState(null);
 
     const { data: fiscalizacoes = [] } = useQuery({
@@ -226,11 +226,11 @@ export default function GerenciarTermos() {
     };
 
     const getStatusFluxo = (termo) => {
-        if (!termo.arquivo_url) return 'pendente_tn';
-        if (!termo.data_protocolo || !termo.arquivo_protocolo_url) return 'pendente_protocolo';
-        if (!termo.data_recebimento_resposta) return 'ativo';
-        return 'respondido';
-    };
+            if (!termo.arquivo_url) return 'pendente_tn';
+            if (!termo.data_protocolo) return 'pendente_protocolo';
+            if (!termo.data_recebimento_resposta) return 'aguardando_resposta';
+            return 'respondido';
+        };
 
     const verificaPrazoVencido = (termo) => {
         if (!termo.data_maxima_resposta) return false;
@@ -251,14 +251,14 @@ export default function GerenciarTermos() {
     });
 
     const getStatusBadge = (status) => {
-        const statusMap = {
-            pendente_tn: { label: 'Pendente - TN Assinado', color: 'bg-yellow-500' },
-            pendente_protocolo: { label: 'Pendente - Protocolo', color: 'bg-yellow-500' },
-            ativo: { label: 'Ativo', color: 'bg-green-600' },
-            respondido: { label: 'Respondido', color: 'bg-purple-600' }
+            const statusMap = {
+                pendente_tn: { label: 'Pendente - TN Assinado', color: 'bg-yellow-500' },
+                pendente_protocolo: { label: 'Pendente - Data Protocolo', color: 'bg-yellow-500' },
+                aguardando_resposta: { label: 'Aguardando Resposta', color: 'bg-green-600' },
+                respondido: { label: 'Respondido', color: 'bg-purple-600' }
+            };
+            return statusMap[status] || { label: 'Criado', color: 'bg-blue-500' };
         };
-        return statusMap[status] || { label: 'Criado', color: 'bg-blue-500' };
-    };
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -844,62 +844,7 @@ export default function GerenciarTermos() {
                                                                   </Dialog>
                                                               )}
 
-                                                              {termo.arquivo_url && termo.data_protocolo && !termo.arquivo_protocolo_url && (
-                                                                  <Dialog open={arquivoProtocoloOpen} onOpenChange={setArquivoProtocoloOpen}>
-                                                                      <DialogTrigger asChild>
-                                                                          <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
-                                                                              <Upload className="h-4 w-4 mr-1" />
-                                                                              Enviar Arquivo Protocolo
-                                                                          </Button>
-                                                                      </DialogTrigger>
-                                                                      <DialogContent>
-                                                                          <DialogHeader>
-                                                                              <DialogTitle>Arquivo de Protocolo / AR</DialogTitle>
-                                                                          </DialogHeader>
-                                                                          <div className="space-y-3">
-                                                                              <Input
-                                                                                  type="file"
-                                                                                  accept=".pdf"
-                                                                                  id={`file-proto-${termo.id}`}
-                                                                              />
-                                                                              <Button
-                                                                                  onClick={async () => {
-                                                                                      const fileInput = document.getElementById(`file-proto-${termo.id}`);
-                                                                                      const file = fileInput?.files?.[0];
-
-                                                                                      if (!file) {
-                                                                                          alert('Selecione um arquivo');
-                                                                                          return;
-                                                                                      }
-
-                                                                                      try {
-                                                                                          setUploadingProtocoloArquivo(true);
-                                                                                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
-
-                                                                                          await base44.entities.TermoNotificacao.update(termo.id, {
-                                                                                              arquivo_protocolo_url: file_url
-                                                                                          });
-
-                                                                                          await queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
-                                                                                          setArquivoProtocoloOpen(false);
-                                                                                          alert('Arquivo de protocolo salvo com sucesso!');
-                                                                                      } catch (error) {
-                                                                                          alert('Erro ao salvar: ' + error.message);
-                                                                                      } finally {
-                                                                                          setUploadingProtocoloArquivo(false);
-                                                                                      }
-                                                                                  }}
-                                                                                  className="w-full"
-                                                                                  disabled={uploadingProtocoloArquivo}
-                                                                              >
-                                                                                  {uploadingProtocoloArquivo ? 'Salvando...' : 'Salvar Arquivo'}
-                                                                              </Button>
-                                                                          </div>
-                                                                      </DialogContent>
-                                                                  </Dialog>
-                                                              )}
-
-                                                              {termo.arquivo_url && termo.data_protocolo && termo.arquivo_protocolo_url && !termo.data_recebimento_resposta && (
+                                                              {termo.arquivo_url && termo.data_protocolo && !termo.data_recebimento_resposta && (
                                                                   <Dialog open={respostaOpenId === termo.id} onOpenChange={(open) => setRespostaOpenId(open ? termo.id : null)}>
                                                     <DialogTrigger asChild>
                                                         <Button size="sm" variant={verificaPrazoVencido(termo) ? "destructive" : "outline"}>
