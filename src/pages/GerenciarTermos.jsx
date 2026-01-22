@@ -889,59 +889,7 @@ export default function GerenciarTermos() {
                                                     Baixar Protocolo
                                                 </Button>
                                             )}
-                                            {termo.data_protocolo && !termo.arquivo_protocolo_url && (
-                                                <Dialog key={`protocolo-dialog-${termo.id}`}>
-                                                    <DialogTrigger asChild>
-                                                        <Button size="sm" variant="default" className="bg-orange-600 hover:bg-orange-700">
-                                                            <Upload className="h-4 w-4 mr-1" />
-                                                            Enviar Protocolo
-                                                        </Button>
-                                                    </DialogTrigger>
-                                                    <DialogContent>
-                                                        <DialogHeader>
-                                                            <DialogTitle>Enviar Arquivo de Protocolo</DialogTitle>
-                                                        </DialogHeader>
-                                                        <div className="space-y-3">
-                                                            <Input
-                                                                type="file"
-                                                                accept=".pdf"
-                                                                id={`file-protocolo-fix-${termo.id}`}
-                                                            />
-                                                            <Button
-                                                                onClick={async () => {
-                                                                    const fileInput = document.getElementById(`file-protocolo-fix-${termo.id}`);
-                                                                    const file = fileInput?.files?.[0];
 
-                                                                    if (!file) {
-                                                                        alert('Selecione um arquivo');
-                                                                        return;
-                                                                    }
-                                                                    try {
-                                                                        setUploadingProtocolo(true);
-                                                                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                                        await base44.entities.TermoNotificacao.update(termo.id, {
-                                                                            arquivo_protocolo_url: file_url,
-                                                                            status: 'ativo'
-                                                                        });
-                                                                        queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
-                                                                        alert('Arquivo de protocolo salvo com sucesso!');
-                                                                        // Close dialog by clearing the file input
-                                                                        document.getElementById(`file-protocolo-fix-${termo.id}`).value = '';
-                                                                    } catch (error) {
-                                                                        alert('Erro ao salvar: ' + error.message);
-                                                                    } finally {
-                                                                        setUploadingProtocolo(false);
-                                                                    }
-                                                                }}
-                                                                className="w-full"
-                                                                disabled={uploadingProtocolo}
-                                                            >
-                                                                {uploadingProtocolo ? 'Salvando...' : 'Salvar'}
-                                                            </Button>
-                                                        </div>
-                                                    </DialogContent>
-                                                </Dialog>
-                                            )}
                                             
                                             {/* Botão Excluir com dupla confirmação */}
                                             <AlertDialog 
