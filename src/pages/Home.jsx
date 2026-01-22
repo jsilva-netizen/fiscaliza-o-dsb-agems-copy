@@ -19,6 +19,7 @@ import {
 
 export default function Home() {
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
         const checkAdmin = async () => {
@@ -30,6 +31,15 @@ export default function Home() {
             }
         };
         checkAdmin();
+    }, []);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     return (
