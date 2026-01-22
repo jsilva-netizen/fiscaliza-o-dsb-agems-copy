@@ -88,7 +88,11 @@ export default function Relatorios() {
         unidadesFiscalizacoesAno.some(u => u.id === r.unidade_fiscalizada_id)
     ).length;
 
-    const totalConformidades = fiscalizacoesAno.reduce((acc, f) => acc + (f.total_conformidades || 0), 0);
+    // Contar conformidades (respostas SIM ao checklist)
+    const totalConformidades = respostas.filter(r => 
+        unidadesFiscalizacoesAno.some(u => u.id === r.unidade_fiscalizada_id) &&
+        r.resposta === 'SIM'
+    ).length;
 
     // Dados por serviço (contando corretamente)
     const porServico = {};
@@ -354,10 +358,6 @@ export default function Relatorios() {
                                         <Tooltip />
                                         <Legend />
                                         <Bar dataKey="quantidade" fill="#3b82f6" name="Fiscalizações" />
-                                        <Bar dataKey="constatacoes" fill="#f59e0b" name="Constatações" />
-                                        <Bar dataKey="ncs" fill="#ef4444" name="NCs" />
-                                        <Bar dataKey="determinacoes" fill="#eab308" name="Determinações" />
-                                        <Bar dataKey="recomendacoes" fill="#06b6d4" name="Recomendações" />
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
