@@ -46,14 +46,11 @@ export default function PhotoGrid({
                     data_hora: new Date().toISOString()
                 };
 
-                // Adicionar imediatamente após upload (uma por vez)
+                // Adicionar imediatamente após upload
                 onAddFoto(novaFoto);
 
                 processados++;
                 setUploadProgress(processados);
-
-                // Pequeno delay para garantir que o estado anterior foi processado
-                await new Promise(resolve => setTimeout(resolve, 100));
             }
         } catch (err) {
             console.error('Erro upload:', err);

@@ -352,8 +352,7 @@ export default function VistoriarUnidade() {
     };
 
     const handleAddFoto = async (fotoData) => {
-        const novasFoto = [...fotos, fotoData];
-        setFotos(novasFoto);
+        setFotos(prev => [...prev, fotoData]);
         setFotosParaSalvar(prev => [...prev, fotoData]);
     };
 
