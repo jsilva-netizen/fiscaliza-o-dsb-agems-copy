@@ -844,7 +844,7 @@ export default function GerenciarTermos() {
                                                               Enviar Arquivo
                                                           </Button>
                                                       </DialogTrigger>
-                                                      <DialogContent>
+                                                      <DialogContent onInteractOutside={(e) => e.preventDefault()}>
                                                           <DialogHeader>
                                                               <DialogTitle>Arquivo de Protocolo / AR</DialogTitle>
                                                           </DialogHeader>
@@ -885,6 +885,19 @@ export default function GerenciarTermos() {
                                                                           queryClient.setQueryData(['termos-notificacao'], (old) => {
                                                                               return old.map(t => t.id === termo.id ? termoAtualizado : t);
                                                                           });
+
+                                                                          // Clear input and trigger re-render
+                                                                          fileInput.value = '';
+
+                                                                          // Force dialog close by simulating escape key
+                                                                          const event = new KeyboardEvent('keydown', {
+                                                                              key: 'Escape',
+                                                                              code: 'Escape',
+                                                                              keyCode: 27,
+                                                                              which: 27,
+                                                                              bubbles: true
+                                                                          });
+                                                                          document.dispatchEvent(event);
 
                                                                           alert('Arquivo de protocolo salvo com sucesso!');
                                                                       } catch (error) {
