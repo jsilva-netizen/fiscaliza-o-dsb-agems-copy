@@ -1074,10 +1074,11 @@ export default function GerenciarTermos() {
                                                     </Button>
                                                 ))}
                                                 </>
-                                            )}
-                                            </div>
-                                            </CardContent>
-                                            </Card>
+                                                )}
+                                                </div>
+                                                </div>
+                                                </CardContent>
+                                                </Card>
                             ))
                         )}
                     </div>
