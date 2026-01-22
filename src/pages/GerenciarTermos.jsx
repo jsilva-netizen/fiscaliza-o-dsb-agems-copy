@@ -46,6 +46,8 @@ export default function GerenciarTermos() {
     const [termoDetalhes, setTermoDetalhes] = useState(null);
     const [termoAssinadoTemp, setTermoAssinadoTemp] = useState(null);
     const [dataProtocoloOpen, setDataProtocoloOpen] = useState(false);
+    const [protocoNoTemp, setProtocoloTemp] = useState(null);
+    const [uploadingProtocolo, setUploadingProtocolo] = useState(false);
 
     const [respostaOpenId, setRespostaOpenId] = useState(null);
 
