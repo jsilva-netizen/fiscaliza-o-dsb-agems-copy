@@ -974,6 +974,5 @@ export default function GerenciarTermos() {
                     </div>
                 </div>
             </div>
-        </div>
     );
 }
