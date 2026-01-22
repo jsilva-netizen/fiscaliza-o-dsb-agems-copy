@@ -747,13 +747,32 @@ export default function GerenciarTermos() {
                                               )}
 
                                               {termo.arquivo_url && (!termo.data_protocolo || !termo.arquivo_protocolo_url) && (
-                                                  <Dialog open={protocoloCardTemp[termo.id]?.open || false} onOpenChange={(open) => {
-                                                      if (open) {
-                                                          setProtocoloCardTemp(prev => ({ ...prev, [termo.id]: { open: true, data: termo.data_protocolo || '', arquivo: termo.arquivo_protocolo_url || '' } }));
-                                                      } else {
-                                                          setProtocoloCardTemp(prev => ({ ...prev, [termo.id]: { open: false, data: '', arquivo: '' } }));
-                                                      }
-                                                  }}>
+                                                  <Dialog 
+                                                      open={protocoloCardTemp[termo.id]?.open || false} 
+                                                      onOpenChange={(open) => {
+                                                          if (open) {
+                                                              setProtocoloCardTemp(prev => ({ 
+                                                                  ...prev, 
+                                                                  [termo.id]: { 
+                                                                      open: true, 
+                                                                      data: termo.data_protocolo || '', 
+                                                                      arquivo: termo.arquivo_protocolo_url || '',
+                                                                      uploadando: false
+                                                                  } 
+                                                              }));
+                                                          } else {
+                                                              setProtocoloCardTemp(prev => ({ 
+                                                                  ...prev, 
+                                                                  [termo.id]: { 
+                                                                      open: false, 
+                                                                      data: '', 
+                                                                      arquivo: '',
+                                                                      uploadando: false
+                                                                  } 
+                                                              }));
+                                                          }
+                                                      }}
+                                                  >
                                                       <DialogTrigger asChild>
                                                           <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
                                                               <FileText className="h-4 w-4 mr-1" />
@@ -770,7 +789,13 @@ export default function GerenciarTermos() {
                                                                   <Input
                                                                       type="date"
                                                                       value={protocoloCardTemp[termo.id]?.data || ''}
-                                                                      onChange={(e) => setProtocoloCardTemp(prev => ({ ...prev, [termo.id]: { ...prev[termo.id], data: e.target.value } }))}
+                                                                      onChange={(e) => setProtocoloCardTemp(prev => ({ 
+                                                                          ...prev, 
+                                                                          [termo.id]: { 
+                                                                              ...prev[termo.id], 
+                                                                              data: e.target.value 
+                                                                          } 
+                                                                      }))}
                                                                   />
                                                               </div>
                                                               <div>
@@ -781,65 +806,125 @@ export default function GerenciarTermos() {
                                                                       onChange={async (e) => {
                                                                           const file = e.target.files?.[0];
                                                                           if (file) {
-                                                                              setUploadingProtocolo(true);
+                                                                              setProtocoloCardTemp(prev => ({ 
+                                                                                  ...prev, 
+                                                                                  [termo.id]: { 
+                                                                                      ...prev[termo.id], 
+                                                                                      uploadando: true 
+                                                                                  } 
+                                                                              }));
                                                                               try {
                                                                                   const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                                                  setProtocoloCardTemp(prev => ({ ...prev, [termo.id]: { ...prev[termo.id], arquivo: file_url } }));
+                                                                                  setProtocoloCardTemp(prev => ({ 
+                                                                                      ...prev, 
+                                                                                      [termo.id]: { 
+                                                                                          ...prev[termo.id], 
+                                                                                          arquivo: file_url,
+                                                                                          uploadando: false
+                                                                                      } 
+                                                                                  }));
                                                                               } catch (error) {
-                                                                                  alert('Erro ao enviar arquivo');
-                                                                              } finally {
-                                                                                  setUploadingProtocolo(false);
+                                                                                  console.error('Upload error:', error);
+                                                                                  alert('Erro ao enviar arquivo: ' + error.message);
+                                                                                  setProtocoloCardTemp(prev => ({ 
+                                                                                      ...prev, 
+                                                                                      [termo.id]: { 
+                                                                                          ...prev[termo.id], 
+                                                                                          uploadando: false 
+                                                                                      } 
+                                                                                  }));
                                                                               }
                                                                           }
                                                                       }}
-                                                                      disabled={uploadingProtocolo}
+                                                                      disabled={protocoloCardTemp[termo.id]?.uploadando}
                                                                   />
-                                                                  {uploadingProtocolo && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
-                                                                  {protocoloCardTemp[termo.id]?.arquivo && !uploadingProtocolo && (
+                                                                  {protocoloCardTemp[termo.id]?.uploadando && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
+                                                                  {protocoloCardTemp[termo.id]?.arquivo && !protocoloCardTemp[termo.id]?.uploadando && (
                                                                       <p className="text-xs text-green-600 mt-1">✓ Arquivo carregado</p>
                                                                   )}
                                                               </div>
                                                               <Button
                                                                   onClick={async () => {
-                                                                      const data = protocoloCardTemp[termo.id]?.data;
-                                                                      const arquivo = protocoloCardTemp[termo.id]?.arquivo;
+                                                                      const estado = protocoloCardTemp[termo.id];
+                                                                      const data = estado?.data;
+                                                                      const arquivo = estado?.arquivo;
 
-                                                                      if (!data) {
+                                                                      if (!data || data.trim() === '') {
                                                                           alert('Informe a data de protocolo');
                                                                           return;
                                                                       }
-                                                                      if (!arquivo) {
-                                                                          alert('Selecione um arquivo');
+                                                                      if (!arquivo || arquivo.trim() === '') {
+                                                                          alert('Selecione um arquivo de protocolo');
                                                                           return;
                                                                       }
-                                                                      try {
-                                                                          setUploadingProtocolo(true);
-                                                                          let dataMaxima = null;
-                                                                          const dp = new Date(data);
-                                                                          const prazo = termo.prazo_resposta_dias || 30;
-                                                                          dataMaxima = new Date(dp.getTime() + prazo * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
+                                                                      try {
+                                                                          setProtocoloCardTemp(prev => ({ 
+                                                                              ...prev, 
+                                                                              [termo.id]: { 
+                                                                                  ...prev[termo.id], 
+                                                                                  uploadando: true 
+                                                                              } 
+                                                                          }));
+
+                                                                          // Calcular data máxima
+                                                                          const dataProtocolo = new Date(data);
+                                                                          const prazoResposta = termo.prazo_resposta_dias || 30;
+                                                                          const dataMaximaResposta = new Date(dataProtocolo.getTime() + prazoResposta * 24 * 60 * 60 * 1000);
+                                                                          const dataMaximaFormatada = dataMaximaResposta.toISOString().split('T')[0];
+
+                                                                          console.log('Salvando protocolo:', {
+                                                                              id: termo.id,
+                                                                              data_protocolo: data,
+                                                                              arquivo_protocolo_url: arquivo,
+                                                                              data_maxima_resposta: dataMaximaFormatada,
+                                                                              status: 'ativo'
+                                                                          });
+
+                                                                          // Atualizar no banco
                                                                           const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
                                                                               data_protocolo: data,
                                                                               arquivo_protocolo_url: arquivo,
-                                                                              data_maxima_resposta: dataMaxima,
+                                                                              data_maxima_resposta: dataMaximaFormatada,
                                                                               status: 'ativo'
                                                                           });
+
+                                                                          console.log('Termo atualizado:', termoAtualizado);
+
+                                                                          // Atualizar cache
                                                                           queryClient.setQueryData(['termos-notificacao'], (old) => {
                                                                               return old.map(t => t.id === termo.id ? termoAtualizado : t);
                                                                           });
-                                                                          setProtocoloCardTemp(prev => ({ ...prev, [termo.id]: { open: false, data: '', arquivo: '' } }));
+
+                                                                          // Limpar state e fechar
+                                                                          setProtocoloCardTemp(prev => ({ 
+                                                                              ...prev, 
+                                                                              [termo.id]: { 
+                                                                                  open: false, 
+                                                                                  data: '', 
+                                                                                  arquivo: '',
+                                                                                  uploadando: false
+                                                                              } 
+                                                                          }));
+
                                                                           alert('Protocolo salvo com sucesso!');
                                                                       } catch (error) {
-                                                                          alert('Erro ao salvar: ' + error.message);
+                                                                          console.error('Erro ao salvar protocolo:', error);
+                                                                          alert('Erro ao salvar protocolo: ' + (error.message || error));
                                                                       } finally {
-                                                                          setUploadingProtocolo(false);
+                                                                          setProtocoloCardTemp(prev => ({ 
+                                                                              ...prev, 
+                                                                              [termo.id]: { 
+                                                                                  ...prev[termo.id], 
+                                                                                  uploadando: false 
+                                                                              } 
+                                                                          }));
                                                                       }
                                                                   }}
                                                                   className="w-full"
-                                                                  disabled={uploadingProtocolo}
+                                                                  disabled={protocoloCardTemp[termo.id]?.uploadando}
                                                               >
-                                                                  {uploadingProtocolo ? 'Salvando...' : 'Salvar'}
+                                                                  {protocoloCardTemp[termo.id]?.uploadando ? 'Salvando...' : 'Salvar Protocolo'}
                                                               </Button>
                                                           </div>
                                                       </DialogContent>
