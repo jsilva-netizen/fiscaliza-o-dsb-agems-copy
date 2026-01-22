@@ -141,7 +141,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
             pdf.setTextColor(255, 255, 255);
             pdf.text('RESUMO EXECUTIVO', margin + 2, yPos + 5.5);
             pdf.setTextColor(0, 0, 0);
-            yPos += 10;
+            yPos += 14;
 
             const totalConstatacoes = todasRespostas.flat().filter(r => r.resposta === 'SIM' || r.resposta === 'NAO').length;
             const totalNCs = todasNcs.flat().length;
