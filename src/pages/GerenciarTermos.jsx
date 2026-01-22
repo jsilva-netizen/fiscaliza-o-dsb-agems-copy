@@ -626,13 +626,36 @@ export default function GerenciarTermos() {
                                             const pendencias = [];
                                             if (status === 'pendente_tn') pendencias.push('TN Assinado');
                                             else if (status === 'pendente_protocolo') pendencias.push('Protocolo');
-                                            
+                                            else if (status === 'ativo') {
+                                                if (verificaPrazoVencido(termo)) {
+                                                    pendencias.push('Resposta Atrasada');
+                                                } else {
+                                                    pendencias.push('Aguardando Resposta');
+                                                }
+                                            }
+
                                             return pendencias.length > 0 ? (
-                                                <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex gap-2">
-                                                    <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                                                <div className={`mb-3 p-3 border rounded-lg flex gap-2 ${
+                                                    verificaPrazoVencido(termo) 
+                                                        ? 'bg-red-50 border-red-200' 
+                                                        : 'bg-yellow-50 border-yellow-200'
+                                                }`}>
+                                                    <AlertCircle className={`h-5 w-5 flex-shrink-0 mt-0.5 ${
+                                                        verificaPrazoVencido(termo) 
+                                                            ? 'text-red-600' 
+                                                            : 'text-yellow-600'
+                                                    }`} />
                                                     <div className="flex-1">
-                                                        <p className="text-sm font-medium text-yellow-800">Pendências:</p>
-                                                        <p className="text-xs text-yellow-700 mt-1">{pendencias.join(', ')}</p>
+                                                        <p className={`text-sm font-medium ${
+                                                            verificaPrazoVencido(termo) 
+                                                                ? 'text-red-800' 
+                                                                : 'text-yellow-800'
+                                                        }`}>Pendências:</p>
+                                                        <p className={`text-xs mt-1 ${
+                                                            verificaPrazoVencido(termo) 
+                                                                ? 'text-red-700' 
+                                                                : 'text-yellow-700'
+                                                        }`}>{pendencias.join(', ')}</p>
                                                     </div>
                                                 </div>
                                             ) : null;
