@@ -292,8 +292,8 @@ export default function GerenciarTermos() {
                                     <Label>Número do TN *</Label>
                                     <Input
                                         value={termoForm.numero_termo_notificacao}
-                                        onChange={(e) => setTermoForm({ ...termoForm, numero_termo_notificacao: e.target.value })}
-                                        placeholder="TN 001/2026/DSB/AGEMS"
+                                        disabled
+                                        placeholder="Gerado automaticamente"
                                     />
                                 </div>
                                 <div>
