@@ -166,11 +166,6 @@ export default function GerenciarTermos() {
             return;
         }
 
-        if (!termoForm.arquivo_url) {
-            alert('Faça upload do Termo de Notificação assinado (PDF)');
-            return;
-        }
-
         criarTermoMutation.mutate({
             ...termoForm,
             fiscalizacao_id: selectedFiscalizacao.id,
@@ -220,16 +215,18 @@ export default function GerenciarTermos() {
     };
 
     const getStatusBadge = (status, termo) => {
+        const semTermoAssinado = !termo.arquivo_url;
+        const semProtocolo = !termo.data_protocolo;
+        const semArquivoProtocolo = !termo.arquivo_protocolo_url;
+        
         if (status === 'pendente_protocolo') {
-            const semProtocolo = !termo.data_protocolo;
-            const semArquivoProtocolo = !termo.arquivo_protocolo_url;
+            const pendencias = [];
+            if (semTermoAssinado) pendencias.push('Termo Assinado');
+            if (semProtocolo) pendencias.push('Data de Protocolo');
+            if (semArquivoProtocolo) pendencias.push('Arquivo de Protocolo');
             
-            if (semProtocolo && semArquivoProtocolo) {
-                return { label: 'Pendente - Data e Arquivo de Protocolo', color: 'bg-yellow-500' };
-            } else if (semProtocolo) {
-                return { label: 'Pendente - Data de Protocolo', color: 'bg-yellow-500' };
-            } else if (semArquivoProtocolo) {
-                return { label: 'Pendente - Arquivo de Protocolo', color: 'bg-yellow-500' };
+            if (pendencias.length > 0) {
+                return { label: `Pendente - ${pendencias.join(', ')}`, color: 'bg-yellow-500' };
             }
         }
         
@@ -377,34 +374,6 @@ export default function GerenciarTermos() {
                             )}
 
                             <div>
-                                <Label>Termo de Notificação Assinado (PDF) *</Label>
-                                <Input
-                                    type="file"
-                                    accept=".pdf"
-                                    onChange={async (e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
-                                            setUploadingFile(true);
-                                            try {
-                                                const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                setTermoForm({ ...termoForm, arquivo_url: file_url });
-                                            } catch (error) {
-                                                alert('Erro ao enviar arquivo');
-                                            } finally {
-                                                setUploadingFile(false);
-                                            }
-                                        }
-                                    }}
-                                    disabled={uploadingFile}
-                                />
-                                {uploadingFile && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
-                                {termoForm.arquivo_url && !uploadingFile && (
-                                    <p className="text-xs text-green-600 mt-1">✓ Arquivo enviado</p>
-                                )}
-                                <p className="text-xs text-gray-500 mt-1">Documento do Termo de Notificação assinado</p>
-                            </div>
-
-                            <div>
                                 <Label>Observações</Label>
                                 <Textarea
                                     placeholder="Adicione observações ao termo..."
@@ -425,7 +394,7 @@ export default function GerenciarTermos() {
                                 <Button
                                     onClick={handleCriarTermo}
                                     className="flex-1 bg-blue-600 hover:bg-blue-700"
-                                    disabled={!termoForm.numero_processo || !termoForm.arquivo_url || uploadingFile}
+                                    disabled={!termoForm.numero_processo}
                                 >
                                     Criar Termo
                                 </Button>
@@ -471,18 +440,43 @@ export default function GerenciarTermos() {
 
                                 <div className="border-t pt-4">
                                     <h3 className="font-semibold mb-3">Termo de Notificação Assinado</h3>
-                                    {termoDetalhes.arquivo_url ? (
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => window.open(termoDetalhes.arquivo_url)}
-                                            className="w-full"
-                                        >
-                                            <Download className="h-4 w-4 mr-2" />
-                                            Baixar Termo Assinado (PDF)
-                                        </Button>
-                                    ) : (
-                                        <p className="text-sm text-gray-500">Nenhum arquivo anexado</p>
-                                    )}
+                                    <div className="space-y-3">
+                                        <Input
+                                            type="file"
+                                            accept=".pdf"
+                                            onChange={async (e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setUploadingFile(true);
+                                                    try {
+                                                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                        await base44.entities.TermoNotificacao.update(termoDetalhes.id, {
+                                                            arquivo_url: file_url
+                                                        });
+                                                        queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+                                                        setTermoDetalhes({ ...termoDetalhes, arquivo_url: file_url });
+                                                        alert('Termo assinado anexado com sucesso!');
+                                                    } catch (error) {
+                                                        alert('Erro ao enviar arquivo');
+                                                    } finally {
+                                                        setUploadingFile(false);
+                                                    }
+                                                }
+                                            }}
+                                            disabled={uploadingFile}
+                                        />
+                                        {uploadingFile && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
+                                        {termoDetalhes.arquivo_url && (
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => window.open(termoDetalhes.arquivo_url)}
+                                                className="w-full"
+                                            >
+                                                <Download className="h-4 w-4 mr-2" />
+                                                Baixar Termo Assinado (PDF)
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="border-t pt-4">
