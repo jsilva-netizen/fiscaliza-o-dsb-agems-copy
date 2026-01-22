@@ -240,7 +240,20 @@ export default function GerenciarTermos() {
                                     <Label>Número do Processo *</Label>
                                     <Input
                                         value={termoForm.numero_processo}
-                                        onChange={(e) => setTermoForm({ ...termoForm, numero_processo: e.target.value })}
+                                        onChange={(e) => {
+                                            let valor = e.target.value.replace(/\D/g, '');
+                                            if (valor.length > 13) valor = valor.slice(0, 13);
+                                            
+                                            if (valor.length > 9) {
+                                                valor = `${valor.slice(0, 2)}.${valor.slice(2, 5)}.${valor.slice(5, 8)}-${valor.slice(8)}`;
+                                            } else if (valor.length > 5) {
+                                                valor = `${valor.slice(0, 2)}.${valor.slice(2, 5)}.${valor.slice(5)}`;
+                                            } else if (valor.length > 2) {
+                                                valor = `${valor.slice(0, 2)}.${valor.slice(2)}`;
+                                            }
+                                            
+                                            setTermoForm({ ...termoForm, numero_processo: valor });
+                                        }}
                                         placeholder="51.011.137-2025"
                                     />
                                 </div>
