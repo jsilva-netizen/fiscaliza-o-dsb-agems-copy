@@ -798,7 +798,7 @@ export default function GerenciarTermos() {
                                                                               Registrar Data
                                                                           </Button>
                                                                       </DialogTrigger>
-                                                                      <DialogContent>
+                                                                      <DialogContent className="max-w-2xl">
                                                                           <DialogHeader>
                                                                               <DialogTitle>Data de Protocolo / AR</DialogTitle>
                                                                           </DialogHeader>
@@ -808,6 +808,31 @@ export default function GerenciarTermos() {
                                                                                   type="date"
                                                                                   id={`data-proto-${termo.id}`}
                                                                               />
+                                                                              <Label>Arquivo de Protocolo / AR (PDF)</Label>
+                                                                              <Input
+                                                                                  type="file"
+                                                                                  accept=".pdf"
+                                                                                  id={`file-proto-${termo.id}`}
+                                                                                  onChange={async (e) => {
+                                                                                      const file = e.target.files?.[0];
+                                                                                      if (file) {
+                                                                                          setUploadingProtocolo(true);
+                                                                                          try {
+                                                                                              const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                                                              setProtocoloTemp(file_url);
+                                                                                          } catch (error) {
+                                                                                              alert('Erro ao enviar arquivo');
+                                                                                          } finally {
+                                                                                              setUploadingProtocolo(false);
+                                                                                          }
+                                                                                      }
+                                                                                  }}
+                                                                                  disabled={uploadingProtocolo}
+                                                                              />
+                                                                              {uploadingProtocolo && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
+                                                                              {protocoNoTemp && !uploadingProtocolo && (
+                                                                                  <p className="text-xs text-green-600 mt-1">✓ Arquivo carregado. Clique em "Salvar" para confirmar.</p>
+                                                                              )}
                                                                               <Button
                                                                                   onClick={async () => {
                                                                                       const dataInput = document.getElementById(`data-proto-${termo.id}`);
@@ -820,21 +845,25 @@ export default function GerenciarTermos() {
 
                                                                                       try {
                                                                                           setUploadingProtocoloData(true);
-                                                                                          const [a, m, d] = data.split('-');
-                                                                                          const dprot = new Date(`${a}-${m}-${d}T00:00:00`);
+                                                                                          const dprot = new Date(data + 'T00:00:00');
                                                                                           const prazo = termo.prazo_resposta_dias || 30;
                                                                                           const dmax = new Date(dprot);
                                                                                           dmax.setDate(dmax.getDate() + prazo);
                                                                                           const dmax_str = `${dmax.getFullYear()}-${String(dmax.getMonth() + 1).padStart(2, '0')}-${String(dmax.getDate()).padStart(2, '0')}`;
 
+                                                                                          const archivoParaSalvar = protocoNoTemp || termo.arquivo_protocolo_url;
+
                                                                                           await base44.entities.TermoNotificacao.update(termo.id, {
                                                                                               data_protocolo: data,
-                                                                                              data_maxima_resposta: dmax_str
+                                                                                              data_maxima_resposta: dmax_str,
+                                                                                              arquivo_protocolo_url: archivoParaSalvar
                                                                                           });
 
                                                                                           await queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
                                                                                           setDataProtocoloOpen(false);
-                                                                                          alert('Data de protocolo salva!');
+                                                                                          setProtocoloTemp(null);
+                                                                                          document.getElementById(`file-proto-${termo.id}`).value = '';
+                                                                                          alert('Data de protocolo e arquivo salvos!');
                                                                                       } catch (error) {
                                                                                           alert('Erro: ' + error.message);
                                                                                       } finally {
@@ -844,7 +873,7 @@ export default function GerenciarTermos() {
                                                                                   disabled={uploadingProtocoloData}
                                                                                   className="w-full"
                                                                               >
-                                                                                  {uploadingProtocoloData ? 'Salvando...' : 'Salvar Data'}
+                                                                                  {uploadingProtocoloData ? 'Salvando...' : 'Salvar Data e Arquivo'}
                                                                               </Button>
                                                                           </div>
                                                                       </DialogContent>
