@@ -183,7 +183,7 @@ export default function GerenciarTermos() {
     });
 
     const atualizarRespostaMutation = useMutation({
-        mutationFn: async ({ id, data_recebimento_resposta }) => {
+        mutationFn: async ({ id, data_recebimento_resposta, arquivo_resposta_url }) => {
             const termo = termos.find(t => t.id === id);
             const dataMaxima = new Date(termo.data_maxima_resposta);
             const dataRecebimento = new Date(data_recebimento_resposta);
@@ -191,6 +191,7 @@ export default function GerenciarTermos() {
 
             return base44.entities.TermoNotificacao.update(id, {
                 data_recebimento_resposta,
+                arquivo_resposta_url,
                 recebida_no_prazo: recebidaNoPrazo,
                 status: 'respondido'
             });
@@ -620,7 +621,7 @@ export default function GerenciarTermos() {
                                         </div>
 
                                         <div className="flex gap-2 pt-3 border-t" onClick={(e) => e.stopPropagation()}>
-                                            {(termo.status === 'ativo' || termo.status === 'pendente_protocolo') && !termo.data_recebimento_resposta && (
+                                            {termo.data_protocolo && termo.arquivo_protocolo_url && !termo.data_recebimento_resposta && (
                                                 <Dialog>
                                                     <DialogTrigger asChild>
                                                         <Button size="sm" variant="outline">
@@ -639,14 +640,39 @@ export default function GerenciarTermos() {
                                                                     id={`data-resposta-${termo.id}`}
                                                                 />
                                                             </div>
+                                                            <div>
+                                                                <Label>Arquivo de Resposta (PDF)</Label>
+                                                                <Input
+                                                                    type="file"
+                                                                    accept=".pdf"
+                                                                    id={`arquivo-resposta-${termo.id}`}
+                                                                />
+                                                            </div>
                                                             <Button
-                                                                onClick={() => {
+                                                                onClick={async () => {
                                                                     const data = document.getElementById(`data-resposta-${termo.id}`).value;
-                                                                    if (data) {
+                                                                    const fileInput = document.getElementById(`arquivo-resposta-${termo.id}`);
+                                                                    const file = fileInput?.files?.[0];
+
+                                                                    if (!data) {
+                                                                        alert('Informe a data de recebimento');
+                                                                        return;
+                                                                    }
+
+                                                                    if (!file) {
+                                                                        alert('Envie o arquivo de resposta');
+                                                                        return;
+                                                                    }
+
+                                                                    try {
+                                                                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
                                                                         atualizarRespostaMutation.mutate({
                                                                             id: termo.id,
-                                                                            data_recebimento_resposta: data
+                                                                            data_recebimento_resposta: data,
+                                                                            arquivo_resposta_url: file_url
                                                                         });
+                                                                    } catch (error) {
+                                                                        alert('Erro ao enviar arquivo');
                                                                     }
                                                                 }}
                                                                 className="w-full"
