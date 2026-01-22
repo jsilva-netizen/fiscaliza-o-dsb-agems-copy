@@ -46,7 +46,7 @@ export default function GerenciarTermos() {
     const [termoDetalhes, setTermoDetalhes] = useState(null);
     const [termoAssinadoTemp, setTermoAssinadoTemp] = useState(null);
     const [protocoloDataOpen, setProtocoloDataOpen] = useState(false);
-    const [protocoloArquivoOpenId, setProtocoloArquivoOpenId] = useState(null);
+    const [protocoloArquivoOpen, setProtocoloArquivoOpen] = useState(false);
     const [respostaOpenId, setRespostaOpenId] = useState(null);
 
     const { data: fiscalizacoes = [] } = useQuery({
