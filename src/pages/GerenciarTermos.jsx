@@ -780,17 +780,17 @@ export default function GerenciarTermos() {
                                                   </Dialog>
                                               )}
 
-                                              {termo.arquivo_url && (!termo.data_protocolo || !termo.arquivo_protocolo_url) && (
+                                              {termo.arquivo_url && !termo.data_protocolo && (
                                                   <Dialog>
                                                       <DialogTrigger asChild>
                                                           <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
                                                               <Upload className="h-4 w-4 mr-1" />
-                                                              Enviar Protocolo
+                                                              Registrar Data
                                                           </Button>
                                                       </DialogTrigger>
                                                       <DialogContent>
                                                           <DialogHeader>
-                                                              <DialogTitle>Protocolo / AR do TN</DialogTitle>
+                                                              <DialogTitle>Data de Protocolo / AR</DialogTitle>
                                                           </DialogHeader>
                                                           <div className="space-y-3">
                                                               <div>
@@ -800,6 +800,53 @@ export default function GerenciarTermos() {
                                                                       id={`data-proto-${termo.id}`}
                                                                   />
                                                               </div>
+                                                              <Button
+                                                                  onClick={async () => {
+                                                                      const datainput = document.getElementById(`data-proto-${termo.id}`);
+                                                                      const data = datainput?.value;
+
+                                                                      if (!data) {
+                                                                          alert('Informe a data de protocolo');
+                                                                          return;
+                                                                      }
+
+                                                                      try {
+                                                                          setUploadingProtocoloData(true);
+                                                                          await base44.entities.TermoNotificacao.update(termo.id, {
+                                                                              data_protocolo: data
+                                                                          });
+
+                                                                          await queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+                                                                          alert('Data registrada!');
+                                                                      } catch (error) {
+                                                                          alert('Erro: ' + error.message);
+                                                                      } finally {
+                                                                          setUploadingProtocoloData(false);
+                                                                      }
+                                                                  }}
+                                                                  disabled={uploadingProtocoloData}
+                                                                  className="w-full"
+                                                              >
+                                                                  {uploadingProtocoloData ? 'Salvando...' : 'Salvar Data'}
+                                                              </Button>
+                                                          </div>
+                                                      </DialogContent>
+                                                  </Dialog>
+                                              )}
+
+                                              {termo.arquivo_url && termo.data_protocolo && !termo.arquivo_protocolo_url && (
+                                                  <Dialog>
+                                                      <DialogTrigger asChild>
+                                                          <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
+                                                              <Upload className="h-4 w-4 mr-1" />
+                                                              Enviar Arquivo
+                                                          </Button>
+                                                      </DialogTrigger>
+                                                      <DialogContent>
+                                                          <DialogHeader>
+                                                              <DialogTitle>Arquivo de Protocolo / AR</DialogTitle>
+                                                          </DialogHeader>
+                                                          <div className="space-y-3">
                                                               <div>
                                                                   <Label>Arquivo PDF *</Label>
                                                                   <Input
@@ -810,21 +857,19 @@ export default function GerenciarTermos() {
                                                               </div>
                                                               <Button
                                                                   onClick={async () => {
-                                                                      const datainput = document.getElementById(`data-proto-${termo.id}`);
                                                                       const fileinput = document.getElementById(`file-proto-${termo.id}`);
-                                                                      const data = datainput?.value;
                                                                       const file = fileinput?.files?.[0];
 
-                                                                      if (!data || !file) {
-                                                                          alert('Preencha data e selecione arquivo');
+                                                                      if (!file) {
+                                                                          alert('Selecione um arquivo');
                                                                           return;
                                                                       }
 
                                                                       try {
-                                                                          setUploadingProtocolo(true);
+                                                                          setUploadingProtocoloArquivo(true);
                                                                           const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-                                                                          const [a, m, d] = data.split('-');
+                                                                          const [a, m, d] = termo.data_protocolo.split('-');
                                                                           const dprot = new Date(`${a}-${m}-${d}T00:00:00`);
                                                                           const prazo = termo.prazo_resposta_dias || 30;
                                                                           const dmax = new Date(dprot);
@@ -833,24 +878,23 @@ export default function GerenciarTermos() {
                                                                           const dmax_str = `${dmax.getFullYear()}-${String(dmax.getMonth() + 1).padStart(2, '0')}-${String(dmax.getDate()).padStart(2, '0')}`;
 
                                                                           await base44.entities.TermoNotificacao.update(termo.id, {
-                                                                              data_protocolo: data,
                                                                               arquivo_protocolo_url: file_url,
                                                                               data_maxima_resposta: dmax_str,
                                                                               status: 'ativo'
                                                                           });
 
                                                                           await queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
-                                                                          alert('Protocolo enviado!');
+                                                                          alert('Arquivo enviado!');
                                                                       } catch (error) {
                                                                           alert('Erro: ' + error.message);
                                                                       } finally {
-                                                                          setUploadingProtocolo(false);
+                                                                          setUploadingProtocoloArquivo(false);
                                                                       }
                                                                   }}
-                                                                  disabled={uploadingProtocolo}
+                                                                  disabled={uploadingProtocoloArquivo}
                                                                   className="w-full"
                                                               >
-                                                                  {uploadingProtocolo ? 'Enviando...' : 'Enviar'}
+                                                                  {uploadingProtocoloArquivo ? 'Enviando...' : 'Enviar'}
                                                               </Button>
                                                           </div>
                                                       </DialogContent>
