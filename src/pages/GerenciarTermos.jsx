@@ -995,22 +995,23 @@ export default function GerenciarTermos() {
                                                                     }
 
                                                                     try {
-                                                                         setUploadingResposta(true);
-                                                                         const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                                          setUploadingResposta(true);
+                                                                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-                                                                         const dataReceb = new Date(data + 'T00:00:00');
-                                                                         dataReceb.setDate(dataReceb.getDate() + 1);
-                                                                         const dataMax = new Date(termo.data_maxima_resposta + 'T00:00:00');
+                                                                          const [ano, mes, dia] = data.split('-');
+                                                                          const dataReceb = new Date(ano, mes - 1, parseInt(dia) + 1);
+                                                                          const dataRecebStr = `${dataReceb.getFullYear()}-${String(dataReceb.getMonth() + 1).padStart(2, '0')}-${String(dataReceb.getDate()).padStart(2, '0')}`;
+                                                                          const dataMax = new Date(termo.data_maxima_resposta + 'T00:00:00');
 
-                                                                         const novoArquivo = {
-                                                                             url: file_url,
-                                                                             nome: file.name,
-                                                                             data_upload: new Date().toISOString()
-                                                                         };
+                                                                          const novoArquivo = {
+                                                                              url: file_url,
+                                                                              nome: file.name,
+                                                                              data_upload: new Date().toISOString()
+                                                                          };
 
-                                                                         const arquivosAtuais = termo.arquivos_resposta || [];
-                                                                         const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
-                                                                             data_recebimento_resposta: data,
+                                                                          const arquivosAtuais = termo.arquivos_resposta || [];
+                                                                          const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
+                                                                              data_recebimento_resposta: dataRecebStr,
                                                                              arquivos_resposta: [...arquivosAtuais, novoArquivo],
                                                                              recebida_no_prazo: dataReceb <= dataMax,
                                                                              status: 'respondido'
