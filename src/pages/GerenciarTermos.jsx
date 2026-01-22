@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, Send, Download, Plus } from 'lucide-react';
+import { ArrowLeft, FileText, Send, Download, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -28,6 +29,7 @@ export default function GerenciarTermos() {
         arquivo_url: ''
     });
     const [uploadingFile, setUploadingFile] = useState(false);
+    const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, termoId: null, step: 1, inputValue: '' });
 
     const { data: fiscalizacoes = [] } = useQuery({
         queryKey: ['fiscalizacoes'],
