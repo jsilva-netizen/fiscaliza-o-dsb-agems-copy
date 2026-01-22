@@ -652,7 +652,10 @@ export default function GerenciarTermos() {
                                                          <span className="font-medium">Câmara:</span> {termo.camara_tecnica || 'N/A'}
                                                      </div>
                                                     <div>
-                                                        <span className="font-medium">Protocolo:</span> {termo.data_protocolo ? new Date(termo.data_protocolo).toLocaleDateString('pt-BR') : 'N/A'}
+                                                        <span className="font-medium">Protocolo:</span> {termo.data_protocolo ? (() => {
+                                                            const [a, m, d] = termo.data_protocolo.split('-');
+                                                            return `${d}/${m}/${a}`;
+                                                        })() : 'N/A'}
                                                     </div>
                                                     <div>
                                                         <span className="font-medium">Prazo:</span> {termo.prazo_resposta_dias || 30} dias
