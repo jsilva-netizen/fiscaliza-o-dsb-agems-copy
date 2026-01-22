@@ -946,6 +946,7 @@ export default function GerenciarTermos() {
                                                                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
                                                                          const dataReceb = new Date(data + 'T00:00:00');
+                                                                         dataReceb.setDate(dataReceb.getDate() + 1);
                                                                          const dataMax = new Date(termo.data_maxima_resposta + 'T00:00:00');
 
                                                                          const novoArquivo = {
