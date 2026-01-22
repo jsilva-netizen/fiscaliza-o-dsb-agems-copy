@@ -97,6 +97,8 @@ export default function Home() {
                 </div>
 
                 {/* Menu Grid */}
+                {!isMobile && (
+                <>
                 <h2 className="text-white text-lg font-semibold mb-4">Menu Principal</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     <Link to={createPageUrl('TiposUnidade')}>
