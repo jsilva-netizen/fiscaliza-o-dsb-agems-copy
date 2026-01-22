@@ -895,8 +895,9 @@ export default function GerenciarTermos() {
                                                                          setUploadingResposta(true);
                                                                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
+                                                                         const [a, m, d] = data.split('-');
+                                                                         const dataReceb = new Date(`${a}-${m}-${d}T00:00:00`);
                                                                          const dataMax = new Date(termo.data_maxima_resposta + 'T00:00:00');
-                                                                         const dataReceb = new Date(data + 'T00:00:00');
 
                                                                          const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
                                                                              data_recebimento_resposta: data,
@@ -905,17 +906,15 @@ export default function GerenciarTermos() {
                                                                              status: 'respondido'
                                                                          });
 
-                                                                        queryClient.setQueryData(['termos-notificacao'], (old) => {
-                                                                            return old.map(t => t.id === termo.id ? termoAtualizado : t);
-                                                                        });
+                                                                         queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
 
-                                                                        setRespostaOpenId(null);
-                                                                        alert('Resposta registrada com sucesso!');
-                                                                    } catch (error) {
-                                                                        alert('Erro ao salvar: ' + error.message);
-                                                                    } finally {
-                                                                        setUploadingResposta(false);
-                                                                    }
+                                                                         setRespostaOpenId(null);
+                                                                         alert('Resposta registrada com sucesso!');
+                                                                     } catch (error) {
+                                                                         alert('Erro ao salvar: ' + error.message);
+                                                                     } finally {
+                                                                         setUploadingResposta(false);
+                                                                     }
                                                                 }}
                                                                 disabled={uploadingResposta}
                                                                 className="w-full"
