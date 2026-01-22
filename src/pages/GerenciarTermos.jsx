@@ -747,7 +747,7 @@ export default function GerenciarTermos() {
                                               )}
 
                                               {termo.arquivo_url && (!termo.data_protocolo || !termo.arquivo_protocolo_url) && (
-                                                  <Dialog open={dialogProtocoloOpen} onOpenChange={setDialogProtocoloOpen}>
+                                                  <Dialog open={protocoloCardTemp[termo.id]?.open || false} onOpenChange={(open) => setProtocoloCardTemp(prev => ({ ...prev, [termo.id]: { ...prev[termo.id], open } }))}>
                                                       <DialogTrigger asChild>
                                                           <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
                                                               <FileText className="h-4 w-4 mr-1" />
@@ -763,8 +763,9 @@ export default function GerenciarTermos() {
                                                                   <Label>Data de Protocolo / AR *</Label>
                                                                   <Input
                                                                       type="date"
-                                                                      id={`data-protocolo-${termo.id}`}
+                                                                      id={`data-protocolo-card-${termo.id}`}
                                                                       defaultValue={termo.data_protocolo || ''}
+                                                                      onChange={(e) => setProtocoloCardTemp(prev => ({ ...prev, [termo.id]: { ...prev[termo.id], data: e.target.value } }))}
                                                                   />
                                                               </div>
                                                               <div>
@@ -772,28 +773,42 @@ export default function GerenciarTermos() {
                                                                   <Input
                                                                       type="file"
                                                                       accept=".pdf"
-                                                                      id={`file-protocolo-${termo.id}`}
+                                                                      onChange={async (e) => {
+                                                                          const file = e.target.files?.[0];
+                                                                          if (file) {
+                                                                              setUploadingProtocolo(true);
+                                                                              try {
+                                                                                  const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                                                  setProtocoloCardTemp(prev => ({ ...prev, [termo.id]: { ...prev[termo.id], arquivo: file_url } }));
+                                                                              } catch (error) {
+                                                                                  alert('Erro ao enviar arquivo');
+                                                                              } finally {
+                                                                                  setUploadingProtocolo(false);
+                                                                              }
+                                                                          }
+                                                                      }}
+                                                                      disabled={uploadingProtocolo}
                                                                   />
+                                                                  {uploadingProtocolo && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
+                                                                  {protocoloCardTemp[termo.id]?.arquivo && !uploadingProtocolo && (
+                                                                      <p className="text-xs text-green-600 mt-1">✓ Arquivo carregado</p>
+                                                                  )}
                                                               </div>
                                                               <Button
                                                                   onClick={async () => {
-                                                                      const data = document.getElementById(`data-protocolo-${termo.id}`).value;
-                                                                      const fileInput = document.getElementById(`file-protocolo-${termo.id}`);
-                                                                      const file = fileInput?.files?.[0];
+                                                                      const data = protocoloCardTemp[termo.id]?.data;
+                                                                      const arquivo = protocoloCardTemp[termo.id]?.arquivo;
 
                                                                       if (!data) {
                                                                           alert('Informe a data de protocolo');
                                                                           return;
                                                                       }
-                                                                      if (!file) {
+                                                                      if (!arquivo) {
                                                                           alert('Selecione um arquivo');
                                                                           return;
                                                                       }
                                                                       try {
                                                                           setUploadingProtocolo(true);
-                                                                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
-
-                                                                          // Calcular data máxima
                                                                           let dataMaxima = null;
                                                                           const dp = new Date(data);
                                                                           const prazo = termo.prazo_resposta_dias || 30;
@@ -801,15 +816,14 @@ export default function GerenciarTermos() {
 
                                                                           const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
                                                                               data_protocolo: data,
-                                                                              arquivo_protocolo_url: file_url,
+                                                                              arquivo_protocolo_url: arquivo,
                                                                               data_maxima_resposta: dataMaxima,
                                                                               status: 'ativo'
                                                                           });
-                                                                          // Atualizar cache local imediatamente
                                                                           queryClient.setQueryData(['termos-notificacao'], (old) => {
                                                                               return old.map(t => t.id === termo.id ? termoAtualizado : t);
                                                                           });
-                                                                          setDialogProtocoloOpen(false);
+                                                                          setProtocoloCardTemp(prev => ({ ...prev, [termo.id]: { open: false, data: '', arquivo: '' } }));
                                                                           alert('Protocolo salvo com sucesso!');
                                                                       } catch (error) {
                                                                           alert('Erro ao salvar: ' + error.message);
