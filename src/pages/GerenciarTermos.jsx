@@ -852,38 +852,57 @@ export default function GerenciarTermos() {
                                                               )}
 
                                                               {termo.arquivo_url && termo.data_protocolo && !termo.data_recebimento_resposta && (
-                                                                  <Dialog open={respostaOpenId === termo.id} onOpenChange={(open) => setRespostaOpenId(open ? termo.id : null)}>
-                                                    <DialogTrigger asChild>
-                                                        <Button size="sm" variant={verificaPrazoVencido(termo) ? "destructive" : "outline"}>
-                                                            {verificaPrazoVencido(termo) ? '⚠ Resposta Atrasada' : 'Registrar Resposta'}
-                                                        </Button>
-                                                    </DialogTrigger>
-                                                    <DialogContent>
-                                                        <DialogHeader>
-                                                            <DialogTitle>Resposta do Prestador</DialogTitle>
-                                                        </DialogHeader>
-                                                        <div className="space-y-3">
-                                                            {verificaPrazoVencido(termo) && (
+                                                              <Dialog open={respostaOpenId === termo.id} onOpenChange={(open) => setRespostaOpenId(open ? termo.id : null)}>
+                                                              <DialogTrigger asChild>
+                                                              <Button size="sm" variant={verificaPrazoVencido(termo) ? "destructive" : "outline"}>
+                                                              {verificaPrazoVencido(termo) ? '⚠ Resposta Atrasada' : 'Registrar Resposta'}
+                                                              </Button>
+                                                              </DialogTrigger>
+                                                              <DialogContent className="max-w-2xl">
+                                                              <DialogHeader>
+                                                              <DialogTitle>Resposta do Prestador</DialogTitle>
+                                                              </DialogHeader>
+                                                              <div className="space-y-3 max-h-[70vh] overflow-y-auto">
+                                                              {verificaPrazoVencido(termo) && (
                                                                 <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
                                                                     ⚠️ Prazo vencido em {new Date(termo.data_maxima_resposta).toLocaleDateString('pt-BR')}
                                                                 </div>
-                                                            )}
-                                                            <div>
+                                                              )}
+                                                              <div>
                                                                 <Label>Data de Recebimento</Label>
                                                                 <Input
                                                                     type="date"
                                                                     id={`data-resp-${termo.id}`}
                                                                 />
-                                                            </div>
-                                                            <div>
-                                                                <Label>Arquivo PDF</Label>
+                                                              </div>
+                                                              <div>
+                                                                <Label>Adicionar Arquivo PDF</Label>
                                                                 <Input
                                                                     type="file"
                                                                     accept=".pdf"
                                                                     id={`file-resp-${termo.id}`}
                                                                 />
-                                                            </div>
-                                                            <Button
+                                                              </div>
+                                                              {termo.arquivos_resposta && termo.arquivos_resposta.length > 0 && (
+                                                                <div className="border-t pt-3">
+                                                                    <Label className="text-gray-600">Arquivos Adicionados</Label>
+                                                                    <div className="space-y-2 mt-2">
+                                                                        {termo.arquivos_resposta.map((arquivo, idx) => (
+                                                                            <div key={idx} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                                                                <span className="text-sm text-gray-700">{arquivo.nome || `Arquivo ${idx + 1}`}</span>
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    variant="ghost"
+                                                                                    onClick={() => window.open(arquivo.url)}
+                                                                                >
+                                                                                    <Download className="h-4 w-4" />
+                                                                                </Button>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                              )}
+                                                              <Button
                                                                 onClick={async () => {
                                                                     const data = document.getElementById(`data-resp-${termo.id}`)?.value;
                                                                     const file = document.getElementById(`file-resp-${termo.id}`)?.files?.[0];
@@ -901,9 +920,16 @@ export default function GerenciarTermos() {
                                                                          const dataReceb = new Date(`${a}-${m}-${d}T00:00:00`);
                                                                          const dataMax = new Date(termo.data_maxima_resposta + 'T00:00:00');
 
+                                                                         const novoArquivo = {
+                                                                             url: file_url,
+                                                                             nome: file.name,
+                                                                             data_upload: new Date().toISOString()
+                                                                         };
+
+                                                                         const arquivosAtuais = termo.arquivos_resposta || [];
                                                                          const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
                                                                              data_recebimento_resposta: data,
-                                                                             arquivo_resposta_url: file_url,
+                                                                             arquivos_resposta: [...arquivosAtuais, novoArquivo],
                                                                              recebida_no_prazo: dataReceb <= dataMax,
                                                                              status: 'respondido'
                                                                          });
@@ -912,8 +938,8 @@ export default function GerenciarTermos() {
                                                                              return old.map(t => t.id === termo.id ? termoAtualizado : t);
                                                                          });
 
-                                                                         setRespostaOpenId(null);
-                                                                         alert('Resposta registrada com sucesso!');
+                                                                         document.getElementById(`file-resp-${termo.id}`).value = '';
+                                                                         alert('Arquivo adicionado com sucesso!');
                                                                      } catch (error) {
                                                                          alert('Erro ao salvar: ' + error.message);
                                                                      } finally {
@@ -922,13 +948,13 @@ export default function GerenciarTermos() {
                                                                 }}
                                                                 disabled={uploadingResposta}
                                                                 className="w-full"
-                                                            >
-                                                                {uploadingResposta ? 'Salvando...' : 'Confirmar'}
-                                                            </Button>
-                                                        </div>
-                                                    </DialogContent>
-                                                </Dialog>
-                                              )}
+                                                              >
+                                                                {uploadingResposta ? 'Salvando...' : 'Adicionar Arquivo'}
+                                                              </Button>
+                                                              </div>
+                                                              </DialogContent>
+                                                              </Dialog>
+                                                              )}
                                             {termo.arquivo_url && (
                                                 <Button
                                                     size="sm"
