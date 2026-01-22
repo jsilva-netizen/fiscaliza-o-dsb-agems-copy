@@ -172,10 +172,10 @@ export default function GerenciarTermos() {
         }
 
         criarTermoMutation.mutate({
+            ...termoForm,
             fiscalizacao_id: selectedFiscalizacao.id,
             prestador_servico_id: selectedFiscalizacao.prestador_servico_id,
-            municipio_id: termoForm.municipio_id || selectedFiscalizacao.municipio_id,
-            ...termoForm
+            municipio_id: termoForm.municipio_id || selectedFiscalizacao.municipio_id
         });
     };
 
