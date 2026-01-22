@@ -109,22 +109,22 @@ export default function Home() {
                         </Card>
                     </Link>
 
+                    <Link to={createPageUrl('PrestadoresServico')}>
+                        <Card className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer border-white/20 h-full">
+                            <CardContent className="p-4 text-center">
+                                <Users className="h-8 w-8 text-blue-300 mx-auto mb-2" />
+                                <h3 className="text-white font-medium text-sm">Prestadores</h3>
+                                <p className="text-blue-300 text-xs">Titulares e Empresas</p>
+                            </CardContent>
+                        </Card>
+                    </Link>
+
                     <Link to={createPageUrl('Relatorios')}>
                         <Card className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer border-white/20 h-full">
                             <CardContent className="p-4 text-center">
                                 <BarChart3 className="h-8 w-8 text-blue-300 mx-auto mb-2" />
                                 <h3 className="text-white font-medium text-sm">Relatórios</h3>
                                 <p className="text-blue-300 text-xs">Indicadores e BI</p>
-                            </CardContent>
-                        </Card>
-                    </Link>
-
-                    <Link to={createPageUrl('AcompanhamentoDeterminacoes')}>
-                        <Card className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer border-white/20 h-full">
-                            <CardContent className="p-4 text-center">
-                                <FileText className="h-8 w-8 text-blue-300 mx-auto mb-2" />
-                                <h3 className="text-white font-medium text-sm">Determinações</h3>
-                                <p className="text-blue-300 text-xs">Acompanhamento</p>
                             </CardContent>
                         </Card>
                     </Link>
@@ -139,22 +139,22 @@ export default function Home() {
                         </Card>
                     </Link>
 
+                    <Link to={createPageUrl('AnaliseManifestacao')}>
+                        <Card className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer border-white/20 h-full">
+                            <CardContent className="p-4 text-center">
+                                <FileText className="h-8 w-8 text-blue-300 mx-auto mb-2" />
+                                <h3 className="text-white font-medium text-sm">Análise Manifestação</h3>
+                                <p className="text-blue-300 text-xs">Processos</p>
+                            </CardContent>
+                        </Card>
+                    </Link>
+
                     <Link to={createPageUrl('GestaoAutos')}>
                         <Card className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer border-white/20 h-full">
                             <CardContent className="p-4 text-center">
                                 <AlertTriangle className="h-8 w-8 text-red-300 mx-auto mb-2" />
                                 <h3 className="text-white font-medium text-sm">Autos</h3>
                                 <p className="text-blue-300 text-xs">Infrações</p>
-                            </CardContent>
-                        </Card>
-                    </Link>
-
-                    <Link to={createPageUrl('PrestadoresServico')}>
-                        <Card className="bg-white/10 hover:bg-white/20 transition-all cursor-pointer border-white/20 h-full">
-                            <CardContent className="p-4 text-center">
-                                <Users className="h-8 w-8 text-blue-300 mx-auto mb-2" />
-                                <h3 className="text-white font-medium text-sm">Prestadores</h3>
-                                <p className="text-blue-300 text-xs">Titulares e Empresas</p>
                             </CardContent>
                         </Card>
                     </Link>
