@@ -21,11 +21,13 @@ export default function GerenciarTermos() {
         numero_termo_notificacao: '',
         municipio_id: '',
         numero_processo: '',
-        camara_tecnica: 'Água e Esgoto',
+        camara_tecnica: 'CATESA',
         data_protocolo: '',
         prazo_resposta_dias: 30,
-        observacoes: ''
+        observacoes: '',
+        arquivo_url: ''
     });
+    const [uploadingFile, setUploadingFile] = useState(false);
 
     const { data: fiscalizacoes = [] } = useQuery({
         queryKey: ['fiscalizacoes'],
@@ -49,7 +51,10 @@ export default function GerenciarTermos() {
 
     const { data: municipios = [] } = useQuery({
         queryKey: ['municipios'],
-        queryFn: () => base44.entities.Municipio.list()
+        queryFn: async () => {
+            const data = await base44.entities.Municipio.list();
+            return data.sort((a, b) => a.nome.localeCompare(b.nome));
+        }
     });
 
     // Calcular data máxima de resposta
@@ -94,10 +99,11 @@ export default function GerenciarTermos() {
                 numero_termo_notificacao: '',
                 municipio_id: '',
                 numero_processo: '',
-                camara_tecnica: 'Água e Esgoto',
+                camara_tecnica: 'CATESA',
                 data_protocolo: '',
                 prazo_resposta_dias: 30,
-                observacoes: ''
+                observacoes: '',
+                arquivo_url: ''
             });
         }
     });
@@ -245,10 +251,9 @@ export default function GerenciarTermos() {
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="Água e Esgoto">Água e Esgoto</SelectItem>
-                                            <SelectItem value="Resíduos Sólidos">Resíduos Sólidos</SelectItem>
-                                            <SelectItem value="Drenagem">Drenagem</SelectItem>
-                                            <SelectItem value="Multissetorial">Multissetorial</SelectItem>
+                                            <SelectItem value="CATESA">CATESA</SelectItem>
+                                            <SelectItem value="CATERS">CATERS</SelectItem>
+                                            <SelectItem value="CRES">CRES</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -302,6 +307,33 @@ export default function GerenciarTermos() {
                                         ))}
                                     </SelectContent>
                                 </Select>
+                            </div>
+
+                            <div>
+                                <Label>Termo de Notificação Assinado (PDF)</Label>
+                                <Input
+                                    type="file"
+                                    accept=".pdf"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                            setUploadingFile(true);
+                                            try {
+                                                const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                setTermoForm({ ...termoForm, arquivo_url: file_url });
+                                            } catch (error) {
+                                                alert('Erro ao enviar arquivo');
+                                            } finally {
+                                                setUploadingFile(false);
+                                            }
+                                        }
+                                    }}
+                                    disabled={uploadingFile}
+                                />
+                                {uploadingFile && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
+                                {termoForm.arquivo_url && !uploadingFile && (
+                                    <p className="text-xs text-green-600 mt-1">✓ Arquivo enviado</p>
+                                )}
                             </div>
 
                             <div>
