@@ -285,6 +285,9 @@ export default function VistoriarUnidade() {
 
     const adicionarRecomendacaoMutation = useMutation({
         mutationFn: async (texto) => {
+            if (fiscalizacao?.status === 'finalizada') {
+                throw new Error('Não é possível modificar uma fiscalização finalizada');
+            }
             // Recarregar recomendações atuais da unidade para calcular o próximo número
             const recsUnidade = await base44.entities.Recomendacao.filter({ 
                 unidade_fiscalizada_id: unidadeId 
@@ -547,10 +550,12 @@ export default function VistoriarUnidade() {
 
                     {/* Recomendações Tab */}
                     <TabsContent value="recomendacoes" className="mt-4 space-y-4">
-                        <Button onClick={() => setShowAddRecomendacao(true)} className="w-full">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Adicionar Recomendação
-                        </Button>
+                        {fiscalizacao?.status !== 'finalizada' && (
+                            <Button onClick={() => setShowAddRecomendacao(true)} className="w-full">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Adicionar Recomendação
+                            </Button>
+                        )}
 
                         {recomendacoesExistentes.map(rec => (
                             <Card key={rec.id}>
