@@ -96,7 +96,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
             pdf.setFontSize(20);
             pdf.setFont('helvetica', 'bold');
             const titulo = fiscalizacao.numero_termo 
-                ? `TERMO DE VISTORIA ${fiscalizacao.numero_termo}` 
+                ? `TERMO DE VISTORIA AGEMS/DSB Nº ${fiscalizacao.numero_termo}` 
                 : 'RELATÓRIO DE FISCALIZAÇÃO';
             pdf.text(titulo, pageWidth / 2, 15, { align: 'center' });
             
