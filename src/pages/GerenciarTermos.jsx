@@ -34,6 +34,7 @@ export default function GerenciarTermos() {
     const [termoDetalhes, setTermoDetalhes] = useState(null);
     const [uploadingProtocolo, setUploadingProtocolo] = useState(false);
     const [termoAssinadoTemp, setTermoAssinadoTemp] = useState(null);
+    const [protocoNoTemp, setProtocoloTemp] = useState(null);
 
     const { data: fiscalizacoes = [] } = useQuery({
         queryKey: ['fiscalizacoes'],
@@ -499,18 +500,7 @@ export default function GerenciarTermos() {
                                                         setUploadingProtocolo(true);
                                                         try {
                                                             const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                            const dataProtocolo = document.getElementById('data-protocolo-detalhe').value;
-                                                            
-                                                            if (!dataProtocolo) {
-                                                                alert('Informe a data de protocolo antes de enviar o arquivo');
-                                                                return;
-                                                            }
-                                                            
-                                                            await atualizarProtocoloMutation.mutateAsync({
-                                                                id: termoDetalhes.id,
-                                                                data_protocolo: dataProtocolo,
-                                                                arquivo_protocolo_url: file_url
-                                                            });
+                                                            setProtocoloTemp(file_url);
                                                         } catch (error) {
                                                             alert('Erro ao enviar arquivo');
                                                         } finally {
@@ -521,7 +511,10 @@ export default function GerenciarTermos() {
                                                 disabled={uploadingProtocolo}
                                             />
                                             {uploadingProtocolo && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
-                                            {termoDetalhes.arquivo_protocolo_url && !uploadingProtocolo && (
+                                            {protocoNoTemp && !uploadingProtocolo && (
+                                                <p className="text-xs text-green-600 mt-1">✓ Arquivo carregado. Clique em "Salvar" para confirmar.</p>
+                                            )}
+                                            {termoDetalhes.arquivo_protocolo_url && (
                                                 <div className="mt-2">
                                                     <Button
                                                         variant="outline"
@@ -541,11 +534,17 @@ export default function GerenciarTermos() {
                                                     alert('Informe a data de protocolo');
                                                     return;
                                                 }
+                                                const archivoParaSalvar = protocoNoTemp || termoDetalhes.arquivo_protocolo_url;
+                                                if (!archivoParaSalvar) {
+                                                    alert('Envie o arquivo de protocolo');
+                                                    return;
+                                                }
                                                 atualizarProtocoloMutation.mutate({
                                                     id: termoDetalhes.id,
                                                     data_protocolo: dataProtocolo,
-                                                    arquivo_protocolo_url: termoDetalhes.arquivo_protocolo_url
+                                                    arquivo_protocolo_url: archivoParaSalvar
                                                 });
+                                                setProtocoloTemp(null);
                                             }}
                                             className="w-full"
                                         >
