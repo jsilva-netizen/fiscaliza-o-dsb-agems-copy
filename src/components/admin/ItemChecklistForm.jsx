@@ -109,17 +109,6 @@ export default function ItemChecklistForm({ item, onSave, onCancel }) {
                             </div>
 
                             <div>
-                                <Label htmlFor="texto_nc">Texto Padrão da NC</Label>
-                                <Textarea
-                                    id="texto_nc"
-                                    value={formData.texto_nc}
-                                    onChange={(e) => setFormData({...formData, texto_nc: e.target.value})}
-                                    placeholder="Descrição padrão da não conformidade..."
-                                    rows={3}
-                                />
-                            </div>
-
-                            <div>
                                 <Label htmlFor="texto_determinacao">Texto Padrão da Determinação</Label>
                                 <Textarea
                                     id="texto_determinacao"
