@@ -551,6 +551,16 @@ export default function GerenciarTermos() {
                                         >
                                             Salvar Dados de Protocolo
                                         </Button>
+                                        {termoDetalhes.arquivo_protocolo_url && (
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => window.open(termoDetalhes.arquivo_protocolo_url)}
+                                                className="w-full"
+                                            >
+                                                <Download className="h-4 w-4 mr-2" />
+                                                Baixar Arquivo de Protocolo
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
 
