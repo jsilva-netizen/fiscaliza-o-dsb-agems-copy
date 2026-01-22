@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -17,6 +18,20 @@ import {
 } from 'lucide-react';
 
 export default function Home() {
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const checkAdmin = async () => {
+            try {
+                const user = await base44.auth.me();
+                setIsAdmin(user?.role === 'admin');
+            } catch (error) {
+                setIsAdmin(false);
+            }
+        };
+        checkAdmin();
+    }, []);
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900">
             {/* Header */}
