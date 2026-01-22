@@ -786,8 +786,8 @@ export default function GerenciarTermos() {
                                                             )}
                                                         </AlertDialogContent>
                                                     </AlertDialog>
-                                                </div>
-                                        </div>
+                                                    </div>
+                                                    </div>
 
                                         <div className="flex gap-2 pt-3 border-t flex-wrap">
                                             {/* Fluxo de Botões - Ordem Específica */}
