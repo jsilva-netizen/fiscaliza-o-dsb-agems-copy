@@ -717,10 +717,12 @@ export default function GerenciarTermos() {
                                                                       try {
                                                                           setUploadingFile(true);
                                                                           const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                                          await base44.entities.TermoNotificacao.update(termo.id, {
+                                                                          const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
                                                                               arquivo_url: file_url
                                                                           });
-                                                                          queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+                                                                          queryClient.setQueryData(['termos-notificacao'], (old) => {
+                                                                              return old.map(t => t.id === termo.id ? termoAtualizado : t);
+                                                                          });
                                                                           alert('TN Assinado salvo com sucesso!');
                                                                       } catch (error) {
                                                                           alert('Erro ao salvar');
