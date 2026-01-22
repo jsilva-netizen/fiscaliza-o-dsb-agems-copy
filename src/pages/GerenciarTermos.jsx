@@ -789,8 +789,8 @@ export default function GerenciarTermos() {
                                                     </div>
 
                                         <div className="space-y-3 pt-3 border-t">
-                                            <div className="flex gap-2 flex-wrap">
                                             {/* Fluxo de Botões - Ordem Específica */}
+                                            <div className="flex gap-2 flex-wrap">
                                               {!termo.arquivo_url && (
                                                   <Dialog>
                                                       <DialogTrigger asChild>
