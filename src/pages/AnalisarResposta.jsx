@@ -322,12 +322,11 @@ Por favor, forneça um parecer técnico completo mas conciso sobre esta resposta
 
                         {/* Ações */}
                         <div className="flex gap-2 pt-4 border-t">
-                            <Button
-                                variant="outline"
-                                onClick={() => {}}
-                            >
-                                Cancelar
-                            </Button>
+                            <Link to={createPageUrl('AcompanhamentoDeterminacoes')}>
+                                <Button variant="outline">
+                                    Cancelar
+                                </Button>
+                            </Link>
                             <Button
                                 onClick={handleSalvarAnalise}
                                 disabled={!analiseForm.parecer}
