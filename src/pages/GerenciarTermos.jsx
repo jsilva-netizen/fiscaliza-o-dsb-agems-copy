@@ -887,18 +887,18 @@ export default function GerenciarTermos() {
                                                                     }
 
                                                                     try {
-                                                                        setUploadingResposta(true);
-                                                                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                                         setUploadingResposta(true);
+                                                                         const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-                                                                        const dataMax = new Date(termo.data_maxima_resposta);
-                                                                        const dataReceb = new Date(data);
+                                                                         const dataMax = new Date(termo.data_maxima_resposta + 'T00:00:00');
+                                                                         const dataReceb = new Date(data + 'T00:00:00');
 
-                                                                        const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
-                                                                            data_recebimento_resposta: data,
-                                                                            arquivo_resposta_url: file_url,
-                                                                            recebida_no_prazo: dataReceb <= dataMax,
-                                                                            status: 'respondido'
-                                                                        });
+                                                                         const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
+                                                                             data_recebimento_resposta: data,
+                                                                             arquivo_resposta_url: file_url,
+                                                                             recebida_no_prazo: dataReceb <= dataMax,
+                                                                             status: 'respondido'
+                                                                         });
 
                                                                         queryClient.setQueryData(['termos-notificacao'], (old) => {
                                                                             return old.map(t => t.id === termo.id ? termoAtualizado : t);
