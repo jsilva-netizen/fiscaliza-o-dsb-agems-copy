@@ -888,6 +888,9 @@ export default function GerenciarTermos() {
                                                                               return old.map(t => t.id === termo.id ? termoAtualizado : t);
                                                                           });
 
+                                                                          // Force refetch para garantir sincronização
+                                                                          await queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+
                                                                           setProtocoloArquivoOpenId(null);
                                                                           alert('Arquivo de protocolo salvo com sucesso!');
                                                                       } catch (error) {
