@@ -838,14 +838,14 @@ export default function GerenciarTermos() {
                                               )}
 
                                               {termo.arquivo_url && termo.data_protocolo && !termo.arquivo_protocolo_url && (
-                                                  <Dialog>
+                                                  <Dialog open={protocoloArquivoOpenId === termo.id} onOpenChange={(open) => setProtocoloArquivoOpenId(open ? termo.id : null)}>
                                                       <DialogTrigger asChild>
                                                           <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
                                                               <Upload className="h-4 w-4 mr-1" />
                                                               Enviar Arquivo
                                                           </Button>
                                                       </DialogTrigger>
-                                                      <DialogContent onInteractOutside={(e) => e.preventDefault()}>
+                                                      <DialogContent>
                                                           <DialogHeader>
                                                               <DialogTitle>Arquivo de Protocolo / AR</DialogTitle>
                                                           </DialogHeader>
@@ -887,22 +887,10 @@ export default function GerenciarTermos() {
                                                                               return old.map(t => t.id === termo.id ? termoAtualizado : t);
                                                                           });
 
-                                                                          // Clear input and trigger re-render
-                                                                          fileInput.value = '';
-
-                                                                          // Force dialog close by simulating escape key
-                                                                          const event = new KeyboardEvent('keydown', {
-                                                                              key: 'Escape',
-                                                                              code: 'Escape',
-                                                                              keyCode: 27,
-                                                                              which: 27,
-                                                                              bubbles: true
-                                                                          });
-                                                                          document.dispatchEvent(event);
-
+                                                                          setProtocoloArquivoOpenId(null);
                                                                           alert('Arquivo de protocolo salvo com sucesso!');
                                                                       } catch (error) {
-                                                                          alert('Erro ao salvar');
+                                                                          alert('Erro ao salvar: ' + error.message);
                                                                       } finally {
                                                                           setUploadingProtocoloArquivo(false);
                                                                       }
