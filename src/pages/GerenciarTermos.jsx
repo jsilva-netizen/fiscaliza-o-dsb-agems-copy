@@ -836,65 +836,76 @@ export default function GerenciarTermos() {
                                               {termo.data_protocolo && termo.arquivo_protocolo_url && !termo.data_recebimento_resposta && (
                                                 <Dialog>
                                                     <DialogTrigger asChild>
-                                                        <Button size="sm" variant="outline">
-                                                            Registrar Resposta
+                                                        <Button size="sm" variant={verificaPrazoVencido(termo) ? "destructive" : "outline"}>
+                                                            {verificaPrazoVencido(termo) ? '⚠ Resposta Atrasada' : 'Registrar Resposta'}
                                                         </Button>
                                                     </DialogTrigger>
                                                     <DialogContent>
                                                         <DialogHeader>
-                                                            <DialogTitle>Registrar Recebimento de Resposta</DialogTitle>
+                                                            <DialogTitle>Resposta do Prestador</DialogTitle>
                                                         </DialogHeader>
-                                                        <div className="space-y-4">
+                                                        <div className="space-y-3">
+                                                            {verificaPrazoVencido(termo) && (
+                                                                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                                                                    ⚠️ Prazo vencido em {new Date(termo.data_maxima_resposta).toLocaleDateString('pt-BR')}
+                                                                </div>
+                                                            )}
                                                             <div>
                                                                 <Label>Data de Recebimento</Label>
                                                                 <Input
                                                                     type="date"
-                                                                    id={`data-resposta-${termo.id}`}
+                                                                    id={`data-resp-${termo.id}`}
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <Label>Arquivo de Resposta (PDF)</Label>
+                                                                <Label>Arquivo PDF</Label>
                                                                 <Input
                                                                     type="file"
                                                                     accept=".pdf"
-                                                                    id={`arquivo-resposta-${termo.id}`}
+                                                                    id={`file-resp-${termo.id}`}
                                                                 />
                                                             </div>
                                                             <Button
                                                                 onClick={async () => {
-                                                                    const data = document.getElementById(`data-resposta-${termo.id}`).value;
-                                                                    const fileInput = document.getElementById(`arquivo-resposta-${termo.id}`);
-                                                                    const file = fileInput?.files?.[0];
+                                                                    const data = document.getElementById(`data-resp-${termo.id}`)?.value;
+                                                                    const file = document.getElementById(`file-resp-${termo.id}`)?.files?.[0];
 
-                                                                    if (!data) {
-                                                                        alert('Informe a data de recebimento');
-                                                                        return;
-                                                                    }
-
-                                                                    if (!file) {
-                                                                        alert('Envie o arquivo de resposta');
+                                                                    if (!data || !file) {
+                                                                        alert('Preencha data e selecione arquivo');
                                                                         return;
                                                                     }
 
                                                                     try {
+                                                                        setUploadingResposta(true);
                                                                         const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                                        atualizarRespostaMutation.mutate({
-                                                                            id: termo.id,
+
+                                                                        const dataMax = new Date(termo.data_maxima_resposta);
+                                                                        const dataReceb = new Date(data);
+
+                                                                        await base44.entities.TermoNotificacao.update(termo.id, {
                                                                             data_recebimento_resposta: data,
-                                                                            arquivo_resposta_url: file_url
+                                                                            arquivo_resposta_url: file_url,
+                                                                            recebida_no_prazo: dataReceb <= dataMax,
+                                                                            status: 'respondido'
                                                                         });
+
+                                                                        await queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+                                                                        alert('Resposta registrada!');
                                                                     } catch (error) {
-                                                                        alert('Erro ao enviar arquivo');
+                                                                        alert('Erro: ' + error.message);
+                                                                    } finally {
+                                                                        setUploadingResposta(false);
                                                                     }
                                                                 }}
+                                                                disabled={uploadingResposta}
                                                                 className="w-full"
                                                             >
-                                                                Confirmar
+                                                                {uploadingResposta ? 'Salvando...' : 'Confirmar'}
                                                             </Button>
                                                         </div>
                                                     </DialogContent>
                                                 </Dialog>
-                                            )}
+                                              )}
                                             {termo.arquivo_url && (
                                                 <Button
                                                     size="sm"
