@@ -738,12 +738,12 @@ export default function GerenciarTermos() {
                                                   </Dialog>
                                               )}
 
-                                              {termo.arquivo_url && !termo.data_protocolo && (
+                                              {termo.arquivo_url && (!termo.data_protocolo || !termo.arquivo_protocolo_url) && (
                                                   <Dialog>
                                                       <DialogTrigger asChild>
                                                           <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
                                                               <FileText className="h-4 w-4 mr-1" />
-                                                              Adicionar Protocolo
+                                                              {termo.data_protocolo ? 'Enviar Arquivo Protocolo' : 'Adicionar Protocolo'}
                                                           </Button>
                                                       </DialogTrigger>
                                                       <DialogContent>
@@ -760,7 +760,7 @@ export default function GerenciarTermos() {
                                                                   />
                                                               </div>
                                                               <div>
-                                                                  <Label>Arquivo de Protocolo / AR (PDF)</Label>
+                                                                  <Label>Arquivo de Protocolo / AR (PDF) *</Label>
                                                                   <Input
                                                                       type="file"
                                                                       accept=".pdf"
@@ -784,13 +784,15 @@ export default function GerenciarTermos() {
                                                                       try {
                                                                           setUploadingProtocolo(true);
                                                                           const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                                          await atualizarProtocoloMutation.mutateAsync({
-                                                                              id: termo.id,
+                                                                          await base44.entities.TermoNotificacao.update(termo.id, {
                                                                               data_protocolo: data,
-                                                                              arquivo_protocolo_url: file_url
+                                                                              arquivo_protocolo_url: file_url,
+                                                                              status: 'ativo'
                                                                           });
+                                                                          queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+                                                                          alert('Protocolo salvo com sucesso!');
                                                                       } catch (error) {
-                                                                          alert('Erro ao salvar');
+                                                                          alert('Erro ao salvar: ' + error.message);
                                                                       } finally {
                                                                           setUploadingProtocolo(false);
                                                                       }
