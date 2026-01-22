@@ -867,8 +867,8 @@ export default function GerenciarTermos() {
                                                     <Download className="h-4 w-4 mr-1" />
                                                     Baixar TN Assinado
                                                 </Button>
-                                                )}
-                                                {termo.arquivo_protocolo_url && (
+                                            )}
+                                            {termo.arquivo_protocolo_url && (
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
@@ -877,8 +877,8 @@ export default function GerenciarTermos() {
                                                     <Download className="h-4 w-4 mr-1" />
                                                     Baixar Protocolo
                                                 </Button>
-                                                )}
-                                                {termo.data_protocolo && !termo.arquivo_protocolo_url && (
+                                            )}
+                                            {termo.data_protocolo && !termo.arquivo_protocolo_url && (
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
@@ -897,7 +897,7 @@ export default function GerenciarTermos() {
                                                         setDeleteConfirmation({ open: false, termoId: null, step: 1, inputValue: '' });
                                                     }
                                                 }}
-                                                >
+                                            >
                                                 <AlertDialogTrigger asChild>
                                                     <Button
                                                         size="sm"
@@ -907,9 +907,9 @@ export default function GerenciarTermos() {
                                                     >
                                                         <Trash2 className="h-4 w-4 mr-1" />
                                                         Excluir
-                                                        </Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
                                                     {deleteConfirmation.step === 1 ? (
                                                         <>
                                                             <AlertDialogHeader>
@@ -964,14 +964,14 @@ export default function GerenciarTermos() {
                                                             </AlertDialogFooter>
                                                         </>
                                                     )}
-                                                    </AlertDialogContent>
-                                                    </AlertDialog>
-                                                    </div>
-                                                    </CardContent>
-                                                    </Card>
-                                                    ))
-                                                    )}
-                                                    </div>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                            )}
+                        </div>
                 </div>
             </div>
         </div>
