@@ -239,23 +239,10 @@ export default function GerenciarTermos() {
         return true;
     });
 
-    const getStatusBadge = (status, termo) => {
-        const semTermoAssinado = !termo.arquivo_url;
-        const semProtocolo = !termo.data_protocolo;
-        const semArquivoProtocolo = !termo.arquivo_protocolo_url;
-        
-        if (status === 'pendente_protocolo') {
-            const pendencias = [];
-            if (semTermoAssinado) pendencias.push('Termo Assinado');
-            if (semProtocolo) pendencias.push('Data de Protocolo');
-            if (semArquivoProtocolo) pendencias.push('Arquivo de Protocolo');
-            
-            if (pendencias.length > 0) {
-                return { label: `Pendente - ${pendencias.join(', ')}`, color: 'bg-yellow-500' };
-            }
-        }
-        
+    const getStatusBadge = (status) => {
         const statusMap = {
+            pendente_tn: { label: 'Pendente - TN Assinado', color: 'bg-yellow-500' },
+            pendente_protocolo: { label: 'Pendente - Protocolo', color: 'bg-yellow-500' },
             ativo: { label: 'Ativo', color: 'bg-green-600' },
             respondido: { label: 'Respondido', color: 'bg-purple-600' }
         };
