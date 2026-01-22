@@ -45,6 +45,7 @@ export default function GerenciarTermos() {
     const [dialogProtocoloOpen, setDialogProtocoloOpen] = useState(false);
     const [termoAssinadoTemp, setTermoAssinadoTemp] = useState(null);
     const [protocoNoTemp, setProtocoloTemp] = useState(null);
+    const [protocoloCardTemp, setProtocoloCardTemp] = useState({});
 
     const { data: fiscalizacoes = [] } = useQuery({
         queryKey: ['fiscalizacoes'],
