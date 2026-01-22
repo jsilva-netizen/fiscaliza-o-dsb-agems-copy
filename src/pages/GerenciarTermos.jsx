@@ -722,7 +722,7 @@ export default function GerenciarTermos() {
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
-                                                                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                                                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 flex-1"
                                                                 onClick={() => setDeleteConfirmation({ open: true, termoId: termo.id, step: 1, inputValue: '' })}
                                                             >
                                                                 <Trash2 className="h-4 w-4 mr-1" />
