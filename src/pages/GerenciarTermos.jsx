@@ -839,7 +839,7 @@ export default function GerenciarTermos() {
                                               )}
 
                                               {termo.arquivo_url && termo.data_protocolo && !termo.arquivo_protocolo_url && (
-                                                  <Dialog open={protocoloArquivoOpenId === termo.id} onOpenChange={(open) => setProtocoloArquivoOpenId(open ? termo.id : null)}>
+                                                  <Dialog>
                                                       <DialogTrigger asChild>
                                                           <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
                                                               <Upload className="h-4 w-4 mr-1" />
@@ -878,17 +878,13 @@ export default function GerenciarTermos() {
 
                                                                           const dmax_str = `${dmax.getFullYear()}-${String(dmax.getMonth() + 1).padStart(2, '0')}-${String(dmax.getDate()).padStart(2, '0')}`;
 
-                                                                          const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
+                                                                          await base44.entities.TermoNotificacao.update(termo.id, {
                                                                               arquivo_protocolo_url: file_url,
                                                                               data_maxima_resposta: dmax_str,
                                                                               status: 'ativo'
                                                                           });
 
-                                                                          queryClient.setQueryData(['termos-notificacao'], (old) => {
-                                                                              return old.map(t => t.id === termo.id ? termoAtualizado : t);
-                                                                          });
-
-                                                                          setProtocoloArquivoOpenId(null);
+                                                                          await queryClient.refetchQueries({ queryKey: ['termos-notificacao'] });
                                                                           alert('Arquivo de protocolo salvo com sucesso!');
                                                                       } catch (error) {
                                                                           alert('Erro ao salvar: ' + error.message);
