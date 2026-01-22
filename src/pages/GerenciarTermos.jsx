@@ -883,13 +883,11 @@ export default function GerenciarTermos() {
                                                                           setUploadingProtocoloArquivo(true);
                                                                           const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-                                                                          const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
+                                                                          await base44.entities.TermoNotificacao.update(termo.id, {
                                                                               arquivo_protocolo_url: file_url
                                                                           });
 
-                                                                          queryClient.setQueryData(['termos-notificacao'], (old) => {
-                                                                              return old.map(t => t.id === termo.id ? termoAtualizado : t);
-                                                                          });
+                                                                          await queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
 
                                                                           setProtocoloArquivoOpen(false);
                                                                           alert('Arquivo salvo com sucesso!');
