@@ -695,7 +695,7 @@ export default function GerenciarTermos() {
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="text-right space-y-2">
+                                            <div className="space-y-2">
                                                     <div>
                                                         <Badge className={getStatusBadge(getStatusFluxo(termo)).color}>
                                                             {getStatusBadge(getStatusFluxo(termo)).label}
@@ -706,7 +706,6 @@ export default function GerenciarTermos() {
                                                             size="sm"
                                                             variant="outline"
                                                             onClick={() => setTermoDetalhes(termo)}
-                                                            className="flex-1"
                                                         >
                                                             Editar
                                                         </Button>
