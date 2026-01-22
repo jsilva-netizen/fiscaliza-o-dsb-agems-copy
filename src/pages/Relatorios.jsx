@@ -16,6 +16,13 @@ import jsPDF from 'jspdf';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const COLORS = ['#22c55e', '#ef4444', '#3b82f6', '#f59e0b'];
+const SERVICO_COLORS = {
+    'Abastecimento de Água': '#3b82f6',
+    'Esgotamento Sanitário': '#8b5cf6',
+    'Manejo de Resíduos Sólidos': '#f59e0b',
+    'Limpeza Urbana': '#10b981',
+    'Drenagem': '#06b6d4'
+};
 
 export default function Relatorios() {
     const [anoFiltro, setAnoFiltro] = useState(new Date().getFullYear().toString());
@@ -333,7 +340,15 @@ export default function Relatorios() {
                                         <YAxis />
                                         <Tooltip />
                                         <Legend />
-                                        <Bar dataKey="quantidade" fill="#3b82f6" name="Fiscalizações" />
+                                        {dadosServico.map((item, index) => (
+                                            <Bar 
+                                                key={item.servico} 
+                                                dataKey="quantidade" 
+                                                fill={SERVICO_COLORS[item.servico] || '#3b82f6'} 
+                                                name={item.servico}
+                                                data={[item]}
+                                            />
+                                        ))}
                                     </BarChart>
                                 </ResponsiveContainer>
                             ) : (
