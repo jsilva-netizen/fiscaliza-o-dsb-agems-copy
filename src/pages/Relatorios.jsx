@@ -438,30 +438,7 @@ export default function Relatorios() {
                     </CardContent>
                 </Card>
 
-                {/* Municípios sem fiscalização */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-lg flex items-center gap-2">
-                            <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                            Municípios sem Fiscalização em {anoFiltro}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm text-gray-500 mb-4">
-                            {municipiosSemFiscalizacao.length} de 79 municípios ({Math.round((municipiosSemFiscalizacao.length / 79) * 100)}%)
-                        </p>
-                        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-                            {municipiosSemFiscalizacao.slice(0, 30).map(m => (
-                                <Badge key={m.id} variant="outline" className="text-xs">
-                                    {m.nome}
-                                </Badge>
-                            ))}
-                            {municipiosSemFiscalizacao.length > 30 && (
-                                <Badge variant="secondary">+{municipiosSemFiscalizacao.length - 30} mais</Badge>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+
             </div>
             </div>
         </div>
