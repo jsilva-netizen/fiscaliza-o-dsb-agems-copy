@@ -747,11 +747,11 @@ export default function GerenciarTermos() {
                                               )}
 
                                               {termo.arquivo_url && (!termo.data_protocolo || !termo.arquivo_protocolo_url) && (
-                                                  <Dialog>
+                                                  <Dialog open={dialogProtocoloOpen} onOpenChange={setDialogProtocoloOpen}>
                                                       <DialogTrigger asChild>
                                                           <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
                                                               <FileText className="h-4 w-4 mr-1" />
-                                                              {termo.data_protocolo ? 'Enviar Arquivo Protocolo' : 'Adicionar Protocolo'}
+                                                              Adicionar Protocolo
                                                           </Button>
                                                       </DialogTrigger>
                                                       <DialogContent>
@@ -809,6 +809,7 @@ export default function GerenciarTermos() {
                                                                           queryClient.setQueryData(['termos-notificacao'], (old) => {
                                                                               return old.map(t => t.id === termo.id ? termoAtualizado : t);
                                                                           });
+                                                                          setDialogProtocoloOpen(false);
                                                                           alert('Protocolo salvo com sucesso!');
                                                                       } catch (error) {
                                                                           alert('Erro ao salvar: ' + error.message);
