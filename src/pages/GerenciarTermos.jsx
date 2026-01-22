@@ -160,6 +160,17 @@ export default function GerenciarTermos() {
         });
     };
 
+    const excluirTermoMutation = useMutation({
+        mutationFn: async (id) => {
+            return base44.entities.TermoNotificacao.delete(id);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+            alert('Termo excluído com sucesso!');
+            setDeleteConfirmation({ open: false, termoId: null, step: 1, inputValue: '' });
+        }
+    });
+
     const atualizarRespostaMutation = useMutation({
         mutationFn: async ({ id, data_recebimento_resposta }) => {
             const termo = termos.find(t => t.id === id);
