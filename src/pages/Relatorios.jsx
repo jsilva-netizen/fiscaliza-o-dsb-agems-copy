@@ -94,44 +94,20 @@ export default function Relatorios() {
         r.resposta === 'SIM'
     ).length;
 
-    // Dados por serviço (contando corretamente)
+    // Dados por serviço - cada fiscalização pode ter múltiplos serviços
     const porServico = {};
     fiscalizacoesAno.forEach(f => {
-        if (!porServico[f.servico]) {
-            porServico[f.servico] = { 
-                servico: f.servico, 
-                quantidade: 0, 
-                constatacoes: 0,
-                ncs: 0,
-                determinacoes: 0,
-                recomendacoes: 0
-            };
-        }
-        porServico[f.servico].quantidade++;
+        const servicos = Array.isArray(f.servicos) ? f.servicos : (f.servico ? [f.servico] : []);
         
-        // Contar por unidades desta fiscalização
-        const unidadesServico = unidadesFiscalizacoesAno.filter(u => u.fiscalizacao_id === f.id);
-        
-        // Constatações
-        porServico[f.servico].constatacoes += respostas.filter(r =>
-            unidadesServico.some(u => u.id === r.unidade_fiscalizada_id) &&
-            (r.resposta === 'SIM' || r.resposta === 'NAO')
-        ).length;
-        
-        // NCs
-        porServico[f.servico].ncs += ncs.filter(nc =>
-            unidadesServico.some(u => u.id === nc.unidade_fiscalizada_id)
-        ).length;
-        
-        // Determinações
-        porServico[f.servico].determinacoes += determinacoes.filter(d =>
-            unidadesServico.some(u => u.id === d.unidade_fiscalizada_id)
-        ).length;
-        
-        // Recomendações
-        porServico[f.servico].recomendacoes += recomendacoes.filter(r =>
-            unidadesServico.some(u => u.id === r.unidade_fiscalizada_id)
-        ).length;
+        servicos.forEach(servico => {
+            if (!porServico[servico]) {
+                porServico[servico] = { 
+                    servico: servico, 
+                    quantidade: 0
+                };
+            }
+            porServico[servico].quantidade++;
+        });
     });
     const dadosServico = Object.values(porServico);
 
