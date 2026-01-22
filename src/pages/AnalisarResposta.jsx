@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Upload, Download, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Upload, Download, AlertCircle, CheckCircle, XCircle, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -18,12 +18,14 @@ export default function AnalisarResposta() {
     const determinacaoId = searchParams.get('determinacao');
     const queryClient = useQueryClient();
     const [analiseForm, setAnaliseForm] = useState({
+        respostaPrestador: '',
         parecer: '',
         resultado: 'atendida', // atendida, justificada, nao_atendida
         observacoes: ''
     });
     const [resposta, setResposta] = useState(null);
     const [uploadingFile, setUploadingFile] = useState(false);
+    const [gerandoParecer, setGerandoParecer] = useState(false);
 
     const { data: determinacao } = useQuery({
         queryKey: ['determinacao', determinacaoId],
@@ -69,10 +71,66 @@ export default function AnalisarResposta() {
         }
     });
 
+    const handleGerarParecer = async () => {
+        if (!analiseForm.respostaPrestador.trim()) {
+            alert('Por favor, insira a resposta do prestador primeiro.');
+            return;
+        }
+
+        setGerandoParecer(true);
+        try {
+            const conversation = await base44.agents.createConversation({
+                agent_name: 'analise_determinacao',
+                metadata: {
+                    determinacao_id: determinacaoId
+                }
+            });
+
+            const prompt = `DETERMINAÇÃO:
+${determinacao.numero_determinacao}
+${determinacao.descricao}
+Prazo: ${determinacao.prazo_dias} dias
+
+RESPOSTA DO PRESTADOR:
+${analiseForm.respostaPrestador}
+
+Por favor, forneça um parecer técnico completo mas conciso sobre esta resposta.`;
+
+            await base44.agents.addMessage(conversation, {
+                role: 'user',
+                content: prompt
+            });
+
+            // Aguardar resposta
+            let tentativas = 0;
+            const maxTentativas = 30;
+            
+            while (tentativas < maxTentativas) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const conv = await base44.agents.getConversation(conversation.id);
+                const ultimaMensagem = conv.messages[conv.messages.length - 1];
+                
+                if (ultimaMensagem.role === 'assistant' && ultimaMensagem.content) {
+                    setAnaliseForm(prev => ({
+                        ...prev,
+                        parecer: ultimaMensagem.content
+                    }));
+                    break;
+                }
+                tentativas++;
+            }
+        } catch (error) {
+            console.error('Erro ao gerar parecer:', error);
+            alert('Erro ao gerar parecer técnico');
+        } finally {
+            setGerandoParecer(false);
+        }
+    };
+
     const handleSalvarAnalise = () => {
         salvarRespostaMutation.mutate({
             status: analiseForm.resultado,
-            descricao_atendimento: analiseForm.parecer,
+            descricao_atendimento: analiseForm.respostaPrestador + '\n\nPARECER TÉCNICO:\n' + analiseForm.parecer,
             tipo_resposta: analiseForm.resultado,
             data_resposta: new Date().toISOString()
         });
@@ -153,6 +211,17 @@ export default function AnalisarResposta() {
                         <CardTitle>Análise da Resposta do Prestador</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
+                        {/* Resposta do Prestador */}
+                        <div>
+                            <Label className="mb-2">Resposta do Prestador</Label>
+                            <Textarea
+                                placeholder="Descreva a resposta fornecida pelo prestador de serviços..."
+                                value={analiseForm.respostaPrestador}
+                                onChange={(e) => setAnaliseForm({ ...analiseForm, respostaPrestador: e.target.value })}
+                                className="min-h-32"
+                            />
+                        </div>
+
                         {/* Upload de Evidências */}
                         <div>
                             <Label className="mb-2">Evidências da Resposta</Label>
@@ -185,14 +254,27 @@ export default function AnalisarResposta() {
                             )}
                         </div>
 
-                        {/* Parecer Técnico */}
+                        {/* Parecer Técnico com IA */}
                         <div>
-                            <Label>Parecer Técnico</Label>
+                            <div className="flex items-center justify-between mb-2">
+                                <Label>Parecer Técnico</Label>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleGerarParecer}
+                                    disabled={gerandoParecer || !analiseForm.respostaPrestador.trim()}
+                                    className="gap-2"
+                                >
+                                    <Sparkles className="h-4 w-4" />
+                                    {gerandoParecer ? 'Gerando...' : 'Gerar com IA'}
+                                </Button>
+                            </div>
                             <Textarea
-                                placeholder="Descreva sua análise sobre a resposta do prestador..."
+                                placeholder="Descreva sua análise sobre a resposta do prestador ou use a IA para gerar um parecer técnico..."
                                 value={analiseForm.parecer}
                                 onChange={(e) => setAnaliseForm({ ...analiseForm, parecer: e.target.value })}
-                                className="min-h-32"
+                                className="min-h-40"
                             />
                         </div>
 
