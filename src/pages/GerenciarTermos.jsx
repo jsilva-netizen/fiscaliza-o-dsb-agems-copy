@@ -815,11 +815,23 @@ export default function GerenciarTermos() {
 
                                                                       try {
                                                                           setUploadingProtocoloData(true);
-                                                                          await base44.entities.TermoNotificacao.update(termo.id, {
-                                                                              data_protocolo: data
+                                                                          const [a, m, d] = data.split('-');
+                                                                          const dprot = new Date(`${a}-${m}-${d}T00:00:00`);
+                                                                          const prazo = termo.prazo_resposta_dias || 30;
+                                                                          const dmax = new Date(dprot);
+                                                                          dmax.setDate(dmax.getDate() + prazo);
+                                                                          const dmax_str = `${dmax.getFullYear()}-${String(dmax.getMonth() + 1).padStart(2, '0')}-${String(dmax.getDate()).padStart(2, '0')}`;
+
+                                                                          const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
+                                                                              data_protocolo: data,
+                                                                              data_maxima_resposta: dmax_str,
+                                                                              status: 'ativo'
                                                                           });
 
-                                                                          await queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+                                                                          queryClient.setQueryData(['termos-notificacao'], (old) => {
+                                                                              return old.map(t => t.id === termo.id ? termoAtualizado : t);
+                                                                          });
+
                                                                           setProtocoloDataOpen(false);
                                                                           alert('Data registrada!');
                                                                       } catch (error) {
@@ -838,12 +850,12 @@ export default function GerenciarTermos() {
                                                   </Dialog>
                                               )}
 
-                                              {termo.arquivo_url && termo.data_protocolo && !termo.arquivo_protocolo_url && (
+                                              {termo.data_protocolo && !termo.arquivo_protocolo_url && (
                                                   <Dialog open={protocoloArquivoOpen} onOpenChange={setProtocoloArquivoOpen}>
                                                       <DialogTrigger asChild>
-                                                          <Button size="sm" variant="default" className="bg-blue-600 hover:bg-blue-700">
+                                                          <Button size="sm" variant="outline">
                                                               <Upload className="h-4 w-4 mr-1" />
-                                                              Enviar Arquivo
+                                                              Enviar Arquivo (Opcional)
                                                           </Button>
                                                       </DialogTrigger>
                                                       <DialogContent>
@@ -851,6 +863,7 @@ export default function GerenciarTermos() {
                                                               <DialogTitle>Arquivo de Protocolo / AR</DialogTitle>
                                                           </DialogHeader>
                                                           <div className="space-y-3">
+                                                              <p className="text-sm text-gray-600">Envie o comprovante de protocolo (opcional)</p>
                                                               <Input
                                                                   type="file"
                                                                   accept=".pdf"
@@ -870,18 +883,8 @@ export default function GerenciarTermos() {
                                                                           setUploadingProtocoloArquivo(true);
                                                                           const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-                                                                          const [a, m, d] = termo.data_protocolo.split('-');
-                                                                          const dprot = new Date(`${a}-${m}-${d}T00:00:00`);
-                                                                          const prazo = termo.prazo_resposta_dias || 30;
-                                                                          const dmax = new Date(dprot);
-                                                                          dmax.setDate(dmax.getDate() + prazo);
-
-                                                                          const dmax_str = `${dmax.getFullYear()}-${String(dmax.getMonth() + 1).padStart(2, '0')}-${String(dmax.getDate()).padStart(2, '0')}`;
-
                                                                           const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
-                                                                              arquivo_protocolo_url: file_url,
-                                                                              data_maxima_resposta: dmax_str,
-                                                                              status: 'ativo'
+                                                                              arquivo_protocolo_url: file_url
                                                                           });
 
                                                                           queryClient.setQueryData(['termos-notificacao'], (old) => {
@@ -889,7 +892,7 @@ export default function GerenciarTermos() {
                                                                           });
 
                                                                           setProtocoloArquivoOpen(false);
-                                                                          alert('Arquivo de protocolo salvo com sucesso!');
+                                                                          alert('Arquivo salvo com sucesso!');
                                                                       } catch (error) {
                                                                           alert('Erro ao salvar: ' + error.message);
                                                                       } finally {
@@ -899,14 +902,14 @@ export default function GerenciarTermos() {
                                                                   className="w-full"
                                                                   disabled={uploadingProtocoloArquivo}
                                                               >
-                                                                  {uploadingProtocoloArquivo ? 'Salvando...' : 'Salvar'}
+                                                                  {uploadingProtocoloArquivo ? 'Salvando...' : 'Enviar'}
                                                               </Button>
                                                           </div>
                                                       </DialogContent>
                                                   </Dialog>
                                               )}
 
-                                              {termo.data_protocolo && termo.arquivo_protocolo_url && !termo.data_recebimento_resposta && (
+                                              {termo.data_protocolo && !termo.data_recebimento_resposta && (
                                                 <Dialog open={respostaOpenId === termo.id} onOpenChange={(open) => setRespostaOpenId(open ? termo.id : null)}>
                                                     <DialogTrigger asChild>
                                                         <Button size="sm" variant={verificaPrazoVencido(termo) ? "destructive" : "outline"}>
