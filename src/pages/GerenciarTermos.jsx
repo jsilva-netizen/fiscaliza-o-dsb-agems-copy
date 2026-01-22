@@ -1039,8 +1039,7 @@ export default function GerenciarTermos() {
                                                               </DialogContent>
                                                               </Dialog>
                                                               )}
-                                            <div className="flex gap-2 flex-wrap">
-                                            {termo.arquivo_url && (
+                                                              {termo.arquivo_url && (
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
