@@ -147,6 +147,9 @@ export default function VistoriarUnidade() {
 
     const salvarRespostaMutation = useMutation({
         mutationFn: async ({ itemId, data }) => {
+            if (fiscalizacao?.status === 'finalizada') {
+                throw new Error('Não é possível modificar uma fiscalização finalizada');
+            }
             const item = itensChecklist.find(i => i.id === itemId);
             if (!item) return;
 
@@ -260,6 +263,9 @@ export default function VistoriarUnidade() {
 
      const salvarFotosMutation = useMutation({
          mutationFn: async (fotosData) => {
+              if (fiscalizacao?.status === 'finalizada') {
+                  throw new Error('Não é possível modificar uma fiscalização finalizada');
+              }
               // Salvar objetos completos com url e legenda
               const fotosCompletas = fotosData.map(f => {
                   if (typeof f === 'string') {
