@@ -181,9 +181,9 @@ export default function AcompanhamentoDeterminacoes() {
     const getStatusBadge = (status) => {
         const statusMap = {
             pendente: { label: 'Pendente', variant: 'outline', color: 'text-orange-600' },
-            atendida: { label: 'Atendida', variant: 'default', color: 'text-green-600' },
+            atendida: { label: 'Acatada', variant: 'default', color: 'text-green-600' },
             justificada: { label: 'Justificada', variant: 'secondary', color: 'text-blue-600' },
-            nao_atendida: { label: 'Não Atendida', variant: 'destructive', color: 'text-red-600' }
+            nao_atendida: { label: 'Não Acatada', variant: 'destructive', color: 'text-red-600' }
         };
         return statusMap[status] || statusMap.pendente;
     };
