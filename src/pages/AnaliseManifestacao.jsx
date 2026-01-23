@@ -161,6 +161,14 @@ export default function AnaliseManifestacao() {
             for (const ai of aisParaDeletar) {
                 await base44.entities.AutoInfracao.delete(ai.id);
             }
+
+            // Deletar as RespostaDeterminacao para voltar ao estado "aguardando análise"
+            const todasRespostas = await base44.entities.RespostaDeterminacao.list();
+            const respostasParaDeletar = todasRespostas.filter(r => detIds.includes(r.determinacao_id));
+            
+            for (const resposta of respostasParaDeletar) {
+                await base44.entities.RespostaDeterminacao.delete(resposta.id);
+            }
             
             // Restaurar para o número original do TN (sequencial geral do DSB)
             const proximoNumeroTN = await calcularProximoNumeroTN();
