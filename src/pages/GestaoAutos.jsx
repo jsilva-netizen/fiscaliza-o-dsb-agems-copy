@@ -129,11 +129,17 @@ export default function GestaoAutos() {
     };
 
     const getMunicipioNome = (autoId) => {
-        const auto = autos.find(a => a.id === autoId);
-        const fisc = fiscalizacoes.find(f => f.id === auto?.fiscalizacao_id);
-        const mun = municipios.find(m => m.id === fisc?.municipio_id);
-        return mun?.nome || 'N/A';
-    };
+         const auto = autos.find(a => a.id === autoId);
+         const fisc = fiscalizacoes.find(f => f.id === auto?.fiscalizacao_id);
+         const mun = municipios.find(m => m.id === fisc?.municipio_id);
+         return mun?.nome || 'N/A';
+     };
+
+     const getNumeroProcesso = (autoId) => {
+         const auto = autos.find(a => a.id === autoId);
+         const fisc = fiscalizacoes.find(f => f.id === auto?.fiscalizacao_id);
+         return fisc?.numero_processo || 'N/A';
+     };
 
     const getStatusBadge = (status) => {
         const statusMap = {
