@@ -538,7 +538,7 @@ export default function AcompanhamentoDeterminacoes() {
                                                                            Vencimento: {dataLimite ? dataLimite.toLocaleDateString('pt-BR') : 'N/A'}
                                                                        </p>
                                                                    </div>
-                                                                   <Badge className="bg-red-600">Não Atendida</Badge>
+                                                                   <Badge className="bg-red-600">Não Acatada</Badge>
                                                                </div>
                                                            </CardContent>
                                                        </Card>
