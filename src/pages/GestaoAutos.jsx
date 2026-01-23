@@ -216,13 +216,6 @@ export default function GestaoAutos() {
                                                     </span>
                                                 </Button>
                                             </label>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => enviarAutoMutation.mutate(auto.id)}
-                                                className="bg-blue-600 hover:bg-blue-700"
-                                            >
-                                                Enviar
-                                            </Button>
                                         </div>
                                     </div>
                                     <div className="border-t pt-4 grid grid-cols-2 gap-4">
