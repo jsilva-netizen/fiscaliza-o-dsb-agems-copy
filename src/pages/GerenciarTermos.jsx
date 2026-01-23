@@ -253,7 +253,14 @@ export default function GerenciarTermos() {
     const termosFiltrados = termos.filter(termo => {
         if (filtros.busca && !termo.numero_termo_notificacao?.toLowerCase().includes(filtros.busca.toLowerCase())) return false;
         if (filtros.camaraTecnica && termo.camara_tecnica !== filtros.camaraTecnica) return false;
-        if (filtros.status && getStatusFluxo(termo) !== filtros.status) return false;
+        if (filtros.status) {
+            const status = getStatusFluxo(termo);
+            if (filtros.status === 'prazo_vencido') {
+                if (status !== 'aguardando_resposta' || !verificaPrazoVencido(termo)) return false;
+            } else if (status !== filtros.status) {
+                return false;
+            }
+        }
         if (filtros.dataInicio && new Date(termo.data_geracao) < new Date(filtros.dataInicio)) return false;
         if (filtros.dataFim && new Date(termo.data_geracao) > new Date(filtros.dataFim)) return false;
         return true;
