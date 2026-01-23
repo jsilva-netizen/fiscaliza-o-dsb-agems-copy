@@ -699,9 +699,9 @@ export default function AnaliseManifestacao() {
                                                                      </Button>
                                                                  </Link>
                                                              </div>
-                                                         )}
+                                                        )}
                                                         </div>
-                                        </div>
+                                                        </div>
                                     </CardContent>
                                 </Card>
                             );
