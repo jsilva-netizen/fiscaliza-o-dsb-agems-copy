@@ -444,7 +444,11 @@ export default function GerenciarTermos() {
                                   data_protocolo: null,
                                   arquivo_protocolo_url: null,
                                   data_recebimento_resposta: null,
-                                  arquivo_resposta_url: null
+                                  arquivo_resposta_url: null,
+                                  numero_processo: null,
+                                  fiscalizacao_id: null,
+                                  camara_tecnica: null,
+                                  prazo_resposta_dias: null
                               });
                               setProtocoloTemp(null);
                           }
