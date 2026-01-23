@@ -158,18 +158,10 @@ export default function AnaliseManifestacao() {
             dets.map(d => d.id).includes(r.determinacao_id)
         );
         
-        const ano = new Date().getFullYear();
-        const camaraTecnica = termo.camara_tecnica;
+        const numeroAM = await calcularNumeroAM(termo);
         
-        // Contar AIs gerados neste ano para esta câmara técnica para determinar número da AM
-        const todosOsAIs = await base44.entities.AutoInfracao.list();
-        const aisDoAno = todosOsAIs.filter(ai => {
-            if (!ai.numero_auto) return false;
-            const match = ai.numero_auto.match(/AI\s*nº\s*(\d+)\/(\d{4})\/DSB\/(\w+)/);
-            return match && parseInt(match[2]) === ano && match[3] === camaraTecnica;
-        });
-        const proximoNumeroAM = aisDoAno.length + 1;
-        const numeroAM = `AM ${String(proximoNumeroAM).padStart(3, '0')}/${ano}/DSB/${camaraTecnica}`;
+        // Salvar número da AM no termo
+        await base44.entities.TermoNotificacao.update(termo.id, { numero_termo_notificacao: numeroAM });
 
         const doc = new jsPDF('l', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
