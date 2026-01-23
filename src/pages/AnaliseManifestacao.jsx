@@ -145,6 +145,17 @@ export default function AnaliseManifestacao() {
         return stats.atendidas + stats.naoAtendidas === stats.total;
     };
 
+    const excluirAnalise = async (termo) => {
+        // Restaurar para o número original do TN (sem AM)
+        const numeroOriginal = `TN ${termo.numero_rfp}/${new Date().getFullYear()}/DSB/${termo.camara_tecnica}`;
+        await base44.entities.TermoNotificacao.update(termo.id, { 
+            numero_termo_notificacao: numeroOriginal 
+        });
+        refetchTermos();
+        setTermoExcluindo(null);
+        setConfirmarExclusao(false);
+    };
+
     const calcularNumeroAM = async (termo) => {
         const ano = new Date().getFullYear();
         const todosOsTermos = await base44.entities.TermoNotificacao.list();
