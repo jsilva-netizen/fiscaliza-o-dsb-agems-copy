@@ -189,14 +189,14 @@ export default function GestaoAutos() {
                     </Card>
                     <Card>
                         <CardContent className="p-4 text-center">
-                            <p className="text-sm text-gray-600 mb-1">Respondidos</p>
-                            <p className="text-2xl font-bold">{autosPorStatus.respondidos.length}</p>
+                            <p className="text-sm text-gray-600 mb-1">Em Análise</p>
+                            <p className="text-2xl font-bold">{autosPorStatus.em_analise.length}</p>
                         </CardContent>
                     </Card>
                     <Card>
                         <CardContent className="p-4 text-center">
-                            <p className="text-sm text-gray-600 mb-1">Em Análise</p>
-                            <p className="text-2xl font-bold">{autosPorStatus.em_analise.length}</p>
+                            <p className="text-sm text-gray-600 mb-1">Finalizados</p>
+                            <p className="text-2xl font-bold">{autosPorStatus.finalizados.length}</p>
                         </CardContent>
                     </Card>
                 </div>
