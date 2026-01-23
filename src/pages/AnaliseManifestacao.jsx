@@ -146,14 +146,28 @@ export default function AnaliseManifestacao() {
     };
 
     const excluirAnalise = async (termo) => {
-        // Restaurar para o número original do TN (sem AM)
-        const numeroOriginal = `TN 002/${new Date().getFullYear()}/DSB/${termo.camara_tecnica}`;
-        await base44.entities.TermoNotificacao.update(termo.id, { 
-            numero_termo_notificacao: numeroOriginal 
-        });
-        refetchTermos();
-        setTermoExcluindo(null);
-        setConfirmarExclusao(false);
+        try {
+            // Deletar todos os AIs relacionados a este termo
+            const dets = getDeterminacoesPorTermo(termo);
+            const detIds = dets.map(d => d.id);
+            const todosAIs = await base44.entities.AutoInfracao.list();
+            const aisParaDeletar = todosAIs.filter(ai => detIds.includes(ai.determinacao_id));
+            
+            for (const ai of aisParaDeletar) {
+                await base44.entities.AutoInfracao.delete(ai.id);
+            }
+            
+            // Restaurar para o número original do TN (sem AM)
+            const numeroOriginal = `TN 002/${new Date().getFullYear()}/DSB/${termo.camara_tecnica}`;
+            await base44.entities.TermoNotificacao.update(termo.id, { 
+                numero_termo_notificacao: numeroOriginal 
+            });
+            refetchTermos();
+            setTermoExcluindo(null);
+            setConfirmarExclusao(false);
+        } catch (error) {
+            console.error('Erro ao excluir análise:', error);
+        }
     };
 
     const calcularNumeroAM = async (termo) => {
