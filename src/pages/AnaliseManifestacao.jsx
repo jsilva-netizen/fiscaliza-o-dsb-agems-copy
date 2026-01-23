@@ -537,6 +537,58 @@ export default function AnaliseManifestacao() {
                         })
                     )}
                 </div>
+
+                {/* Dialog de Exclusão */}
+                <AlertDialog open={termoExcluindo !== null} onOpenChange={(open) => {
+                    if (!open) setTermoExcluindo(null);
+                }}>
+                    <AlertDialogContent>
+                        {!confirmarExclusao ? (
+                            <>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Excluir Análise?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Tem certeza que deseja excluir a análise da manifestação? Esta ação removerá o número AM e permitirá que a análise seja refeita.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <div className="flex gap-2 justify-end">
+                                    <AlertDialogCancel onClick={() => setTermoExcluindo(null)}>
+                                        Cancelar
+                                    </AlertDialogCancel>
+                                    <Button
+                                        variant="destructive"
+                                        onClick={() => setConfirmarExclusao(true)}
+                                    >
+                                        Excluir
+                                    </Button>
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Esta é a última confirmação. Ao continuar, a análise será removida permanentemente e o TN voltará ao estado anterior.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <div className="flex gap-2 justify-end">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setConfirmarExclusao(false)}
+                                    >
+                                        Voltar
+                                    </Button>
+                                    <AlertDialogAction
+                                        className="bg-red-600 hover:bg-red-700"
+                                        onClick={() => excluirAnalise(termoExcluindo)}
+                                    >
+                                        Confirmar Exclusão
+                                    </AlertDialogAction>
+                                </div>
+                            </>
+                        )}
+                    </AlertDialogContent>
+                </AlertDialog>
             </div>
         </div>
     );
