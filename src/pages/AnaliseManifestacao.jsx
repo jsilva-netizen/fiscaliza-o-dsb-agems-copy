@@ -170,11 +170,9 @@ export default function AnaliseManifestacao() {
                 await base44.entities.RespostaDeterminacao.delete(resposta.id);
             }
             
-            // Restaurar para o número original do TN (sequencial geral do DSB)
-            const proximoNumeroTN = await calcularProximoNumeroTN();
-            const numeroOriginal = `TN ${proximoNumeroTN}/${new Date().getFullYear()}/DSB/AGEMS`;
+            // Remover numero_am para permitir nova geração
             await base44.entities.TermoNotificacao.update(termo.id, { 
-                numero_termo_notificacao: numeroOriginal 
+                numero_am: null 
             });
             refetchTermos();
             setTermoExcluindo(null);
