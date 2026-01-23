@@ -131,16 +131,17 @@ export default function AnaliseManifestacao() {
         
         if (stats.total === 0) return { label: 'Sem determinações', color: 'bg-gray-500' };
         
-        // Se já tem resposta do prestador registrada
-        if (termo.data_recebimento_resposta) {
-            if (stats.atendidas + stats.naoAtendidas === stats.total) {
-                return { label: 'Análise Concluída', color: 'bg-green-600' };
-            } else {
-                return { label: 'Aguardando Análise', color: 'bg-yellow-600' };
-            }
-        } else {
-            // Se ainda não tem resposta do prestador
+        // Se ainda não tem AM (resposta não foi registrada)
+        if (!termo.numero_am) {
             return { label: 'Aguardando Resposta', color: 'bg-blue-600' };
+        }
+        
+        // Se tem AM e todas as determinações foram analisadas
+        if (stats.atendidas + stats.naoAtendidas === stats.total) {
+            return { label: 'Análise Concluída', color: 'bg-green-600' };
+        } else {
+            // Se tem AM mas ainda há determinações aguardando análise
+            return { label: 'Aguardando Análise', color: 'bg-yellow-600' };
         }
     };
 
