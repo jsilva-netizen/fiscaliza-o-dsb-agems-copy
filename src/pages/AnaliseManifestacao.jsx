@@ -647,49 +647,36 @@ export default function AnaliseManifestacao() {
                                             </div>
                                             <div className="flex flex-col gap-2 items-end">
                                                 <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
-                                                {stats.total > 0 && !todasDeterminacoesAnalisadas(termo) && (
-                                                    <Link to={createPageUrl('AnalisarResposta') + `?termo=${termo.id}`}>
-                                                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                                            Analisar Determinações
-                                                        </Button>
-                                                    </Link>
-                                                )}
-                                                {stats.total > 0 && todasDeterminacoesAnalisadas(termo) && (
-                                                    <div className="flex gap-2">
-                                                        {!termo.numero_am ? (
-                                                            <Button 
-                                                                size="sm" 
-                                                                className="bg-green-600 hover:bg-green-700"
-                                                                onClick={() => gerarAnaliseManifestacao(termo)}
-                                                            >
-                                                                <Download className="h-4 w-4 mr-1" />
-                                                                Gerar Análise
-                                                            </Button>
-                                                        ) : (
-                                                            <div className="flex gap-2">
-                                                                <Button 
-                                                                    size="sm" 
-                                                                    className="bg-blue-600 hover:bg-blue-700"
-                                                                    onClick={() => baixarAnaliseManifestacao(termo)}
-                                                                >
-                                                                    <Download className="h-4 w-4 mr-1" />
-                                                                    Baixar AM PDF
-                                                                </Button>
-                                                                <Button 
-                                                                    size="sm" 
-                                                                    variant="outline"
-                                                                    onClick={async () => {
-                                                                        await base44.entities.TermoNotificacao.update(termo.id, { numero_am: null });
-                                                                        queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
-                                                                    }}
-                                                                >
-                                                                    Editar AM
-                                                                </Button>
-                                                            </div>
-                                                        )}
-                                                        </div>
-                                                        )}
-                                            </div>
+                                                {stats.total > 0 && termo.numero_am && (
+                                                     <Link to={createPageUrl('AnalisarResposta') + `?termo=${termo.id}`}>
+                                                         <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                                             Analisar Determinações
+                                                         </Button>
+                                                     </Link>
+                                                 )}
+                                                 {stats.total > 0 && termo.numero_am && todasDeterminacoesAnalisadas(termo) && (
+                                                     <div className="flex gap-2">
+                                                         <Button 
+                                                             size="sm" 
+                                                             className="bg-blue-600 hover:bg-blue-700"
+                                                             onClick={() => baixarAnaliseManifestacao(termo)}
+                                                         >
+                                                             <Download className="h-4 w-4 mr-1" />
+                                                             Baixar AM PDF
+                                                         </Button>
+                                                         <Button 
+                                                             size="sm" 
+                                                             variant="outline"
+                                                             onClick={async () => {
+                                                                 await base44.entities.TermoNotificacao.update(termo.id, { numero_am: null });
+                                                                 refetchTermos();
+                                                             }}
+                                                         >
+                                                             Editar AM
+                                                         </Button>
+                                                     </div>
+                                                 )}
+                                                </div>
                                         </div>
                                     </CardContent>
                                 </Card>
