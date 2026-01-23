@@ -134,11 +134,13 @@ export default function TiposUnidade() {
                             />
                         </div>
                         <div>
-                            <Label>Descrição</Label>
-                            <Textarea
-                                value={formData.descricao}
-                                onChange={(e) => setFormData({...formData, descricao: e.target.value})}
-                                placeholder="Descrição do tipo de unidade..."
+                            <Label>Código *</Label>
+                            <Input
+                                value={formData.tipo_unidade_codigo}
+                                onChange={(e) => setFormData({...formData, tipo_unidade_codigo: e.target.value.toUpperCase()})}
+                                placeholder="Ex: ETA, ETE, RES..."
+                                maxLength="10"
+                                required
                             />
                         </div>
                         <div>
