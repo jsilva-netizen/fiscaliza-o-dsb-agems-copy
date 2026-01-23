@@ -157,8 +157,9 @@ export default function AnaliseManifestacao() {
                 await base44.entities.AutoInfracao.delete(ai.id);
             }
             
-            // Restaurar para o número original do TN (sem AM)
-            const numeroOriginal = `TN 002/${new Date().getFullYear()}/DSB/${termo.camara_tecnica}`;
+            // Restaurar para o número original do TN (sequencial geral do DSB)
+            const proximoNumeroTN = await calcularProximoNumeroTN();
+            const numeroOriginal = `TN ${proximoNumeroTN}/${new Date().getFullYear()}/DSB/AGEMS`;
             await base44.entities.TermoNotificacao.update(termo.id, { 
                 numero_termo_notificacao: numeroOriginal 
             });
