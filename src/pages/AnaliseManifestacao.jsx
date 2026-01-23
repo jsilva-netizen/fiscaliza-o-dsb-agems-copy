@@ -10,7 +10,6 @@ import { ArrowLeft, FileText, AlertCircle, CheckCircle, Clock, Download } from '
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import jsPDF from 'jspdf';
-import 'jspdf/dist/polyfills.es6';
 
 export default function AnaliseManifestacao() {
     const [filtros, setFiltros] = useState({
