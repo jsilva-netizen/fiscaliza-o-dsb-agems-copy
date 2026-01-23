@@ -67,9 +67,19 @@ export default function AnaliseManifestacao() {
     });
 
     const { data: autos = [] } = useQuery({
-        queryKey: ['autos-infracao'],
-        queryFn: () => base44.entities.AutoInfracao.list()
-    });
+         queryKey: ['autos-infracao'],
+         queryFn: () => base44.entities.AutoInfracao.list()
+     });
+
+     const { data: naoConformidades = [] } = useQuery({
+         queryKey: ['nao-conformidades'],
+         queryFn: () => base44.entities.NaoConformidade.list()
+     });
+
+     const { data: itemsChecklist = [] } = useQuery({
+         queryKey: ['items-checklist'],
+         queryFn: () => base44.entities.ItemChecklist.list()
+     });
 
     const getPrestadorNome = (id) => {
         const p = prestadores.find(pres => pres.id === id);
