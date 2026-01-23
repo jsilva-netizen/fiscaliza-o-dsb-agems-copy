@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, FileText, AlertCircle, CheckCircle, Clock, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import jsPDF from 'jspdf';
+import 'jspdf/dist/polyfills.es6';
 
 export default function AnaliseManifestacao() {
     const [filtros, setFiltros] = useState({
