@@ -285,8 +285,8 @@ export default function AnalisarResposta() {
                                             </div>
                                             <p className="text-sm text-gray-600 mb-2">{det.descricao}</p>
                                             <div className="flex gap-2">
-                                                {status === 'atendida' && <Badge className="bg-green-600">Atendida</Badge>}
-                                                {status === 'nao_atendida' && <Badge className="bg-red-600">Não Atendida - Auto Gerado</Badge>}
+                                                {status === 'atendida' && <Badge className="bg-green-600">Acatada</Badge>}
+                                                {status === 'nao_atendida' && <Badge className="bg-red-600">Não acatada - AI Gerado</Badge>}
                                                 {status === 'aguardando_analise' && <Badge className="bg-yellow-600">Aguardando Análise</Badge>}
                                                 {status === 'pendente' && <Badge className="bg-gray-500">Pendente</Badge>}
                                             </div>
