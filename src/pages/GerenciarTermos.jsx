@@ -1470,12 +1470,20 @@ export default function GerenciarTermos() {
                                                                           };
 
                                                                           const arquivosAtuais = termo.arquivos_resposta || [];
+                                                                          
+                                                                          // Calcular número da AM se ainda não tiver
+                                                                          let numeroAM = termo.numero_am;
+                                                                          if (!numeroAM) {
+                                                                              numeroAM = await calcularNumeroAM();
+                                                                          }
+                                                                          
                                                                           const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
                                                                               data_recebimento_resposta: dataRecebStr,
                                                                               arquivos_resposta: [...arquivosAtuais, novoArquivo],
                                                                               arquivo_oficio_resposta: respostaOficioTemp,
                                                                               recebida_no_prazo: dataReceb <= dataMax,
-                                                                             status: 'respondido'
+                                                                             status: 'respondido',
+                                                                              numero_am: numeroAM
                                                                           });
 
                                                                          queryClient.setQueryData(['termos-notificacao'], (old) => {
