@@ -206,8 +206,8 @@ export default function GestaoAutos() {
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="gerados">Gerados ({autosPorStatus.gerados.length})</TabsTrigger>
                         <TabsTrigger value="enviados">Enviados ({autosPorStatus.enviados.length})</TabsTrigger>
-                        <TabsTrigger value="respondidos">Respondidos ({autosPorStatus.respondidos.length})</TabsTrigger>
                         <TabsTrigger value="analise">Em Análise ({autosPorStatus.em_analise.length})</TabsTrigger>
+                        <TabsTrigger value="finalizados">Finalizados ({autosPorStatus.finalizados.length})</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="gerados" className="space-y-4">
