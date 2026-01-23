@@ -50,6 +50,13 @@ export default function GerenciarTermos() {
     const [uploadingProtocolo, setUploadingProtocolo] = useState(false);
 
     const [respostaOpenId, setRespostaOpenId] = useState(null);
+    const [alteracoesPendentes, setAlteracoesPendentes] = useState(false);
+    const [dadosEditados, setDadosEditados] = useState({
+        data_protocolo: null,
+        arquivo_protocolo_url: null,
+        data_recebimento_resposta: null,
+        arquivo_resposta_url: null
+    });
 
     const { data: fiscalizacoes = [] } = useQuery({
         queryKey: ['fiscalizacoes'],
@@ -413,12 +420,20 @@ export default function GerenciarTermos() {
 
                 {/* Dialog de Detalhes do Termo */}
                 <Dialog open={termoDetalhes !== null} onOpenChange={(open) => {
-          if (!open) {
-              setTermoDetalhes(null);
-              setTermoAssinadoTemp(null);
-          }
-      }}>
-                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                          if (!open) {
+                              setTermoDetalhes(null);
+                              setTermoAssinadoTemp(null);
+                              setAlteracoesPendentes(false);
+                              setDadosEditados({
+                                  data_protocolo: null,
+                                  arquivo_protocolo_url: null,
+                                  data_recebimento_resposta: null,
+                                  arquivo_resposta_url: null
+                              });
+                              setProtocoloTemp(null);
+                          }
+                      }}>
+                                    <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Detalhes do Termo de Notificação</DialogTitle>
                         </DialogHeader>
@@ -508,7 +523,15 @@ export default function GerenciarTermos() {
                                     <div className="space-y-2">
                                         <div>
                                             <Label className="text-sm">Data de Protocolo / AR *</Label>
-                                            <Input type="date" id="data-protocolo-detalhe" defaultValue={termoDetalhes.data_protocolo || ''} />
+                                            <Input 
+                                                type="date" 
+                                                id="data-protocolo-detalhe" 
+                                                defaultValue={termoDetalhes.data_protocolo || ''}
+                                                onChange={(e) => {
+                                                    setDadosEditados(prev => ({ ...prev, data_protocolo: e.target.value }));
+                                                    setAlteracoesPendentes(true);
+                                                }}
+                                            />
                                         </div>
                                         <Input
                                             type="file"
@@ -520,6 +543,8 @@ export default function GerenciarTermos() {
                                                     try {
                                                         const { file_url } = await base44.integrations.Core.UploadFile({ file });
                                                         setProtocoloTemp(file_url);
+                                                        setDadosEditados(prev => ({ ...prev, arquivo_protocolo_url: file_url }));
+                                                        setAlteracoesPendentes(true);
                                                     } catch (error) {
                                                         alert('Erro ao enviar arquivo');
                                                     } finally {
@@ -532,23 +557,6 @@ export default function GerenciarTermos() {
                                         {uploadingProtocolo && <p className="text-xs text-gray-500">Enviando arquivo...</p>}
                                         {protocoNoTemp && !uploadingProtocolo && (
                                             <p className="text-xs text-green-600">✓ Arquivo carregado</p>
-                                        )}
-                                        {protocoNoTemp && (
-                                            <Button onClick={() => {
-                                                const dataProtocolo = document.getElementById('data-protocolo-detalhe').value;
-                                                if (!dataProtocolo) {
-                                                    alert('Informe a data de protocolo');
-                                                    return;
-                                                }
-                                                atualizarProtocoloMutation.mutate({
-                                                    id: termoDetalhes.id,
-                                                    data_protocolo: dataProtocolo,
-                                                    arquivo_protocolo_url: protocoNoTemp
-                                                });
-                                                setProtocoloTemp(null);
-                                            }} className="w-full" size="sm">
-                                                Salvar
-                                            </Button>
                                         )}
                                         {termoDetalhes.arquivo_protocolo_url && (
                                             <Button variant="outline" onClick={() => window.open(termoDetalhes.arquivo_protocolo_url)} className="w-full" size="sm">
@@ -565,7 +573,15 @@ export default function GerenciarTermos() {
                                         <div className="space-y-2">
                                             <div>
                                                 <Label className="text-sm">Data de Recebimento da Resposta *</Label>
-                                                <Input type="date" id="data-resposta-detalhe" defaultValue={termoDetalhes.data_recebimento_resposta || ''} />
+                                                <Input 
+                                                    type="date" 
+                                                    id="data-resposta-detalhe" 
+                                                    defaultValue={termoDetalhes.data_recebimento_resposta || ''}
+                                                    onChange={(e) => {
+                                                        setDadosEditados(prev => ({ ...prev, data_recebimento_resposta: e.target.value }));
+                                                        setAlteracoesPendentes(true);
+                                                    }}
+                                                />
                                             </div>
                                             <Input
                                                 type="file"
@@ -576,7 +592,8 @@ export default function GerenciarTermos() {
                                                         setUploadingResposta(true);
                                                         try {
                                                             const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                            setProtocoloTemp(file_url);
+                                                            setDadosEditados(prev => ({ ...prev, arquivo_resposta_url: file_url }));
+                                                            setAlteracoesPendentes(true);
                                                         } catch (error) {
                                                             alert('Erro ao enviar arquivo');
                                                         } finally {
@@ -587,45 +604,8 @@ export default function GerenciarTermos() {
                                                 disabled={uploadingResposta}
                                             />
                                             {uploadingResposta && <p className="text-xs text-gray-500">Enviando arquivo...</p>}
-                                            {protocoNoTemp && !uploadingResposta && (
+                                            {dadosEditados.arquivo_resposta_url && !uploadingResposta && (
                                                 <p className="text-xs text-green-600">✓ Arquivo carregado</p>
-                                            )}
-                                            {protocoNoTemp && (
-                                                <Button onClick={async () => {
-                                                    const dataResposta = document.getElementById('data-resposta-detalhe').value;
-                                                    if (!dataResposta) {
-                                                        alert('Informe a data de recebimento');
-                                                        return;
-                                                    }
-
-                                                    try {
-                                                        const novoArquivo = {
-                                                            url: protocoNoTemp,
-                                                            nome: 'Resposta do Prestador',
-                                                            data_upload: new Date().toISOString()
-                                                        };
-
-                                                        const arquivosAtuais = termoDetalhes.arquivos_resposta || [];
-                                                        const dataMax = new Date(termoDetalhes.data_maxima_resposta + 'T00:00:00');
-                                                        const dataReceb = new Date(dataResposta + 'T00:00:00');
-
-                                                        await base44.entities.TermoNotificacao.update(termoDetalhes.id, {
-                                                            data_recebimento_resposta: dataResposta,
-                                                            arquivos_resposta: [...arquivosAtuais, novoArquivo],
-                                                            recebida_no_prazo: dataReceb <= dataMax,
-                                                            status: 'respondido'
-                                                        });
-
-                                                        queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
-                                                        setTermoDetalhes({ ...termoDetalhes, data_recebimento_resposta: dataResposta, arquivos_resposta: [...arquivosAtuais, novoArquivo] });
-                                                        setProtocoloTemp(null);
-                                                        alert('Resposta registrada com sucesso!');
-                                                    } catch (error) {
-                                                        alert('Erro ao salvar');
-                                                    }
-                                                }} className="w-full" size="sm">
-                                                    Salvar
-                                                </Button>
                                             )}
                                             {termoDetalhes.arquivos_resposta && termoDetalhes.arquivos_resposta.length > 0 && (
                                                 <>
@@ -647,10 +627,103 @@ export default function GerenciarTermos() {
                                         <p className="text-sm">{termoDetalhes.observacoes}</p>
                                     </div>
                                 )}
-                            </div>
-                        )}
-                    </DialogContent>
-                </Dialog>
+
+                                {alteracoesPendentes && (
+                                    <div className="border-t pt-4 flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => {
+                                                setAlteracoesPendentes(false);
+                                                setDadosEditados({
+                                                    data_protocolo: null,
+                                                    arquivo_protocolo_url: null,
+                                                    data_recebimento_resposta: null,
+                                                    arquivo_resposta_url: null
+                                                });
+                                                setProtocoloTemp(null);
+                                                document.getElementById('data-protocolo-detalhe').value = termoDetalhes.data_protocolo || '';
+                                                document.getElementById('data-resposta-detalhe').value = termoDetalhes.data_recebimento_resposta || '';
+                                            }}
+                                            className="flex-1"
+                                        >
+                                            Cancelar
+                                        </Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
+                                                    Salvar Alterações
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Confirmar Alterações</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                        Deseja salvar as alterações realizadas neste termo?
+                                                    </AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={async () => {
+                                                        try {
+                                                            const updateData = {};
+
+                                                            if (dadosEditados.data_protocolo) {
+                                                                updateData.data_protocolo = dadosEditados.data_protocolo;
+                                                                const dp = new Date(dadosEditados.data_protocolo);
+                                                                const prazo = termoDetalhes.prazo_resposta_dias || 30;
+                                                                const dmax = new Date(dp.getTime() + prazo * 24 * 60 * 60 * 1000);
+                                                                updateData.data_maxima_resposta = dmax.toISOString().split('T')[0];
+                                                            }
+
+                                                            if (dadosEditados.arquivo_protocolo_url) {
+                                                                updateData.arquivo_protocolo_url = dadosEditados.arquivo_protocolo_url;
+                                                            }
+
+                                                            if (dadosEditados.data_recebimento_resposta) {
+                                                                updateData.data_recebimento_resposta = dadosEditados.data_recebimento_resposta;
+                                                                const dataMax = new Date(termoDetalhes.data_maxima_resposta + 'T00:00:00');
+                                                                const dataReceb = new Date(dadosEditados.data_recebimento_resposta + 'T00:00:00');
+                                                                updateData.recebida_no_prazo = dataReceb <= dataMax;
+                                                                updateData.status = 'respondido';
+                                                            }
+
+                                                            if (dadosEditados.arquivo_resposta_url) {
+                                                                const novoArquivo = {
+                                                                    url: dadosEditados.arquivo_resposta_url,
+                                                                    nome: 'Resposta do Prestador',
+                                                                    data_upload: new Date().toISOString()
+                                                                };
+                                                                const arquivosAtuais = termoDetalhes.arquivos_resposta || [];
+                                                                updateData.arquivos_resposta = [...arquivosAtuais, novoArquivo];
+                                                            }
+
+                                                            await base44.entities.TermoNotificacao.update(termoDetalhes.id, updateData);
+                                                            queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+                                                            setTermoDetalhes(null);
+                                                            setAlteracoesPendentes(false);
+                                                            setDadosEditados({
+                                                                data_protocolo: null,
+                                                                arquivo_protocolo_url: null,
+                                                                data_recebimento_resposta: null,
+                                                                arquivo_resposta_url: null
+                                                            });
+                                                            setProtocoloTemp(null);
+                                                            alert('Alterações salvas com sucesso!');
+                                                        } catch (error) {
+                                                            alert('Erro ao salvar alterações: ' + error.message);
+                                                        }
+                                                    }}>
+                                                        Confirmar
+                                                    </AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
+                                )}
+                                </div>
+                                )}
+                                </DialogContent>
+                                </Dialog>
 
                 {/* Lista de Termos Criados */}
                 <div className="space-y-4">
