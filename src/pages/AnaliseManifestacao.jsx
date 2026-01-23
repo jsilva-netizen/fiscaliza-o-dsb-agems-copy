@@ -604,6 +604,7 @@ export default function AnaliseManifestacao() {
                             </Button>
                         )}
                         </div>
+                        </div>
                         </CardContent>
                         </Card>
 
