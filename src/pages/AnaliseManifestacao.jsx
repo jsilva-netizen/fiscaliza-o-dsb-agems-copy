@@ -66,6 +66,11 @@ export default function AnaliseManifestacao() {
         queryFn: () => base44.entities.RespostaDeterminacao.list()
     });
 
+    const { data: autos = [] } = useQuery({
+        queryKey: ['autos-infracao'],
+        queryFn: () => base44.entities.AutoInfracao.list()
+    });
+
     const getPrestadorNome = (id) => {
         const p = prestadores.find(pres => pres.id === id);
         return p?.nome || 'N/A';
