@@ -279,8 +279,8 @@ export default function AcompanhamentoDeterminacoes() {
                 <Tabs defaultValue="pendentes" className="w-full mb-8">
                     <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="pendentes">Pendentes ({determPorStatus.pendente.length})</TabsTrigger>
-                        <TabsTrigger value="atendidas">Atendidas ({determPorStatus.atendidas.length})</TabsTrigger>
-                        <TabsTrigger value="nao_atendidas">Não Atendidas ({determPorStatus.nao_atendidas.length})</TabsTrigger>
+                        <TabsTrigger value="atendidas">Acatadas ({determPorStatus.atendidas.length})</TabsTrigger>
+                        <TabsTrigger value="nao_atendidas">Não Acatadas ({determPorStatus.nao_atendidas.length})</TabsTrigger>
                         <TabsTrigger value="autos">Com Auto ({determPorStatus.com_auto.length})</TabsTrigger>
                     </TabsList>
 
