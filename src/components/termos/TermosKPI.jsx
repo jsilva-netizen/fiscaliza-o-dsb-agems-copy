@@ -11,7 +11,7 @@ export default function TermosKPI({ termos }) {
       if (!termo.data_maxima_resposta) return false;
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
-      const dataMax = new Date(termo.data_maxima_resposta);
+      const dataMax = new Date(termo.data_maxima_resposta + 'T00:00:00');
       dataMax.setHours(0, 0, 0, 0);
       return hoje > dataMax;
   };

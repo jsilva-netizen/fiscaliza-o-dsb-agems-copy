@@ -120,8 +120,10 @@ export default function GerenciarTermos() {
         mutationFn: async (dados) => {
             let dataMaxima = null;
             if (dados.data_protocolo) {
-                const dataProtocolo = new Date(dados.data_protocolo);
-                dataMaxima = new Date(dataProtocolo.getTime() + dados.prazo_resposta_dias * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                const dp = new Date(dados.data_protocolo + 'T00:00:00');
+                const dmax = new Date(dp);
+                dmax.setDate(dmax.getDate() + dados.prazo_resposta_dias);
+                dataMaxima = `${dmax.getFullYear()}-${String(dmax.getMonth() + 1).padStart(2, '0')}-${String(dmax.getDate()).padStart(2, '0')}`;
             }
             
             const novoTermo = await base44.entities.TermoNotificacao.create({
@@ -156,8 +158,11 @@ export default function GerenciarTermos() {
             let dataMaxima = null;
             const termo = termos.find(t => t.id === id);
             if (data_protocolo && termo) {
-                const dp = new Date(data_protocolo);
-                dataMaxima = new Date(dp.getTime() + (termo.prazo_resposta_dias || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                const dp = new Date(data_protocolo + 'T00:00:00');
+                const prazo = termo.prazo_resposta_dias || 30;
+                const dmax = new Date(dp);
+                dmax.setDate(dmax.getDate() + prazo);
+                dataMaxima = `${dmax.getFullYear()}-${String(dmax.getMonth() + 1).padStart(2, '0')}-${String(dmax.getDate()).padStart(2, '0')}`;
             }
             
             return base44.entities.TermoNotificacao.update(id, {
@@ -207,8 +212,8 @@ export default function GerenciarTermos() {
     const atualizarRespostaMutation = useMutation({
         mutationFn: async ({ id, data_recebimento_resposta, arquivo_resposta_url }) => {
             const termo = termos.find(t => t.id === id);
-            const dataMaxima = new Date(termo.data_maxima_resposta);
-            const dataRecebimento = new Date(data_recebimento_resposta);
+            const dataMaxima = new Date(termo.data_maxima_resposta + 'T00:00:00');
+            const dataRecebimento = new Date(data_recebimento_resposta + 'T00:00:00');
             const recebidaNoPrazo = dataRecebimento <= dataMaxima;
 
             return base44.entities.TermoNotificacao.update(id, {
@@ -245,7 +250,7 @@ export default function GerenciarTermos() {
         if (!termo.data_maxima_resposta) return false;
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
-        const dataMax = new Date(termo.data_maxima_resposta);
+        const dataMax = new Date(termo.data_maxima_resposta + 'T00:00:00');
         dataMax.setHours(0, 0, 0, 0);
         return hoje > dataMax;
     };
@@ -818,7 +823,10 @@ export default function GerenciarTermos() {
                                                          <span className="font-medium">Prazo:</span> {termo.prazo_resposta_dias || 30} dias
                                                      </div>
                                                      <div>
-                                                         <span className="font-medium">Prazo para resposta:</span> {termo.data_maxima_resposta ? new Date(termo.data_maxima_resposta).toLocaleDateString('pt-BR') : 'N/A'}
+                                                         <span className="font-medium">Prazo para resposta:</span> {termo.data_maxima_resposta ? (() => {
+                                                             const [a, m, d] = termo.data_maxima_resposta.split('-');
+                                                             return `${d}/${m}/${a}`;
+                                                         })() : 'N/A'}
                                                          {termo.data_maxima_resposta && !termo.data_recebimento_resposta && (
                                                              <p className={`text-xs mt-1 ${verificaPrazoVencido(termo) ? 'text-red-600' : 'text-green-600'}`}>
                                                                  {verificaPrazoVencido(termo) ? '⚠️ Prazo vencido' : '✓ No prazo'}
@@ -1090,7 +1098,10 @@ export default function GerenciarTermos() {
                                                               <div className="space-y-3 max-h-[70vh] overflow-y-auto">
                                                               {verificaPrazoVencido(termo) && (
                                                                 <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                                                                    ⚠️ Prazo vencido em {new Date(termo.data_maxima_resposta).toLocaleDateString('pt-BR')}
+                                                                   ⚠️ Prazo vencido em {(() => {
+                                                                       const [a, m, d] = termo.data_maxima_resposta.split('-');
+                                                                       return `${d}/${m}/${a}`;
+                                                                   })()}
                                                                 </div>
                                                               )}
                                                               <div>
