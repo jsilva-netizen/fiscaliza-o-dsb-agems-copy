@@ -25,6 +25,7 @@ export default function AnalisarResposta() {
     });
     const [confirmDialog, setConfirmDialog] = useState({ open: false, determinacao: null });
     const [pdfViewer, setPdfViewer] = useState({ open: false, url: '' });
+    const [analisandoIA, setAnalisandoIA] = useState(false);
 
     const { data: termo } = useQuery({
         queryKey: ['termo', termoId],
