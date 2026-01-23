@@ -140,17 +140,10 @@ export default function AnaliseManifestacao() {
             dets.map(d => d.id).includes(r.determinacao_id)
         );
         
-        // Contar AMs existentes do mesmo tipo
-        const amsExistentes = (await base44.entities.AnaliseManifestaçao?.list?.()) || [];
         const ano = new Date().getFullYear();
         const camaraTecnica = termo.camara_tecnica;
-        
-        const amsDA = amsExistentes.filter(a => {
-            if (!a.numero_am) return false;
-            const match = a.numero_am.match(/AM\s*(\d+)\/\d+\/DSB\/(\w+)/);
-            return match && match[2] === camaraTecnica;
-        });
-        const proximoNumero = amsDA.length + 1;
+        const timestamp = new Date().getTime();
+        const proximoNumero = Math.floor(timestamp / 1000) % 1000;
         const numeroAM = `AM ${String(proximoNumero).padStart(3, '0')}/${ano}/DSB/${camaraTecnica}`;
 
         const doc = new jsPDF('l', 'mm', 'a4');
