@@ -214,8 +214,12 @@ export default function AnaliseManifestacao() {
 
             // Resultado
             const resultado = resposta?.status === 'atendida' ? 'ACATADA' : 'NÃO ACATADA';
-            doc.setFont(undefined, resposta?.status === 'atendida' ? 'bold' : 'bold');
-            doc.setTextColor(resposta?.status === 'atendida' ? 0, 128, 0 : 255, 0, 0);
+            doc.setFont(undefined, 'bold');
+            if (resposta?.status === 'atendida') {
+                doc.setTextColor(0, 128, 0);
+            } else {
+                doc.setTextColor(255, 0, 0);
+            }
             doc.text(resultado, xPos + 1, yPos + 4, { maxWidth: colWidths[4] - 2 });
             doc.setTextColor(0, 0, 0);
             doc.setFont(undefined, 'normal');
