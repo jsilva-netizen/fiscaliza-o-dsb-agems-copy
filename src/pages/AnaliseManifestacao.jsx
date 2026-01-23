@@ -701,7 +701,7 @@ export default function AnaliseManifestacao() {
                                                              </div>
                                                              )}
                                                              </div>
-                                    </CardContent>
+                                                             </CardContent>
                                 </Card>
                             );
                         })
