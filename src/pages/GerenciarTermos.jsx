@@ -784,9 +784,7 @@ export default function GerenciarTermos() {
                                                          </AlertDialogContent>
                                                      </AlertDialog>
                                                      </div>
-                                                     </div>
 
-                                        <div className="space-y-3 pt-3 border-t">
                                             {/* Fluxo de Botões - Ordem Específica */}
                                             <div className="flex gap-2 flex-wrap">
                                               {!termo.arquivo_url && (
