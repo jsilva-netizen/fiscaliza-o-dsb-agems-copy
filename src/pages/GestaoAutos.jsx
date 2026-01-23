@@ -156,8 +156,8 @@ export default function GestaoAutos() {
     const autosPorStatus = {
         gerados: autos.filter(a => a.status === 'gerado'),
         enviados: autos.filter(a => a.status === 'enviado'),
-        respondidos: autos.filter(a => a.status === 'respondido'),
-        em_analise: autos.filter(a => a.status === 'em_analise')
+        em_analise: autos.filter(a => a.status === 'em_analise'),
+        finalizados: autos.filter(a => a.status === 'finalizado')
     };
 
     return (
