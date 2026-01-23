@@ -252,15 +252,37 @@ export default function GerenciarTermos() {
     };
 
     const excluirTermoMutation = useMutation({
-        mutationFn: async (id) => {
-            return base44.entities.TermoNotificacao.delete(id);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
-            alert('Termo excluído com sucesso!');
-            setDeleteConfirmation({ open: false, termoId: null, step: 1, inputValue: '' });
-        }
-    });
+         mutationFn: async (id) => {
+             const termo = termos.find(t => t.id === id);
+             if (!termo) throw new Error('Termo não encontrado');
+
+             // 1. Buscar determinações relacionadas ao TN
+             const unidadesFiscalizadasData = await base44.entities.UnidadeFiscalizada.list();
+             const unidadesDaTermo = unidadesFiscalizadasData.filter(u => u.fiscalizacao_id === termo.fiscalizacao_id);
+             const unidadeIds = unidadesDaTermo.map(u => u.id);
+
+             const determinacoesData = await base44.entities.Determinacao.list();
+             const determinacoesDoTermo = determinacoesData.filter(d => unidadeIds.includes(d.unidade_fiscalizada_id));
+             const detIds = determinacoesDoTermo.map(d => d.id);
+
+             // 2. Buscar e deletar todos os AIs relacionados
+             const autosData = await base44.entities.AutoInfracao.list();
+             const aisParaDeletar = autosData.filter(ai => detIds.includes(ai.determinacao_id));
+
+             for (const ai of aisParaDeletar) {
+                 await base44.entities.AutoInfracao.delete(ai.id);
+             }
+
+             // 3. Deletar o TN
+             return base44.entities.TermoNotificacao.delete(id);
+         },
+         onSuccess: () => {
+             queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
+             queryClient.invalidateQueries({ queryKey: ['autos-infracao'] });
+             alert('Termo e todos os dados associados foram excluídos!');
+             setDeleteConfirmation({ open: false, termoId: null, step: 1, inputValue: '' });
+         }
+     });
 
     const atualizarRespostaMutation = useMutation({
         mutationFn: async ({ id, data_recebimento_resposta, arquivo_resposta_url }) => {
