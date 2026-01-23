@@ -368,26 +368,19 @@ export default function AnalisarResposta() {
                                                                     const ultimaMensagem = mensagens[mensagens.length - 1];
 
                                                                     if (ultimaMensagem && ultimaMensagem.role === 'assistant') {
-                                                                        const conteudo = ultimaMensagem.content;
-                                                                        let status = '';
-                                                                        let analise = conteudo;
-
-                                                                        if (conteudo.startsWith('[ACATADA]')) {
-                                                                            status = 'atendida';
-                                                                            analise = conteudo.replace('[ACATADA]', '').trim();
-                                                                        } else if (conteudo.startsWith('[NÃO ACATADA]')) {
-                                                                            status = 'nao_atendida';
-                                                                            analise = conteudo.replace('[NÃO ACATADA]', '').trim();
-                                                                        }
-
-                                                                        setAnaliseForm({
-                                                                            ...analiseForm,
-                                                                            status: status,
-                                                                            descricao_atendimento: analise
-                                                                        });
-                                                                    } else {
-                                                                        alert('Aguarde alguns segundos e tente novamente');
-                                                                    }
+                                                                         try {
+                                                                             const resultado = JSON.parse(ultimaMensagem.content);
+                                                                             setAnaliseForm({
+                                                                                 ...analiseForm,
+                                                                                 status: resultado.status || '',
+                                                                                 descricao_atendimento: resultado.analise || ''
+                                                                             });
+                                                                         } catch (e) {
+                                                                             alert('Erro ao processar análise. Tente novamente.');
+                                                                         }
+                                                                     } else {
+                                                                         alert('Aguarde alguns segundos e tente novamente');
+                                                                     }
                                                 } catch (error) {
                                                     alert('Erro ao gerar análise: ' + error.message);
                                                 } finally {
