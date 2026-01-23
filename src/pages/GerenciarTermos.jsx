@@ -281,7 +281,7 @@ export default function GerenciarTermos() {
     const getStatusBadge = (status) => {
             const statusMap = {
                 pendente_tn: { label: 'Pendente - TN Assinado', color: 'bg-yellow-500' },
-                pendente_protocolo: { label: 'Pendente - Data Protocolo', color: 'bg-yellow-500' },
+                pendente_protocolo: { label: 'Pendente - Protocolo', color: 'bg-yellow-500' },
                 aguardando_resposta: { label: 'Aguardando Resposta', color: 'bg-green-600' },
                 respondido: { label: 'Respondido', color: 'bg-purple-600' }
             };
