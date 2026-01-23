@@ -156,21 +156,29 @@ export default function AnalisarResposta() {
     };
 
     const handleAbrirAnalise = (det, index) => {
-        if (!podeAnalisar(index)) {
-            alert('Você deve analisar as determinações na ordem sequencial. Analise a determinação anterior primeiro.');
-            return;
-        }
-        setDetalheDeterminacao(det);
-        const resp = respostas.find(r => r.determinacao_id === det.id);
-        if (resp) {
-            setAnaliseForm({
-                status: resp.status,
-                manifestacao_prestador: resp.manifestacao_prestador || '',
-                descricao_atendimento: resp.descricao_atendimento || '',
-                dentro_prazo: resp.dentro_prazo
-            });
-        }
-    };
+         if (!podeAnalisar(index)) {
+             alert('Você deve analisar as determinações na ordem sequencial. Analise a determinação anterior primeiro.');
+             return;
+         }
+         setDetalheDeterminacao(det);
+         const resp = respostas.find(r => r.determinacao_id === det.id);
+         if (resp) {
+             setAnaliseForm({
+                 status: resp.status,
+                 manifestacao_prestador: resp.manifestacao_prestador || '',
+                 descricao_atendimento: resp.descricao_atendimento || '',
+                 dentro_prazo: resp.dentro_prazo
+             });
+         } else {
+             // Resetar formulário para nova análise
+             setAnaliseForm({
+                 status: '',
+                 manifestacao_prestador: '',
+                 descricao_atendimento: '',
+                 dentro_prazo: true
+             });
+         }
+     };
 
     const handleSalvarAnalise = () => {
         if (!analiseForm.status || !analiseForm.manifestacao_prestador || !analiseForm.descricao_atendimento) {
