@@ -330,22 +330,6 @@ export default function AnalisarResposta() {
                                     />
                                 </div>
 
-                                {termo.arquivos_resposta?.length > 0 && (
-                                    <div className="border-t pt-4">
-                                        <p className="font-medium mb-2">Arquivo de Resposta do Prestador:</p>
-                                        {termo.arquivos_resposta.map((arquivo, idx) => (
-                                            <Button
-                                                key={idx}
-                                                variant="outline"
-                                                onClick={() => setPdfViewer({ open: true, url: arquivo.url })}
-                                            >
-                                                <Download className="h-4 w-4 mr-2" />
-                                                Visualizar PDF em Nova Janela
-                                            </Button>
-                                        ))}
-                                    </div>
-                                )}
-
                                 <div className="border-t pt-4">
                                     <div className="flex justify-between items-center mb-2">
                                         <p className="font-medium">Sua Análise:</p>
@@ -405,7 +389,7 @@ export default function AnalisarResposta() {
                                         className="min-h-24 mb-4"
                                     />
 
-                                    <p className="font-medium mb-3">Status da Determinação:</p>
+                                    <p className="font-medium mb-3">Resultado da Análise:</p>
                                     <div className="grid grid-cols-2 gap-3 mb-4">
                                         <Button
                                             variant={analiseForm.status === 'atendida' ? 'default' : 'outline'}
