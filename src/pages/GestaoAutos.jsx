@@ -189,49 +189,6 @@ export default function GestaoAutos() {
                     </TabsList>
 
                     <TabsContent value="gerados" className="space-y-4">
-                        <Dialog>
-                            <DialogTrigger asChild>
-                                <Button className="mb-4 bg-red-600 hover:bg-red-700">
-                                    <FileText className="h-4 w-4 mr-2" />
-                                    Gerar Novo Auto
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogHeader>
-                                    <DialogTitle>Gerar Auto de Infração</DialogTitle>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                    <div>
-                                        <Label>Determinação não atendida</Label>
-                                        <p className="text-sm text-gray-500">Selecione uma determinação sem resposta adequada</p>
-                                    </div>
-                                    <div>
-                                        <Label>Motivo da Infração</Label>
-                                        <Textarea
-                                            placeholder="Descreva o motivo..."
-                                            value={autoForm.motivo}
-                                            onChange={(e) => setAutoForm({ ...autoForm, motivo: e.target.value })}
-                                            className="min-h-24"
-                                        />
-                                    </div>
-                                    <div>
-                                        <Label>Prazo para Manifestação (dias)</Label>
-                                        <Input
-                                            type="number"
-                                            value={autoForm.prazo}
-                                            onChange={(e) => setAutoForm({ ...autoForm, prazo: e.target.value })}
-                                        />
-                                    </div>
-                                    <Button
-                                        onClick={() => criarAutoMutation.mutate(autoForm)}
-                                        className="w-full bg-red-600 hover:bg-red-700"
-                                    >
-                                        Gerar Auto
-                                    </Button>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-
                         {autosPorStatus.gerados.map(auto => (
                             <Card key={auto.id}>
                                 <CardContent className="p-4">
