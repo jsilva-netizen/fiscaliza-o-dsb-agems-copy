@@ -185,8 +185,8 @@ export default function TiposUnidade() {
                                             </div>
                                             <div>
                                                 <h3 className="font-medium">{tipo.nome}</h3>
-                                                {tipo.descricao && (
-                                                    <p className="text-sm text-gray-500 mt-1">{tipo.descricao}</p>
+                                                {tipo.tipo_unidade_codigo && (
+                                                    <p className="text-sm text-gray-600 mt-1 font-mono">Código: <span className="font-bold">{tipo.tipo_unidade_codigo}</span></p>
                                                 )}
                                                 <div className="flex flex-wrap gap-1 mt-2">
                                                     {tipo.servicos_aplicaveis?.map(s => (
