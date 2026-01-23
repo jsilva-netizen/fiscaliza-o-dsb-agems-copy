@@ -24,6 +24,7 @@ export default function AnalisarResposta() {
         dentro_prazo: true
     });
     const [confirmDialog, setConfirmDialog] = useState({ open: false, determinacao: null });
+    const [pdfViewer, setPdfViewer] = useState({ open: false, url: '' });
 
     const { data: termo } = useQuery({
         queryKey: ['termo', termoId],
@@ -232,18 +233,16 @@ export default function AnalisarResposta() {
                             <div className="mt-4 pt-4 border-t">
                                 <p className="font-medium mb-2">Arquivo de Resposta do Prestador:</p>
                                 {termo.arquivos_resposta.map((arquivo, idx) => (
-                                    <a
+                                    <Button
                                         key={idx}
-                                        href={arquivo.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="inline-block mr-2"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setPdfViewer({ open: true, url: arquivo.url })}
+                                        className="mr-2"
                                     >
-                                        <Button variant="outline" size="sm">
-                                            <Download className="h-4 w-4 mr-2" />
-                                            Visualizar PDF
-                                        </Button>
-                                    </a>
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Visualizar PDF
+                                    </Button>
                                 ))}
                             </div>
                         )}
@@ -334,17 +333,14 @@ export default function AnalisarResposta() {
                                     <div className="border-t pt-4">
                                         <p className="font-medium mb-2">Arquivo de Resposta do Prestador:</p>
                                         {termo.arquivos_resposta.map((arquivo, idx) => (
-                                            <a
+                                            <Button
                                                 key={idx}
-                                                href={arquivo.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                                variant="outline"
+                                                onClick={() => setPdfViewer({ open: true, url: arquivo.url })}
                                             >
-                                                <Button variant="outline">
-                                                    <Download className="h-4 w-4 mr-2" />
-                                                    Visualizar PDF em Nova Janela
-                                                </Button>
-                                            </a>
+                                                <Download className="h-4 w-4 mr-2" />
+                                                Visualizar PDF em Nova Janela
+                                            </Button>
                                         ))}
                                     </div>
                                 )}
@@ -430,6 +426,22 @@ export default function AnalisarResposta() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                {/* Visualizador de PDF */}
+                <Dialog open={pdfViewer.open} onOpenChange={(open) => setPdfViewer({ open, url: '' })}>
+                    <DialogContent className="max-w-[90vw] max-h-[90vh] p-0">
+                        <DialogHeader className="p-4 pb-0">
+                            <DialogTitle>Visualizador de PDF</DialogTitle>
+                        </DialogHeader>
+                        <div className="w-full h-[80vh]">
+                            <iframe
+                                src={pdfViewer.url}
+                                className="w-full h-full border-0"
+                                title="PDF Viewer"
+                            />
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
         </div>
     );
