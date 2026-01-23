@@ -407,10 +407,7 @@ export default function AnaliseManifestacao() {
                                 <div>
                                     <p className="text-sm text-gray-600">Autos Gerados</p>
                                     <p className="text-2xl font-bold">
-                                        {termosFiltrados.reduce((acc, t) => {
-                                            const stats = contarStatusDeterminacoes(t);
-                                            return acc + stats.naoAtendidas;
-                                        }, 0)}
+                                        {autos.length}
                                     </p>
                                 </div>
                                 <AlertCircle className="h-8 w-8 text-red-600" />
