@@ -435,7 +435,7 @@ export default function AnalisarResposta() {
                         </DialogHeader>
                         <div className="w-full h-[80vh]">
                             <iframe
-                                src={pdfViewer.url}
+                                src={`https://docs.google.com/viewer?url=${encodeURIComponent(pdfViewer.url)}&embedded=true`}
                                 className="w-full h-full border-0"
                                 title="PDF Viewer"
                             />
