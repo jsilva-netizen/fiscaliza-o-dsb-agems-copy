@@ -43,6 +43,8 @@ export default function GerenciarTermos() {
     const [oficioProtocoloTemp, setOficioProtocoloTemp] = useState(null);
 
     const [uploadingResposta, setUploadingResposta] = useState(false);
+    const [respostaManifestacaoTemp, setRespostaManifestacaoTemp] = useState(null);
+    const [respostaOficioTemp, setRespostaOficioTemp] = useState(null);
     const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, termoId: null, step: 1, inputValue: '' });
     const [termoDetalhes, setTermoDetalhes] = useState(null);
     const [termoAssinadoTemp, setTermoAssinadoTemp] = useState(null);
@@ -460,6 +462,8 @@ export default function GerenciarTermos() {
                               });
                               setProtocoloTemp(null);
                               setOficioProtocoloTemp(null);
+                              setRespostaManifestacaoTemp(null);
+                              setRespostaOficioTemp(null);
                           }
                       }}>
                                     <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -1275,8 +1279,14 @@ export default function GerenciarTermos() {
                                                               )}
 
                                                               {termo.arquivo_url && termo.data_protocolo && !termo.data_recebimento_resposta && (
-                                                              <Dialog open={respostaOpenId === termo.id} onOpenChange={(open) => setRespostaOpenId(open ? termo.id : null)}>
-                                                              <DialogTrigger asChild>
+                                                              <Dialog open={respostaOpenId === termo.id} onOpenChange={(open) => {
+                                                                  setRespostaOpenId(open ? termo.id : null);
+                                                                  if (!open) {
+                                                                      setRespostaManifestacaoTemp(null);
+                                                                      setRespostaOficioTemp(null);
+                                                                  }
+                                                              }}>
+                                                                                              <DialogTrigger asChild>
                                                               <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
                                                               {verificaPrazoVencido(termo) ? '⚠ Resposta Atrasada' : 'Registrar Resposta do Prestador'}
                                                               </Button>
@@ -1295,20 +1305,62 @@ export default function GerenciarTermos() {
                                                                 </div>
                                                               )}
                                                               <div>
-                                                                <Label>Data de Recebimento</Label>
+                                                                <Label>Data de Recebimento *</Label>
                                                                 <Input
                                                                     type="date"
                                                                     id={`data-resp-${termo.id}`}
                                                                 />
                                                               </div>
                                                               <div>
-                                                                <Label>Adicionar Arquivo PDF</Label>
+                                                                <Label>Ofício de Manifestação (PDF) *</Label>
+                                                                <Input
+                                                                    type="file"
+                                                                    accept=".pdf"
+                                                                    id={`file-oficio-resp-${termo.id}`}
+                                                                    onChange={async (e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (file) {
+                                                                            setUploadingResposta(true);
+                                                                            try {
+                                                                                const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                                                setRespostaOficioTemp(file_url);
+                                                                            } catch (error) {
+                                                                                alert('Erro ao enviar ofício');
+                                                                            } finally {
+                                                                                setUploadingResposta(false);
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    disabled={uploadingResposta}
+                                                                />
+                                                              </div>
+                                                              <div>
+                                                                <Label>Arquivo Manifestação (PDF) *</Label>
                                                                 <Input
                                                                     type="file"
                                                                     accept=".pdf"
                                                                     id={`file-resp-${termo.id}`}
+                                                                    onChange={async (e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (file) {
+                                                                            setUploadingResposta(true);
+                                                                            try {
+                                                                                const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                                                setRespostaManifestacaoTemp(file_url);
+                                                                            } catch (error) {
+                                                                                alert('Erro ao enviar arquivo');
+                                                                            } finally {
+                                                                                setUploadingResposta(false);
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    disabled={uploadingResposta}
                                                                 />
                                                               </div>
+                                                              {uploadingResposta && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
+                                                              {respostaManifestacaoTemp && respostaOficioTemp && !uploadingResposta && (
+                                                                  <p className="text-xs text-green-600 mt-1">✓ Arquivos carregados. Clique em "Adicionar Arquivo" para confirmar.</p>
+                                                              )}
                                                               {termo.arquivos_resposta && termo.arquivos_resposta.length > 0 && (
                                                                 <div className="border-t pt-3">
                                                                     <Label className="text-gray-600">Arquivos Adicionados</Label>
@@ -1331,24 +1383,27 @@ export default function GerenciarTermos() {
                                                               <Button
                                                                 onClick={async () => {
                                                                     const data = document.getElementById(`data-resp-${termo.id}`)?.value;
-                                                                    const file = document.getElementById(`file-resp-${termo.id}`)?.files?.[0];
 
-                                                                    if (!data || !file) {
-                                                                        alert('Preencha data e selecione arquivo');
+                                                                    if (!data) {
+                                                                        alert('Informe a data de recebimento');
+                                                                        return;
+                                                                    }
+
+                                                                    if (!respostaManifestacaoTemp || !respostaOficioTemp) {
+                                                                        alert('Envie ambos os arquivos obrigatórios');
                                                                         return;
                                                                     }
 
                                                                     try {
                                                                           setUploadingResposta(true);
-                                                                          const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
                                                                           const dataRecebStr = data;
                                                                           const dataMax = new Date(termo.data_maxima_resposta + 'T00:00:00');
                                                                           const dataReceb = new Date(data + 'T00:00:00');
 
                                                                           const novoArquivo = {
-                                                                              url: file_url,
-                                                                              nome: file.name,
+                                                                              url: respostaManifestacaoTemp,
+                                                                              nome: 'Manifestação do Prestador',
                                                                               data_upload: new Date().toISOString()
                                                                           };
 
@@ -1356,6 +1411,7 @@ export default function GerenciarTermos() {
                                                                           const termoAtualizado = await base44.entities.TermoNotificacao.update(termo.id, {
                                                                               data_recebimento_resposta: dataRecebStr,
                                                                               arquivos_resposta: [...arquivosAtuais, novoArquivo],
+                                                                              arquivo_oficio_resposta: respostaOficioTemp,
                                                                               recebida_no_prazo: dataReceb <= dataMax,
                                                                              status: 'respondido'
                                                                           });
@@ -1364,15 +1420,18 @@ export default function GerenciarTermos() {
                                                                              return old.map(t => t.id === termo.id ? termoAtualizado : t);
                                                                          });
 
+                                                                         setRespostaManifestacaoTemp(null);
+                                                                         setRespostaOficioTemp(null);
                                                                          document.getElementById(`file-resp-${termo.id}`).value = '';
-                                                                         alert('Arquivo adicionado com sucesso!');
+                                                                         document.getElementById(`file-oficio-resp-${termo.id}`).value = '';
+                                                                         alert('Arquivos adicionados com sucesso!');
                                                                      } catch (error) {
                                                                          alert('Erro ao salvar: ' + error.message);
                                                                      } finally {
                                                                          setUploadingResposta(false);
                                                                      }
                                                                 }}
-                                                                disabled={uploadingResposta}
+                                                                disabled={uploadingResposta || !respostaManifestacaoTemp || !respostaOficioTemp}
                                                                 className="w-full"
                                                               >
                                                                 {uploadingResposta ? 'Salvando...' : 'Adicionar Arquivo'}
