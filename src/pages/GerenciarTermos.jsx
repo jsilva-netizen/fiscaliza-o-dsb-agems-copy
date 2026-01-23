@@ -54,8 +54,10 @@ export default function GerenciarTermos() {
     const [dadosEditados, setDadosEditados] = useState({
         data_protocolo: null,
         arquivo_protocolo_url: null,
+        arquivo_oficio_protocolo: null,
         data_recebimento_resposta: null,
         arquivo_resposta_url: null,
+        arquivo_oficio_resposta: null,
         numero_processo: null,
         fiscalizacao_id: null,
         camara_tecnica: null,
@@ -443,8 +445,10 @@ export default function GerenciarTermos() {
                               setDadosEditados({
                                   data_protocolo: null,
                                   arquivo_protocolo_url: null,
+                                  arquivo_oficio_protocolo: null,
                                   data_recebimento_resposta: null,
                                   arquivo_resposta_url: null,
+                                  arquivo_oficio_resposta: null,
                                   numero_processo: null,
                                   fiscalizacao_id: null,
                                   camara_tecnica: null,
@@ -600,7 +604,7 @@ export default function GerenciarTermos() {
                                 </div>
 
                                 <div className="border-t pt-4">
-                                    <h3 className="font-semibold mb-3">Arquivo de Protocolo / AR</h3>
+                                    <h3 className="font-semibold mb-3">Protocolo / AR</h3>
                                     <div className="space-y-2">
                                         <div>
                                             <Label className="text-sm">Data de Protocolo / AR *</Label>
@@ -614,43 +618,63 @@ export default function GerenciarTermos() {
                                                 }}
                                             />
                                         </div>
-                                        <Input
-                                            type="file"
-                                            accept=".pdf"
-                                            onChange={async (e) => {
-                                                const file = e.target.files?.[0];
-                                                if (file) {
-                                                    setUploadingProtocolo(true);
-                                                    try {
-                                                        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                        setProtocoloTemp(file_url);
-                                                        setDadosEditados(prev => ({ ...prev, arquivo_protocolo_url: file_url }));
-                                                        setAlteracoesPendentes(true);
-                                                    } catch (error) {
-                                                        alert('Erro ao enviar arquivo');
-                                                    } finally {
-                                                        setUploadingProtocolo(false);
+                                        <div>
+                                            <Label className="text-sm">Arquivo de Protocolo / AR (PDF)</Label>
+                                            <Input
+                                                type="file"
+                                                accept=".pdf"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        setUploadingProtocolo(true);
+                                                        try {
+                                                            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                            setProtocoloTemp(file_url);
+                                                            setDadosEditados(prev => ({ ...prev, arquivo_protocolo_url: file_url }));
+                                                            setAlteracoesPendentes(true);
+                                                        } catch (error) {
+                                                            alert('Erro ao enviar arquivo');
+                                                        } finally {
+                                                            setUploadingProtocolo(false);
+                                                        }
                                                     }
-                                                }
-                                            }}
-                                            disabled={uploadingProtocolo}
-                                        />
+                                                }}
+                                                disabled={uploadingProtocolo}
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-sm">Ofício que Acompanha o Protocolo (PDF)</Label>
+                                            <Input
+                                                type="file"
+                                                accept=".pdf"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (file) {
+                                                        setUploadingProtocolo(true);
+                                                        try {
+                                                            const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                            setDadosEditados(prev => ({ ...prev, arquivo_oficio_protocolo: file_url }));
+                                                            setAlteracoesPendentes(true);
+                                                        } catch (error) {
+                                                            alert('Erro ao enviar ofício');
+                                                        } finally {
+                                                            setUploadingProtocolo(false);
+                                                        }
+                                                    }
+                                                }}
+                                                disabled={uploadingProtocolo}
+                                            />
+                                        </div>
                                         {uploadingProtocolo && <p className="text-xs text-gray-500">Enviando arquivo...</p>}
-                                        {protocoNoTemp && !uploadingProtocolo && (
-                                            <p className="text-xs text-green-600">✓ Arquivo carregado</p>
-                                        )}
-                                        {termoDetalhes.arquivo_protocolo_url && (
-                                            <Button variant="outline" onClick={() => window.open(termoDetalhes.arquivo_protocolo_url)} className="w-full" size="sm">
-                                                <Download className="h-4 w-4 mr-2" />
-                                                Baixar Arquivo de Protocolo
-                                            </Button>
+                                        {(protocoNoTemp || dadosEditados.arquivo_oficio_protocolo) && !uploadingProtocolo && (
+                                            <p className="text-xs text-green-600">✓ Arquivo(s) carregado(s)</p>
                                         )}
                                     </div>
                                 </div>
 
                                 {termoDetalhes.data_maxima_resposta && (
                                     <div className="border-t pt-4">
-                                        <h3 className="font-semibold mb-3">Arquivo de Resposta do Prestador</h3>
+                                        <h3 className="font-semibold mb-3">Manifestação do Prestador</h3>
                                         <div className="space-y-2">
                                             <div>
                                                 <Label className="text-sm">Data de Recebimento da Resposta *</Label>
@@ -664,39 +688,55 @@ export default function GerenciarTermos() {
                                                     }}
                                                 />
                                             </div>
-                                            <Input
-                                                type="file"
-                                                accept=".pdf"
-                                                onChange={async (e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        setUploadingResposta(true);
-                                                        try {
-                                                            const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                            setDadosEditados(prev => ({ ...prev, arquivo_resposta_url: file_url }));
-                                                            setAlteracoesPendentes(true);
-                                                        } catch (error) {
-                                                            alert('Erro ao enviar arquivo');
-                                                        } finally {
-                                                            setUploadingResposta(false);
+                                            <div>
+                                                <Label className="text-sm">Arquivo de Manifestação (PDF)</Label>
+                                                <Input
+                                                    type="file"
+                                                    accept=".pdf"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            setUploadingResposta(true);
+                                                            try {
+                                                                const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                                setDadosEditados(prev => ({ ...prev, arquivo_resposta_url: file_url }));
+                                                                setAlteracoesPendentes(true);
+                                                            } catch (error) {
+                                                                alert('Erro ao enviar arquivo');
+                                                            } finally {
+                                                                setUploadingResposta(false);
+                                                            }
                                                         }
-                                                    }
-                                                }}
-                                                disabled={uploadingResposta}
-                                            />
+                                                    }}
+                                                    disabled={uploadingResposta}
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label className="text-sm">Ofício que Acompanha a Manifestação (PDF)</Label>
+                                                <Input
+                                                    type="file"
+                                                    accept=".pdf"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0];
+                                                        if (file) {
+                                                            setUploadingResposta(true);
+                                                            try {
+                                                                const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                                setDadosEditados(prev => ({ ...prev, arquivo_oficio_resposta: file_url }));
+                                                                setAlteracoesPendentes(true);
+                                                            } catch (error) {
+                                                                alert('Erro ao enviar ofício');
+                                                            } finally {
+                                                                setUploadingResposta(false);
+                                                            }
+                                                        }
+                                                    }}
+                                                    disabled={uploadingResposta}
+                                                />
+                                            </div>
                                             {uploadingResposta && <p className="text-xs text-gray-500">Enviando arquivo...</p>}
-                                            {dadosEditados.arquivo_resposta_url && !uploadingResposta && (
-                                                <p className="text-xs text-green-600">✓ Arquivo carregado</p>
-                                            )}
-                                            {termoDetalhes.arquivos_resposta && termoDetalhes.arquivos_resposta.length > 0 && (
-                                                <>
-                                                    {termoDetalhes.arquivos_resposta.map((arquivo, idx) => (
-                                                        <Button key={idx} variant="outline" onClick={() => window.open(arquivo.url)} className="w-full" size="sm">
-                                                            <Download className="h-4 w-4 mr-2" />
-                                                            Baixar Arquivo de Resposta
-                                                        </Button>
-                                                    ))}
-                                                </>
+                                            {(dadosEditados.arquivo_resposta_url || dadosEditados.arquivo_oficio_resposta) && !uploadingResposta && (
+                                                <p className="text-xs text-green-600">✓ Arquivo(s) carregado(s)</p>
                                             )}
                                         </div>
                                     </div>
@@ -718,8 +758,10 @@ export default function GerenciarTermos() {
                                                 setDadosEditados({
                                                     data_protocolo: null,
                                                     arquivo_protocolo_url: null,
+                                                    arquivo_oficio_protocolo: null,
                                                     data_recebimento_resposta: null,
                                                     arquivo_resposta_url: null,
+                                                    arquivo_oficio_resposta: null,
                                                     numero_processo: null,
                                                     fiscalizacao_id: null,
                                                     camara_tecnica: null,
@@ -787,8 +829,12 @@ export default function GerenciarTermos() {
                                                         }
 
                                                         if (dadosEditados.arquivo_protocolo_url) {
-                                                            updateData.arquivo_protocolo_url = dadosEditados.arquivo_protocolo_url;
-                                                        }
+                                                                            updateData.arquivo_protocolo_url = dadosEditados.arquivo_protocolo_url;
+                                                                        }
+
+                                                                        if (dadosEditados.arquivo_oficio_protocolo) {
+                                                                            updateData.arquivo_oficio_protocolo = dadosEditados.arquivo_oficio_protocolo;
+                                                                        }
 
                                                         if (dadosEditados.data_recebimento_resposta) {
                                                             updateData.data_recebimento_resposta = dadosEditados.data_recebimento_resposta;
@@ -799,14 +845,18 @@ export default function GerenciarTermos() {
                                                         }
 
                                                         if (dadosEditados.arquivo_resposta_url) {
-                                                            const novoArquivo = {
-                                                                url: dadosEditados.arquivo_resposta_url,
-                                                                nome: 'Resposta do Prestador',
-                                                                data_upload: new Date().toISOString()
-                                                            };
-                                                            const arquivosAtuais = termoDetalhes.arquivos_resposta || [];
-                                                            updateData.arquivos_resposta = [...arquivosAtuais, novoArquivo];
-                                                        }
+                                                                            const novoArquivo = {
+                                                                                url: dadosEditados.arquivo_resposta_url,
+                                                                                nome: 'Resposta do Prestador',
+                                                                                data_upload: new Date().toISOString()
+                                                                            };
+                                                                            const arquivosAtuais = termoDetalhes.arquivos_resposta || [];
+                                                                            updateData.arquivos_resposta = [...arquivosAtuais, novoArquivo];
+                                                                        }
+
+                                                                        if (dadosEditados.arquivo_oficio_resposta) {
+                                                                            updateData.arquivo_oficio_resposta = dadosEditados.arquivo_oficio_resposta;
+                                                                        }
 
                                                         await base44.entities.TermoNotificacao.update(termoDetalhes.id, updateData);
                                                         queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
@@ -815,8 +865,10 @@ export default function GerenciarTermos() {
                                                         setDadosEditados({
                                                             data_protocolo: null,
                                                             arquivo_protocolo_url: null,
+                                                            arquivo_oficio_protocolo: null,
                                                             data_recebimento_resposta: null,
                                                             arquivo_resposta_url: null,
+                                                            arquivo_oficio_resposta: null,
                                                             numero_processo: null,
                                                             fiscalizacao_id: null,
                                                             camara_tecnica: null,
@@ -1313,11 +1365,16 @@ export default function GerenciarTermos() {
                                                               <Button
                                                               size="sm"
                                                               variant="outline"
-                                                              onClick={() => window.open(termo.arquivo_protocolo_url)}
+                                                              onClick={() => {
+                                                                  window.open(termo.arquivo_protocolo_url);
+                                                                  if (termo.arquivo_oficio_protocolo) {
+                                                                      setTimeout(() => window.open(termo.arquivo_oficio_protocolo), 500);
+                                                                  }
+                                                              }}
                                                               className="w-full"
                                                               >
                                                               <Download className="h-4 w-4 mr-1" />
-                                                              Baixar Arquivo de Protocolo
+                                                              Baixar Protocolo {termo.arquivo_oficio_protocolo && '+ Ofício'}
                                                               </Button>
                                                               )}
 
@@ -1328,11 +1385,16 @@ export default function GerenciarTermos() {
                                                               key={idx}
                                                               size="sm"
                                                               variant="outline"
-                                                              onClick={() => window.open(arquivo.url)}
+                                                              onClick={() => {
+                                                                  window.open(arquivo.url);
+                                                                  if (termo.arquivo_oficio_resposta) {
+                                                                      setTimeout(() => window.open(termo.arquivo_oficio_resposta), 500);
+                                                                  }
+                                                              }}
                                                               className="w-full"
                                                               >
                                                               <Download className="h-4 w-4 mr-1" />
-                                                              Baixar Resposta do Prestador
+                                                              Baixar Manifestação {termo.arquivo_oficio_resposta && '+ Ofício'}
                                                               </Button>
                                                               ))}
                                                               </>
