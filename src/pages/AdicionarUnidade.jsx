@@ -86,33 +86,18 @@ export default function AdicionarUnidade() {
         t.servicos_aplicaveis.some(s => fiscalizacao.servicos.includes(s))
     );
 
-    // Mapeamento de siglas por tipo de unidade
-    const siglasUnidade = {
-        'Atendimento Comercial ao Usuário': 'ACU',
-        'Almoxarifado/SSA': 'ALM-SSA',
-        'Poço Tubular Profundo': 'PTP',
-        'Captação Superficial': 'CAF',
-        'Estação de Tratamento de Água': 'ETA',
-        'Unidade Dosadora de Cloro': 'UTA',
-        'Unidade de Tratamento de Água': 'UTA',
-        'Reservatório Apoiado': 'RAP',
-        'Reservatório Elevado': 'REL',
-        'Reservatório Enterrado': 'REN',
-        'Reservatório Semienterrado': 'RES'
-    };
-
     // Gerar código automático quando seleciona tipo
     const handleTipoChange = (tipoId) => {
         const tipo = tipos.find(t => t.id === tipoId);
         if (!tipo) return;
 
-        // Obter sigla do tipo
-        const sigla = siglasUnidade[tipo.nome] || tipo.nome.substring(0, 3).toUpperCase();
+        // Obter código do tipo de unidade (tipo_unidade_codigo da importação)
+        const prefixo = tipo.nome || tipo.nome.substring(0, 3).toUpperCase();
 
         // Contar quantas unidades deste tipo já existem
         const unidadesMesmoTipo = unidadesExistentes.filter(u => u.tipo_unidade_id === tipoId);
         const proximoNumero = unidadesMesmoTipo.length + 1;
-        const codigo = `${sigla}-${String(proximoNumero).padStart(3, '0')}`;
+        const codigo = `${prefixo}-${String(proximoNumero).padStart(3, '0')}`;
 
         // Atualizar form
         setFormData({
