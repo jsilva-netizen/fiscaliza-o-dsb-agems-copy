@@ -672,14 +672,25 @@ export default function AnaliseManifestacao() {
                                                 )}
                                                 {stats.total > 0 && todasDeterminacoesAnalisadas(termo) && (
                                                     <div className="flex gap-2">
-                                                        <Button 
-                                                            size="sm" 
-                                                            className="bg-green-600 hover:bg-green-700"
-                                                            onClick={() => gerarAnaliseManifestacao(termo)}
-                                                        >
-                                                            <Download className="h-4 w-4 mr-1" />
-                                                            Gerar Análise
-                                                        </Button>
+                                                        {!termo.numero_am ? (
+                                                            <Button 
+                                                                size="sm" 
+                                                                className="bg-green-600 hover:bg-green-700"
+                                                                onClick={() => gerarAnaliseManifestacao(termo)}
+                                                            >
+                                                                <Download className="h-4 w-4 mr-1" />
+                                                                Gerar Análise
+                                                            </Button>
+                                                        ) : (
+                                                            <Button 
+                                                                size="sm" 
+                                                                className="bg-blue-600 hover:bg-blue-700"
+                                                                onClick={() => baixarAnaliseManifestacao(termo)}
+                                                            >
+                                                                <Download className="h-4 w-4 mr-1" />
+                                                                Baixar AM PDF
+                                                            </Button>
+                                                        )}
                                                         <Button
                                                             size="sm"
                                                             variant="destructive"
