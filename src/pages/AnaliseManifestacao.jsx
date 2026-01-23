@@ -221,7 +221,7 @@ export default function AnaliseManifestacao() {
         let numeroAM = termo.numero_am;
         if (!numeroAM) {
             numeroAM = await calcularNumeroAM(termo);
-            await base44.entities.TermoNotificacao.update(termo.id, { numero_am: numeroAM, numero_termo_notificacao: numeroAM });
+            await base44.entities.TermoNotificacao.update(termo.id, { numero_am: numeroAM });
             refetchTermos();
         }
 
