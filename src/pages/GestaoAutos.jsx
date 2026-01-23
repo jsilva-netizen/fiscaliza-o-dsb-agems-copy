@@ -15,9 +15,10 @@ import { createPageUrl } from '@/utils';
 import FluxoUploadDocumentos from '../components/autos/FluxoUploadDocumentos';
 
 export default function GestaoAutos() {
-    const queryClient = useQueryClient();
-    const [autoForm, setAutoForm] = useState({ motivo: '', prazo: '15' });
-    const [uploadingFile, setUploadingFile] = useState(false);
+     const queryClient = useQueryClient();
+     const [autoForm, setAutoForm] = useState({ motivo: '', prazo: '15' });
+     const [uploadingFile, setUploadingFile] = useState(false);
+     const [penaBase, setPenaBase] = useState({});
 
     const { data: autos = [] } = useQuery({
         queryKey: ['autos-infracao'],
