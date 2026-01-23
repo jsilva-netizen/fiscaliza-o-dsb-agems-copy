@@ -153,7 +153,7 @@ export default function GerenciarTermos() {
     // Calcular próximo número de AM
     const calcularNumeroAM = async () => {
         const ano = new Date().getFullYear();
-        const todosOsTermos = termos;
+        const todosOsTermos = await base44.entities.TermoNotificacao.list();
         const amsDoAno = todosOsTermos.filter(t => {
             if (!t.numero_am) return false;
             const match = t.numero_am.match(/AM\s*(\d+)\/(\d{4})\/DSB\/AGEMS/);
