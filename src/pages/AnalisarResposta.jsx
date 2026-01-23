@@ -367,17 +367,25 @@ export default function AnalisarResposta() {
                                                     
                                                     const prompt = `DETERMINAÇÃO:\n${detalheDeterminacao.descricao}\n\nMANIFESTAÇÃO DO PRESTADOR:\n${analiseForm.manifestacao_prestador}\n\nAnalise se a manifestação do prestador atende ou não a determinação. Seja objetivo e técnico.`;
                                                     
-                                                    const resposta = await base44.agents.addMessage(conversacao, {
+                                                    await base44.agents.addMessage(conversacao, {
                                                         role: 'user',
                                                         content: prompt
                                                     });
                                                     
-                                                    const ultimaMensagem = resposta.messages[resposta.messages.length - 1];
-                                                    if (ultimaMensagem.role === 'assistant') {
+                                                    // Aguardar e buscar a conversação atualizada
+                                                    await new Promise(resolve => setTimeout(resolve, 2000));
+                                                    
+                                                    const conversacaoAtualizada = await base44.agents.getConversation(conversacao.id);
+                                                    const mensagens = conversacaoAtualizada.messages || [];
+                                                    const ultimaMensagem = mensagens[mensagens.length - 1];
+                                                    
+                                                    if (ultimaMensagem && ultimaMensagem.role === 'assistant') {
                                                         setAnaliseForm({
                                                             ...analiseForm,
                                                             descricao_atendimento: ultimaMensagem.content
                                                         });
+                                                    } else {
+                                                        alert('Aguarde alguns segundos e tente novamente');
                                                     }
                                                 } catch (error) {
                                                     alert('Erro ao gerar análise: ' + error.message);
