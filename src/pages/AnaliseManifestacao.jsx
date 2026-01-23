@@ -182,17 +182,7 @@ export default function AnaliseManifestacao() {
         }
     };
 
-    const calcularNumeroAM = async (termo) => {
-        const ano = new Date().getFullYear();
-        const todosOsTermos = await base44.entities.TermoNotificacao.list();
-        const amsDoAno = todosOsTermos.filter(t => {
-            if (!t.numero_termo_notificacao) return false;
-            const match = t.numero_termo_notificacao.match(/AM\s*(\d+)\/(\d{4})\/DSB\/AGEMS/);
-            return match && parseInt(match[2]) === ano;
-        });
-        const proximoNumeroAM = amsDoAno.length + 1;
-        return `AM ${String(proximoNumeroAM).padStart(3, '0')}/${ano}/DSB/AGEMS`;
-    };
+
 
     const calcularProximoNumeroTN = async () => {
         const ano = new Date().getFullYear();
