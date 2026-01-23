@@ -114,11 +114,15 @@ export default function AnaliseManifestacao() {
         
         if (stats.total === 0) return { label: 'Sem determinações', color: 'bg-gray-500' };
         
-        if (stats.aguardandoAnalise > 0) {
-            return { label: 'Aguardando Análise', color: 'bg-yellow-600' };
-        } else if (stats.atendidas + stats.naoAtendidas === stats.total) {
-            return { label: 'Análise Concluída', color: 'bg-green-600' };
+        // Se já tem resposta do prestador registrada
+        if (termo.data_recebimento_resposta) {
+            if (stats.atendidas + stats.naoAtendidas === stats.total) {
+                return { label: 'Análise Concluída', color: 'bg-green-600' };
+            } else {
+                return { label: 'Aguardando Análise', color: 'bg-yellow-600' };
+            }
         } else {
+            // Se ainda não tem resposta do prestador
             return { label: 'Aguardando Resposta', color: 'bg-blue-600' };
         }
     };
