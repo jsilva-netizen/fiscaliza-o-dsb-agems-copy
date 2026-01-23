@@ -9,15 +9,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { 
     ArrowLeft, Search, MapPin, Calendar, CheckCircle2, 
-    Clock, AlertTriangle, ChevronRight, Plus, Filter, Trash2, FileDown
+    Clock, AlertTriangle, ChevronRight, Plus, Filter, Trash2, FileDown, Image
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import RelatorioFiscalizacao from '@/components/fiscalizacao/RelatorioFiscalizacao';
 import ExportarPDFConsolidado from '@/components/fiscalizacao/ExportarPDFConsolidado';
+import GerenciarFotos from '@/components/fiscalizacao/GerenciarFotos';
 
 export default function Fiscalizacoes() {
     const queryClient = useQueryClient();
@@ -29,6 +31,7 @@ export default function Fiscalizacoes() {
     const [fiscalizacaoParaDeletar, setFiscalizacaoParaDeletar] = useState(null);
     const [mostrarFiltros, setMostrarFiltros] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, fiscId: null, step: 1, inputValue: '' });
+    const [gerenciandoFotos, setGerenciandoFotos] = useState(null);
 
     const { data: user } = useQuery({
         queryKey: ['user'],
@@ -284,12 +287,34 @@ export default function Fiscalizacoes() {
 
                                         {/* Botões de ação */}
                                          <div className="mt-3 pt-3 border-t flex gap-2">
-                                             {fisc.status === 'finalizada' && (
-                                                 <div className="flex-1">
-                                                     <RelatorioFiscalizacao fiscalizacao={fisc} />
-                                                 </div>
-                                             )}
-                                             {podeDeleter && (
+                                              {fisc.status === 'finalizada' && (
+                                                  <>
+                                                      <div className="flex-1">
+                                                          <RelatorioFiscalizacao fiscalizacao={fisc} />
+                                                      </div>
+                                                      <Dialog open={gerenciandoFotos === fisc.id} onOpenChange={(open) => {
+                                                          if (!open) setGerenciandoFotos(null);
+                                                      }}>
+                                                          <Button
+                                                              variant="outline"
+                                                              size="sm"
+                                                              className="text-blue-600 hover:text-blue-700"
+                                                              onClick={() => setGerenciandoFotos(fisc.id)}
+                                                          >
+                                                              <Image className="h-4 w-4 mr-1" />
+                                                              Editar Fotos
+                                                          </Button>
+                                                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                                              <GerenciarFotos 
+                                                                  fiscalizacaoId={fisc.id}
+                                                                  unidadeId={fisc.unidade_id}
+                                                                  onClose={() => setGerenciandoFotos(null)}
+                                                              />
+                                                          </DialogContent>
+                                                      </Dialog>
+                                                  </>
+                                              )}
+                                              {podeDeleter && (
                                                  <AlertDialog 
                                                      open={deleteConfirmation.open && deleteConfirmation.fiscId === fisc.id}
                                                      onOpenChange={(open) => {
