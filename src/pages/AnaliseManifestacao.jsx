@@ -603,8 +603,10 @@ export default function AnaliseManifestacao() {
                                 Limpar Filtros
                             </Button>
                         )}
-                    </CardContent>
-                </Card>
+                        </div>
+                        </div>
+                        </CardContent>
+                        </Card>
 
                 {/* Lista de TNs */}
                 <div className="space-y-4">
