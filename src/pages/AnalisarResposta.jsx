@@ -347,7 +347,49 @@ export default function AnalisarResposta() {
                                 )}
 
                                 <div className="border-t pt-4">
-                                    <p className="font-medium mb-2">Sua Análise:</p>
+                                    <div className="flex justify-between items-center mb-2">
+                                        <p className="font-medium">Sua Análise:</p>
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={async () => {
+                                                if (!analiseForm.manifestacao_prestador) {
+                                                    alert('Insira a manifestação do prestador primeiro');
+                                                    return;
+                                                }
+                                                
+                                                setAnalisandoIA(true);
+                                                try {
+                                                    const conversacao = await base44.agents.createConversation({
+                                                        agent_name: 'analise_resposta_determinacao'
+                                                    });
+                                                    
+                                                    const prompt = `DETERMINAÇÃO:\n${detalheDeterminacao.descricao}\n\nMANIFESTAÇÃO DO PRESTADOR:\n${analiseForm.manifestacao_prestador}\n\nAnalise se a manifestação do prestador atende ou não a determinação. Seja objetivo e técnico.`;
+                                                    
+                                                    const resposta = await base44.agents.addMessage(conversacao, {
+                                                        role: 'user',
+                                                        content: prompt
+                                                    });
+                                                    
+                                                    const ultimaMensagem = resposta.messages[resposta.messages.length - 1];
+                                                    if (ultimaMensagem.role === 'assistant') {
+                                                        setAnaliseForm({
+                                                            ...analiseForm,
+                                                            descricao_atendimento: ultimaMensagem.content
+                                                        });
+                                                    }
+                                                } catch (error) {
+                                                    alert('Erro ao gerar análise: ' + error.message);
+                                                } finally {
+                                                    setAnalisandoIA(false);
+                                                }
+                                            }}
+                                            disabled={analisandoIA || !analiseForm.manifestacao_prestador}
+                                        >
+                                            {analisandoIA ? 'Gerando análise...' : '🤖 Gerar Análise com IA'}
+                                        </Button>
+                                    </div>
                                     <Textarea
                                         placeholder="Descreva sua análise técnica sobre a resposta do prestador..."
                                         value={analiseForm.descricao_atendimento}
@@ -363,7 +405,7 @@ export default function AnalisarResposta() {
                                             className={analiseForm.status === 'atendida' ? 'bg-green-600 hover:bg-green-700' : ''}
                                         >
                                             <CheckCircle className="h-4 w-4 mr-2" />
-                                            Atendida
+                                            Acatada
                                         </Button>
                                         <Button
                                             variant={analiseForm.status === 'nao_atendida' ? 'default' : 'outline'}
@@ -371,14 +413,14 @@ export default function AnalisarResposta() {
                                             className={analiseForm.status === 'nao_atendida' ? 'bg-red-600 hover:bg-red-700' : ''}
                                         >
                                             <XCircle className="h-4 w-4 mr-2" />
-                                            Não Atendida
+                                            Não Acatada
                                         </Button>
                                     </div>
 
                                     {analiseForm.status === 'nao_atendida' && (
                                         <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
                                             <p className="text-sm text-yellow-800">
-                                                ⚠️ Ao marcar como "Não Atendida", um Auto de Infração será gerado automaticamente.
+                                                ⚠️ Ao marcar como "Não Acatada", um Auto de Infração será gerado automaticamente.
                                             </p>
                                         </div>
                                     )}
@@ -412,7 +454,7 @@ export default function AnalisarResposta() {
                             <AlertDialogTitle>Confirmar Análise</AlertDialogTitle>
                             <AlertDialogDescription>
                                 Você está prestes a marcar a determinação <strong>{confirmDialog.determinacao?.numero_determinacao}</strong> como{' '}
-                                <strong>{analiseForm.status === 'atendida' ? 'Atendida' : 'Não Atendida'}</strong>.
+                                <strong>{analiseForm.status === 'atendida' ? 'Acatada' : 'Não Acatada'}</strong>.
                                 {analiseForm.status === 'nao_atendida' && (
                                     <span className="block mt-2 text-red-600 font-medium">
                                         Um Auto de Infração será gerado automaticamente.
