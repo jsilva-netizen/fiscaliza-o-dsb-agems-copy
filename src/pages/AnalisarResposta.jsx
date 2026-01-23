@@ -232,16 +232,18 @@ export default function AnalisarResposta() {
                             <div className="mt-4 pt-4 border-t">
                                 <p className="font-medium mb-2">Arquivo de Resposta do Prestador:</p>
                                 {termo.arquivos_resposta.map((arquivo, idx) => (
-                                    <Button
+                                    <a
                                         key={idx}
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => window.open(arquivo.url, '_blank')}
-                                        className="mr-2"
+                                        href={arquivo.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-block mr-2"
                                     >
-                                        <Download className="h-4 w-4 mr-2" />
-                                        Visualizar PDF
-                                    </Button>
+                                        <Button variant="outline" size="sm">
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Visualizar PDF
+                                        </Button>
+                                    </a>
                                 ))}
                             </div>
                         )}
@@ -332,14 +334,17 @@ export default function AnalisarResposta() {
                                     <div className="border-t pt-4">
                                         <p className="font-medium mb-2">Arquivo de Resposta do Prestador:</p>
                                         {termo.arquivos_resposta.map((arquivo, idx) => (
-                                            <Button
+                                            <a
                                                 key={idx}
-                                                variant="outline"
-                                                onClick={() => window.open(arquivo.url, '_blank')}
+                                                href={arquivo.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
                                             >
-                                                <Download className="h-4 w-4 mr-2" />
-                                                Visualizar PDF em Nova Janela
-                                            </Button>
+                                                <Button variant="outline">
+                                                    <Download className="h-4 w-4 mr-2" />
+                                                    Visualizar PDF em Nova Janela
+                                                </Button>
+                                            </a>
                                         ))}
                                     </div>
                                 )}
