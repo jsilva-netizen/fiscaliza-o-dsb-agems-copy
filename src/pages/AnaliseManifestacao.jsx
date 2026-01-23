@@ -177,17 +177,18 @@ export default function AnaliseManifestacao() {
 
         // Tabela com melhor formatação
         const tableTop = 35;
-        const colWidths = [18, 28, 32, 36, 22, 18];
+        const colWidths = [14, 24, 31, 33, 28, 18];
         const headers = ['Determinação', 'Base Legal', 'Manifestação Apresentada', 'Análise', 'Resultado da Análise', 'Nº AI'];
         
         doc.setFont(undefined, 'bold');
-        doc.setFillColor(180, 200, 255);
+        doc.setFillColor(150, 170, 220);
         doc.setFontSize(9);
         let xPos = margin;
         headers.forEach((header, i) => {
-            doc.rect(xPos, tableTop, colWidths[i], 7, 'F');
-            const lines = doc.splitTextToSize(header, colWidths[i] - 2);
-            doc.text(lines, xPos + 1, tableTop + 3.5, { align: 'left' });
+            doc.rect(xPos, tableTop, colWidths[i], 6, 'F');
+            doc.setTextColor(0, 0, 0);
+            const headerLines = doc.splitTextToSize(header, colWidths[i] - 1);
+            doc.text(headerLines, xPos + 0.5, tableTop + 3.5, { maxWidth: colWidths[i] - 1 });
             xPos += colWidths[i];
         });
 
@@ -202,17 +203,20 @@ export default function AnaliseManifestacao() {
 
         // Dados das determinações
         doc.setFont(undefined, 'normal');
-        doc.setFontSize(8);
-        let yPos = tableTop + 7;
+        doc.setFontSize(7);
+        let yPos = tableTop + 6;
 
-        dets.forEach(det => {
+        dets.forEach((det, detIndex) => {
             const resposta = resp.find(r => r.determinacao_id === det.id);
             
-            // Calcular altura da linha baseado no conteúdo
-            const manifestacaoLines = doc.splitTextToSize(resposta?.manifestacao_prestador || 'N/A', colWidths[2] - 2);
-            const analiseLines = doc.splitTextToSize(resposta?.descricao_atendimento || 'N/A', colWidths[3] - 2);
-            const maxLines = Math.max(manifestacaoLines.length, analiseLines.length, 2);
-            const rowHeight = maxLines * 3.5 + 2;
+            // Quebrar texto em múltiplas linhas
+            const manifestacaoLines = doc.splitTextToSize(resposta?.manifestacao_prestador || '', colWidths[2] - 1);
+            const analiseLines = doc.splitTextToSize(resposta?.descricao_atendimento || '', colWidths[3] - 1);
+            const baseLegalLines = doc.splitTextToSize('Portaria AGEMS nº 233/2022 e suas alterações', colWidths[1] - 1);
+            
+            const maxLines = Math.max(manifestacaoLines.length || 1, analiseLines.length || 1, baseLegalLines.length || 1);
+            const lineHeight = 2.5;
+            const rowHeight = Math.max(6, maxLines * lineHeight + 2);
 
             // Verificar se precisa de nova página
             if (yPos + rowHeight > pageHeight - 10) {
@@ -221,26 +225,32 @@ export default function AnaliseManifestacao() {
             }
 
             xPos = margin;
+            const cellStartY = yPos + 1;
 
-            // Determinação
-            doc.text(det.numero_determinacao, xPos + 1, yPos + 2, { maxWidth: colWidths[0] - 2 });
+            // Célula: Determinação
+            doc.rect(xPos, yPos, colWidths[0], rowHeight);
+            doc.setFont(undefined, 'bold');
+            doc.text(det.numero_determinacao, xPos + 0.5, cellStartY, { maxWidth: colWidths[0] - 1 });
             xPos += colWidths[0];
 
-            // Base Legal
-            doc.text('Portaria AGEMS nº 233/2022', xPos + 1, yPos + 2, { maxWidth: colWidths[1] - 2 });
+            // Célula: Base Legal
+            doc.rect(xPos, yPos, colWidths[1], rowHeight);
+            doc.setFont(undefined, 'normal');
+            doc.text(baseLegalLines, xPos + 0.5, cellStartY, { maxWidth: colWidths[1] - 1 });
             xPos += colWidths[1];
 
-            // Manifestação Apresentada
-            const manifestacaoText = doc.splitTextToSize(resposta?.manifestacao_prestador || 'N/A', colWidths[2] - 2);
-            doc.text(manifestacaoText, xPos + 1, yPos + 2);
+            // Célula: Manifestação Apresentada
+            doc.rect(xPos, yPos, colWidths[2], rowHeight);
+            doc.text(manifestacaoLines, xPos + 0.5, cellStartY, { maxWidth: colWidths[2] - 1 });
             xPos += colWidths[2];
 
-            // Análise
-            const analiseText = doc.splitTextToSize(resposta?.descricao_atendimento || 'N/A', colWidths[3] - 2);
-            doc.text(analiseText, xPos + 1, yPos + 2);
+            // Célula: Análise
+            doc.rect(xPos, yPos, colWidths[3], rowHeight);
+            doc.text(analiseLines, xPos + 0.5, cellStartY, { maxWidth: colWidths[3] - 1 });
             xPos += colWidths[3];
 
-            // Resultado
+            // Célula: Resultado da Análise
+            doc.rect(xPos, yPos, colWidths[4], rowHeight);
             const resultado = resposta?.status === 'atendida' ? 'ACATADA' : 'NÃO ACATADA';
             doc.setFont(undefined, 'bold');
             if (resposta?.status === 'atendida') {
@@ -248,21 +258,22 @@ export default function AnaliseManifestacao() {
             } else {
                 doc.setTextColor(255, 0, 0);
             }
-            doc.text(resultado, xPos + 1, yPos + 2, { maxWidth: colWidths[4] - 2 });
+            doc.text(resultado, xPos + 0.5, cellStartY, { maxWidth: colWidths[4] - 1 });
             doc.setTextColor(0, 0, 0);
             doc.setFont(undefined, 'normal');
             xPos += colWidths[4];
 
-            // Nº AI
+            // Célula: Nº AI
+            doc.rect(xPos, yPos, colWidths[5], rowHeight);
             const numeroAI = autosPorDeterminacao[det.id];
             if (numeroAI) {
-                doc.text(numeroAI, xPos + 1, yPos + 2, { maxWidth: colWidths[5] - 2 });
+                doc.text(numeroAI, xPos + 0.5, cellStartY, { maxWidth: colWidths[5] - 1 });
             } else if (resposta?.status === 'nao_atendida') {
-                doc.text('Gerar', xPos + 1, yPos + 2, { maxWidth: colWidths[5] - 2 });
+                doc.text('Gerar', xPos + 0.5, cellStartY, { maxWidth: colWidths[5] - 1 });
+            } else {
+                doc.text('NÃO SE APLICA', xPos + 0.5, cellStartY, { maxWidth: colWidths[5] - 1 });
             }
 
-            // Desenhar bordo da célula
-            doc.rect(margin, yPos, pageWidth - 2 * margin, rowHeight);
             yPos += rowHeight;
         });
 
