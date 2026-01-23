@@ -435,7 +435,7 @@ export default function AcompanhamentoDeterminacoes() {
                                                         </div>
                                                         <div className="flex gap-4 text-sm text-gray-600">
                                                             <div>
-                                                                <Badge className="bg-green-600">{detsAtendidas.length} atendidas</Badge>
+                                                                <Badge className="bg-green-600">{detsAtendidas.length} acatadas</Badge>
                                                             </div>
                                                         </div>
                                                     </div>
