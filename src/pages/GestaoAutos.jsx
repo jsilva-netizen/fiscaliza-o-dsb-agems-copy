@@ -9,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, FileText, Upload } from 'lucide-react';
+import { ArrowLeft, FileText, Upload, Save } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import FluxoUploadDocumentos from '../components/autos/FluxoUploadDocumentos';
 
 export default function GestaoAutos() {
     const queryClient = useQueryClient();
