@@ -19,6 +19,7 @@ export default function AnalisarResposta() {
     const [detalheDeterminacao, setDetalheDeterminacao] = useState(null);
     const [analiseForm, setAnaliseForm] = useState({
         status: '',
+        manifestacao_prestador: '',
         descricao_atendimento: '',
         dentro_prazo: true
     });
@@ -36,16 +37,26 @@ export default function AnalisarResposta() {
         enabled: !!termo
     });
 
+    const { data: unidadesFiscalizadas = [] } = useQuery({
+        queryKey: ['unidades-fiscalizadas', fiscalizacao?.id],
+        queryFn: () => base44.entities.UnidadeFiscalizada.list().then(us => 
+            us.filter(u => u.fiscalizacao_id === fiscalizacao.id)
+        ),
+        enabled: !!fiscalizacao
+    });
+
     const { data: determinacoes = [] } = useQuery({
-        queryKey: ['determinacoes', fiscalizacao?.id],
-        queryFn: () => base44.entities.Determinacao.list().then(ds => 
-            ds.filter(d => d.fiscalizacao_id === fiscalizacao.id).sort((a, b) => {
+        queryKey: ['determinacoes', unidadesFiscalizadas],
+        queryFn: async () => {
+            const unidadeIds = unidadesFiscalizadas.map(u => u.id);
+            const todasDets = await base44.entities.Determinacao.list();
+            return todasDets.filter(d => unidadeIds.includes(d.unidade_fiscalizada_id)).sort((a, b) => {
                 const numA = parseInt(a.numero_determinacao?.replace(/\D/g, '') || '0');
                 const numB = parseInt(b.numero_determinacao?.replace(/\D/g, '') || '0');
                 return numA - numB;
-            })
-        ),
-        enabled: !!fiscalizacao
+            });
+        },
+        enabled: unidadesFiscalizadas.length > 0
     });
 
     const { data: respostas = [] } = useQuery({
@@ -64,13 +75,14 @@ export default function AnalisarResposta() {
     });
 
     const salvarAnaliseMutation = useMutation({
-        mutationFn: async ({ determinacaoId, status, descricao }) => {
+        mutationFn: async ({ determinacaoId, status, manifestacao, descricao }) => {
             const resposta = respostas.find(r => r.determinacao_id === determinacaoId);
             const user = await base44.auth.me();
             
             if (resposta) {
                 return base44.entities.RespostaDeterminacao.update(resposta.id, {
                     status,
+                    manifestacao_prestador: manifestacao,
                     descricao_atendimento: descricao,
                     data_resposta: new Date().toISOString()
                 });
@@ -82,6 +94,7 @@ export default function AnalisarResposta() {
                     prestador_servico_id: fiscalizacao.prestador_servico_id,
                     status,
                     tipo_resposta: status === 'atendida' ? 'atendida' : 'nao_respondida',
+                    manifestacao_prestador: manifestacao,
                     descricao_atendimento: descricao,
                     data_resposta: new Date().toISOString(),
                     dentro_prazo: true
@@ -113,7 +126,7 @@ export default function AnalisarResposta() {
             
             alert('Análise salva com sucesso!');
             setDetalheDeterminacao(null);
-            setAnaliseForm({ status: '', descricao_atendimento: '', dentro_prazo: true });
+            setAnaliseForm({ status: '', manifestacao_prestador: '', descricao_atendimento: '', dentro_prazo: true });
         }
     });
 
@@ -142,6 +155,7 @@ export default function AnalisarResposta() {
         if (resp) {
             setAnaliseForm({
                 status: resp.status,
+                manifestacao_prestador: resp.manifestacao_prestador || '',
                 descricao_atendimento: resp.descricao_atendimento || '',
                 dentro_prazo: resp.dentro_prazo
             });
@@ -149,8 +163,8 @@ export default function AnalisarResposta() {
     };
 
     const handleSalvarAnalise = () => {
-        if (!analiseForm.status || !analiseForm.descricao_atendimento) {
-            alert('Preencha todos os campos');
+        if (!analiseForm.status || !analiseForm.manifestacao_prestador || !analiseForm.descricao_atendimento) {
+            alert('Preencha todos os campos obrigatórios');
             return;
         }
         setConfirmDialog({ open: true, determinacao: detalheDeterminacao });
@@ -160,6 +174,7 @@ export default function AnalisarResposta() {
         salvarAnaliseMutation.mutate({
             determinacaoId: detalheDeterminacao.id,
             status: analiseForm.status,
+            manifestacao: analiseForm.manifestacao_prestador,
             descricao: analiseForm.descricao_atendimento
         });
         setConfirmDialog({ open: false, determinacao: null });
@@ -204,10 +219,13 @@ export default function AnalisarResposta() {
                                 <span className="font-medium">Prestador:</span> {getPrestadorNome(termo.prestador_servico_id)}
                             </div>
                             <div>
-                                <span className="font-medium">Fiscalização:</span> {fiscalizacao?.numero_termo}
+                                <span className="font-medium">Processo:</span> {termo.numero_processo || 'N/A'}
                             </div>
                             <div>
                                 <span className="font-medium">Câmara:</span> {termo.camara_tecnica}
+                            </div>
+                            <div className="col-span-2">
+                                <span className="font-medium">Serviços:</span> {fiscalizacao?.servicos?.join(', ') || 'N/A'}
                             </div>
                         </div>
                         {termo.arquivos_resposta?.length > 0 && (
@@ -296,8 +314,18 @@ export default function AnalisarResposta() {
                         {detalheDeterminacao && (
                             <div className="space-y-4">
                                 <div>
-                                    <p className="font-medium mb-2">Descrição da Determinação:</p>
-                                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{detalheDeterminacao.descricao}</p>
+                                    <p className="font-medium mb-2">Texto Completo da Determinação:</p>
+                                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded border">{detalheDeterminacao.descricao}</p>
+                                </div>
+
+                                <div className="border-t pt-4">
+                                    <p className="font-medium mb-2">Manifestação do Prestador:</p>
+                                    <Textarea
+                                        placeholder="Insira aqui o que o prestador manifestou sobre esta determinação..."
+                                        value={analiseForm.manifestacao_prestador || ''}
+                                        onChange={(e) => setAnaliseForm({ ...analiseForm, manifestacao_prestador: e.target.value })}
+                                        className="min-h-24"
+                                    />
                                 </div>
 
                                 {termo.arquivos_resposta?.length > 0 && (
@@ -317,7 +345,15 @@ export default function AnalisarResposta() {
                                 )}
 
                                 <div className="border-t pt-4">
-                                    <p className="font-medium mb-3">Análise:</p>
+                                    <p className="font-medium mb-2">Sua Análise:</p>
+                                    <Textarea
+                                        placeholder="Descreva sua análise técnica sobre a resposta do prestador..."
+                                        value={analiseForm.descricao_atendimento}
+                                        onChange={(e) => setAnaliseForm({ ...analiseForm, descricao_atendimento: e.target.value })}
+                                        className="min-h-24 mb-4"
+                                    />
+
+                                    <p className="font-medium mb-3">Status da Determinação:</p>
                                     <div className="grid grid-cols-2 gap-3 mb-4">
                                         <Button
                                             variant={analiseForm.status === 'atendida' ? 'default' : 'outline'}
@@ -336,13 +372,6 @@ export default function AnalisarResposta() {
                                             Não Atendida
                                         </Button>
                                     </div>
-
-                                    <Textarea
-                                        placeholder="Descreva a análise da resposta do prestador..."
-                                        value={analiseForm.descricao_atendimento}
-                                        onChange={(e) => setAnaliseForm({ ...analiseForm, descricao_atendimento: e.target.value })}
-                                        className="min-h-32"
-                                    />
 
                                     {analiseForm.status === 'nao_atendida' && (
                                         <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
@@ -363,7 +392,7 @@ export default function AnalisarResposta() {
                                     </Button>
                                     <Button
                                         onClick={handleSalvarAnalise}
-                                        disabled={!analiseForm.status || !analiseForm.descricao_atendimento}
+                                        disabled={!analiseForm.status || !analiseForm.manifestacao_prestador || !analiseForm.descricao_atendimento}
                                         className="flex-1 bg-blue-600 hover:bg-blue-700"
                                     >
                                         Salvar Análise
