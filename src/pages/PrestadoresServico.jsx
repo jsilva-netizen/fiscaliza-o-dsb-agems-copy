@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit2, Trash2, Loader2, ArrowLeft, Eye } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, ArrowLeft, Eye, AlertTriangle } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -14,6 +15,7 @@ export default function PrestadoresServico() {
     const queryClient = useQueryClient();
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, prestadorId: null, step: 1, inputValue: '' });
     const [formData, setFormData] = useState({
         nome: '',
         razao_social: '',
@@ -99,6 +101,7 @@ export default function PrestadoresServico() {
         mutationFn: (id) => base44.entities.PrestadorServico.delete(id),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prestadores'] });
+            setDeleteConfirmation({ open: false, prestadorId: null, step: 1, inputValue: '' });
         }
     });
 
@@ -246,18 +249,81 @@ export default function PrestadoresServico() {
                                             <Edit2 className="h-4 w-4 mr-1" />
                                             Editar
                                         </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="destructive"
-                                            onClick={() => {
-                                                if (confirm('Tem certeza?')) {
-                                                    deletarMutation.mutate(prestador.id);
+                                        <AlertDialog 
+                                            open={deleteConfirmation.open && deleteConfirmation.prestadorId === prestador.id}
+                                            onOpenChange={(open) => {
+                                                if (!open) {
+                                                    setDeleteConfirmation({ open: false, prestadorId: null, step: 1, inputValue: '' });
                                                 }
                                             }}
                                         >
-                                            <Trash2 className="h-4 w-4 mr-1" />
-                                            Deletar
-                                        </Button>
+                                            <AlertDialogTrigger asChild>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={() => setDeleteConfirmation({ open: true, prestadorId: prestador.id, step: 1, inputValue: '' })}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-1" />
+                                                    Deletar
+                                                </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                {deleteConfirmation.step === 1 ? (
+                                                    <>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                                                                <AlertTriangle className="h-5 w-5" />
+                                                                Excluir Prestador de Serviço?
+                                                            </AlertDialogTitle>
+                                                            <AlertDialogDescription className="space-y-2">
+                                                                <p>Você está prestes a excluir permanentemente:</p>
+                                                                <p className="font-semibold text-gray-900">{prestador.nome}</p>
+                                                                <p className="text-red-600">Esta ação não pode ser desfeita.</p>
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                            <Button
+                                                                variant="destructive"
+                                                                onClick={() => setDeleteConfirmation(prev => ({ ...prev, step: 2 }))}
+                                                            >
+                                                                Continuar
+                                                            </Button>
+                                                        </AlertDialogFooter>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                                                                <AlertTriangle className="h-5 w-5" />
+                                                                Confirmação Final
+                                                            </AlertDialogTitle>
+                                                            <AlertDialogDescription className="space-y-3">
+                                                                <p>Para confirmar a exclusão, digite <span className="font-bold">EXCLUIR</span> no campo abaixo:</p>
+                                                                <Input
+                                                                    placeholder="Digite EXCLUIR"
+                                                                    value={deleteConfirmation.inputValue}
+                                                                    onChange={(e) => setDeleteConfirmation(prev => ({ ...prev, inputValue: e.target.value }))}
+                                                                    className="mt-2"
+                                                                />
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel onClick={() => setDeleteConfirmation({ open: false, prestadorId: null, step: 1, inputValue: '' })}>
+                                                                Cancelar
+                                                            </AlertDialogCancel>
+                                                            <Button
+                                                                variant="destructive"
+                                                                disabled={deleteConfirmation.inputValue !== 'EXCLUIR' || deletarMutation.isPending}
+                                                                onClick={() => deletarMutation.mutate(prestador.id)}
+                                                            >
+                                                                {deletarMutation.isPending ? 'Excluindo...' : 'Excluir Permanentemente'}
+                                                            </Button>
+                                                        </AlertDialogFooter>
+                                                    </>
+                                                )}
+                                            </AlertDialogContent>
+                                        </AlertDialog>
                                     </div>
                                 </CardContent>
                             </Card>

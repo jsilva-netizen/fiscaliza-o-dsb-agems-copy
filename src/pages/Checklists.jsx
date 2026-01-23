@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { ArrowLeft, Plus, ClipboardCheck, Edit, Trash2, AlertTriangle, GripVertical, Upload, Loader2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import ItemChecklistForm from '@/components/admin/ItemChecklistForm';
 
 export default function Checklists() {
@@ -20,6 +22,7 @@ export default function Checklists() {
     const [showForm, setShowForm] = useState(false);
     const [editing, setEditing] = useState(null);
     const [importing, setImporting] = useState(false);
+    const [deleteConfirmation, setDeleteConfirmation] = useState({ open: false, itemId: null, step: 1, inputValue: '' });
 
     const { data: tipos = [] } = useQuery({
         queryKey: ['tipos-unidade'],
@@ -54,7 +57,10 @@ export default function Checklists() {
 
     const deleteMutation = useMutation({
         mutationFn: (id) => base44.entities.ItemChecklist.delete(id),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['itens-checklist'] })
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['itens-checklist'] });
+            setDeleteConfirmation({ open: false, itemId: null, step: 1, inputValue: '' });
+        }
     });
 
     const handleSave = (data) => {
@@ -235,17 +241,80 @@ export default function Checklists() {
                                                 <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                                                     <Edit className="h-4 w-4" />
                                                 </Button>
-                                                <Button 
-                                                    variant="ghost" 
-                                                    size="icon"
-                                                    onClick={() => {
-                                                        if (confirm('Excluir este item do checklist?')) {
-                                                            deleteMutation.mutate(item.id);
+                                                <AlertDialog 
+                                                    open={deleteConfirmation.open && deleteConfirmation.itemId === item.id}
+                                                    onOpenChange={(open) => {
+                                                        if (!open) {
+                                                            setDeleteConfirmation({ open: false, itemId: null, step: 1, inputValue: '' });
                                                         }
                                                     }}
                                                 >
-                                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                                </Button>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="icon"
+                                                            onClick={() => setDeleteConfirmation({ open: true, itemId: item.id, step: 1, inputValue: '' })}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        {deleteConfirmation.step === 1 ? (
+                                                            <>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                                                                        <AlertTriangle className="h-5 w-5" />
+                                                                        Excluir Item do Checklist?
+                                                                    </AlertDialogTitle>
+                                                                    <AlertDialogDescription className="space-y-2">
+                                                                        <p>Você está prestes a excluir permanentemente:</p>
+                                                                        <p className="font-semibold text-gray-900">{item.pergunta}</p>
+                                                                        <p className="text-red-600">Esta ação não pode ser desfeita.</p>
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                                                    <Button
+                                                                        variant="destructive"
+                                                                        onClick={() => setDeleteConfirmation(prev => ({ ...prev, step: 2 }))}
+                                                                    >
+                                                                        Continuar
+                                                                    </Button>
+                                                                </AlertDialogFooter>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                                                                        <AlertTriangle className="h-5 w-5" />
+                                                                        Confirmação Final
+                                                                    </AlertDialogTitle>
+                                                                    <AlertDialogDescription className="space-y-3">
+                                                                        <p>Para confirmar a exclusão, digite <span className="font-bold">EXCLUIR</span> no campo abaixo:</p>
+                                                                        <Input
+                                                                            placeholder="Digite EXCLUIR"
+                                                                            value={deleteConfirmation.inputValue}
+                                                                            onChange={(e) => setDeleteConfirmation(prev => ({ ...prev, inputValue: e.target.value }))}
+                                                                            className="mt-2"
+                                                                        />
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel onClick={() => setDeleteConfirmation({ open: false, itemId: null, step: 1, inputValue: '' })}>
+                                                                        Cancelar
+                                                                    </AlertDialogCancel>
+                                                                    <Button
+                                                                        variant="destructive"
+                                                                        disabled={deleteConfirmation.inputValue !== 'EXCLUIR' || deleteMutation.isPending}
+                                                                        onClick={() => deleteMutation.mutate(item.id)}
+                                                                    >
+                                                                        {deleteMutation.isPending ? 'Excluindo...' : 'Excluir Permanentemente'}
+                                                                    </Button>
+                                                                </AlertDialogFooter>
+                                                            </>
+                                                        )}
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             </div>
                                         </div>
                                     </CardContent>
