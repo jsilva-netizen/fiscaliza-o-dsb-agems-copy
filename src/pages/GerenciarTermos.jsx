@@ -1137,7 +1137,7 @@ export default function GerenciarTermos() {
                                                               className="w-full"
                                                               >
                                                               <Download className="h-4 w-4 mr-1" />
-                                                              Baixar Resposta
+                                                              Baixar Resposta do Prestador
                                                               </Button>
                                                               ))}
                                                               </>
