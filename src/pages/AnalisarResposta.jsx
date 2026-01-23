@@ -106,20 +106,19 @@ export default function AnalisarResposta() {
             await queryClient.invalidateQueries({ queryKey: ['respostas-determinacao'] });
             
             // Se não atendida, gerar auto de infração
-            if (variables.status === 'nao_atendida') {
-                const determinacao = determinacoes.find(d => d.id === variables.determinacaoId);
-                const autosExistentes = await base44.entities.AutoInfracao.list();
-                const ano = new Date().getFullYear();
-                const camaraTecnica = termo.camara_tecnica;
-                
-                // Contar AIs da mesma câmara técnica do ano
-                const autosDA = autosExistentes.filter(a => {
-                    if (!a.numero_auto) return false;
-                    const match = a.numero_auto.match(/AI\s*nº\s*(\d+)\/\d+\/DSB\/(\w+)/);
-                    return match && match[2] === camaraTecnica;
-                });
-                const proximoNumero = autosDA.length + 1;
-                const numeroAuto = `AI nº ${String(proximoNumero).padStart(3, '0')}/${ano}/DSB/${camaraTecnica}`;
+             if (variables.status === 'nao_atendida') {
+                 const determinacao = determinacoes.find(d => d.id === variables.determinacaoId);
+                 const autosExistentes = await base44.entities.AutoInfracao.list();
+                 const ano = new Date().getFullYear();
+
+                 // Contar AIs de toda DSB do ano (não por câmara técnica)
+                 const autosDSB = autosExistentes.filter(a => {
+                     if (!a.numero_auto) return false;
+                     const match = a.numero_auto.match(/AI\s*nº\s*(\d+)\/(\d+)\/DSB\/AGEMS/);
+                     return match && parseInt(match[2]) === ano;
+                 });
+                 const proximoNumero = autosDSB.length + 1;
+                 const numeroAuto = `AI nº ${String(proximoNumero).padStart(3, '0')}/${ano}/DSB/AGEMS`;
                 
                 await base44.entities.AutoInfracao.create({
                     determinacao_id: variables.determinacaoId,
