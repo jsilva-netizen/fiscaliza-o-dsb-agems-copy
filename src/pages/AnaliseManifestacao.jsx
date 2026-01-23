@@ -148,14 +148,14 @@ export default function AnaliseManifestacao() {
         const ano = new Date().getFullYear();
         const camaraTecnica = termo.camara_tecnica;
         
-        // Contar AMs já geradas neste ano para esta câmara técnica
-        const todasAsAMs = await base44.entities.TermoNotificacao.list();
-        const amsDoAno = todasAsAMs.filter(t => {
-            if (!t.numero_termo_notificacao) return false;
-            const match = t.numero_termo_notificacao.match(/AM\s*(\d+)\/\d+\/DSB\/(\w+)/);
-            return match && match[2] === camaraTecnica && t.numero_termo_notificacao.includes(`/${ano}/`);
+        // Contar AIs gerados neste ano para esta câmara técnica para determinar número da AM
+        const todosOsAIs = await base44.entities.AutoInfracao.list();
+        const aisDoAno = todosOsAIs.filter(ai => {
+            if (!ai.numero_auto) return false;
+            const match = ai.numero_auto.match(/AI\s*nº\s*(\d+)\/(\d{4})\/DSB\/(\w+)/);
+            return match && parseInt(match[2]) === ano && match[3] === camaraTecnica;
         });
-        const proximoNumeroAM = amsDoAno.length + 1;
+        const proximoNumeroAM = aisDoAno.length + 1;
         const numeroAM = `AM ${String(proximoNumeroAM).padStart(3, '0')}/${ano}/DSB/${camaraTecnica}`;
 
         const doc = new jsPDF('l', 'mm', 'a4');
