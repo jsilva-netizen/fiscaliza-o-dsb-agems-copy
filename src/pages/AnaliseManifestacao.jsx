@@ -603,7 +603,6 @@ export default function AnaliseManifestacao() {
                                 Limpar Filtros
                             </Button>
                         )}
-                        </div>
                         </CardContent>
                         </Card>
 
