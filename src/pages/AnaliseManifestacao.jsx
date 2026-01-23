@@ -1,274 +1,322 @@
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Download } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, FileText, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function AnaliseManifestacao() {
-    const [searchParams] = useSearchParams();
-    const autoId = searchParams.get('auto');
-    const queryClient = useQueryClient();
-    const [parerForm, setParerForm] = useState({
-        analise: '',
-        recomendacao: 'analise_adicional', // aplicar_multa, rejeitar_multa, analise_adicional
-        valor_multa: ''
+    const [filtros, setFiltros] = useState({
+        busca: '',
+        camaraTecnica: '',
+        status: '',
+        dataInicio: '',
+        dataFim: ''
     });
 
-    const { data: auto } = useQuery({
-        queryKey: ['auto', autoId],
-        queryFn: () => base44.entities.AutoInfracao.list().then(as => as.find(a => a.id === autoId)),
-        enabled: !!autoId
+    const { data: termos = [] } = useQuery({
+        queryKey: ['termos-notificacao'],
+        queryFn: () => base44.entities.TermoNotificacao.list()
     });
 
-    const { data: manifestacao } = useQuery({
-        queryKey: ['manifestacao', autoId],
-        queryFn: async () => {
-            const manifestacoes = await base44.entities.ManifestacaoAuto.list();
-            return manifestacoes.find(m => m.auto_id === autoId);
-        },
-        enabled: !!autoId
+    const { data: fiscalizacoes = [] } = useQuery({
+        queryKey: ['fiscalizacoes'],
+        queryFn: () => base44.entities.Fiscalizacao.list()
     });
 
-    const { data: parecer } = useQuery({
-        queryKey: ['parecer', autoId],
-        queryFn: async () => {
-            const pareres = await base44.entities.ParerTecnico.list();
-            return pareres.find(p => p.auto_id === autoId);
-        },
-        enabled: !!autoId
+    const { data: determinacoes = [] } = useQuery({
+        queryKey: ['determinacoes'],
+        queryFn: () => base44.entities.Determinacao.list()
     });
 
-    const { data: determinacao } = useQuery({
-        queryKey: ['determinacao', auto?.determinacao_id],
-        queryFn: () => {
-            if (!auto?.determinacao_id) return null;
-            return base44.entities.Determinacao.list().then(ds => 
-                ds.find(d => d.id === auto.determinacao_id)
-            );
-        },
-        enabled: !!auto
+    const { data: prestadores = [] } = useQuery({
+        queryKey: ['prestadores'],
+        queryFn: () => base44.entities.PrestadorServico.list()
     });
 
-    const salvarPalerMutation = useMutation({
-        mutationFn: async (dados) => {
-            if (parecer) {
-                return base44.entities.ParerTecnico.update(parecer.id, dados);
-            } else {
-                return base44.entities.ParerTecnico.create({
-                    auto_id: autoId,
-                    manifestacao_auto_id: manifestacao?.id,
-                    responsavel_analise: (await base44.auth.me()).email,
-                    ...dados
-                });
-            }
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['parecer'] });
-            alert('Parecer salvo com sucesso!');
-        }
+    const { data: municipios = [] } = useQuery({
+        queryKey: ['municipios'],
+        queryFn: () => base44.entities.Municipio.list()
     });
 
-    const handleSalvarParecer = () => {
-        salvarPalerMutation.mutate({
-            analise_tecnica: parerForm.analise,
-            recomendacao: parerForm.recomendacao,
-            valor_multa_sugerido: parerForm.valor_multa ? parseFloat(parerForm.valor_multa) : null,
-            data_parecer: new Date().toISOString(),
-            status: 'finalizado'
-        });
+    const { data: respostasDeterminacao = [] } = useQuery({
+        queryKey: ['respostas-determinacao'],
+        queryFn: () => base44.entities.RespostaDeterminacao.list()
+    });
+
+    const getPrestadorNome = (id) => {
+        const p = prestadores.find(pres => pres.id === id);
+        return p?.nome || 'N/A';
     };
 
-    if (!autoId) {
-        return (
-            <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-                <Card className="max-w-md">
-                    <CardContent className="p-6 text-center">
-                        <p className="text-gray-600 mb-4">Nenhum auto de infração foi selecionado.</p>
-                        <Link to={createPageUrl('GestaoAutos')}>
-                            <Button>Ir para Gestão de Autos</Button>
-                        </Link>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    }
+    const getMunicipioNome = (id) => {
+        const m = municipios.find(mun => mun.id === id);
+        return m?.nome || 'N/A';
+    };
 
-    if (!auto) return <div className="p-6">Carregando...</div>;
+    const getDeterminacoesPorFiscalizacao = (fiscId) => {
+        return determinacoes.filter(d => d.fiscalizacao_id === fiscId);
+    };
 
-    const diasAteManifestacao = Math.ceil((new Date(auto.data_limite_manifestacao) - new Date()) / (1000 * 60 * 60 * 24));
-    const manifestacaoAtrasada = diasAteManifestacao < 0;
+    const getStatusDeterminacao = (detId) => {
+        const resposta = respostasDeterminacao.find(r => r.determinacao_id === detId);
+        return resposta?.status || 'pendente';
+    };
+
+    const contarStatusDeterminacoes = (fiscId) => {
+        const dets = getDeterminacoesPorFiscalizacao(fiscId);
+        const total = dets.length;
+        const aguardandoAnalise = dets.filter(d => getStatusDeterminacao(d.id) === 'aguardando_analise').length;
+        const atendidas = dets.filter(d => getStatusDeterminacao(d.id) === 'atendida').length;
+        const naoAtendidas = dets.filter(d => getStatusDeterminacao(d.id) === 'nao_atendida').length;
+        return { total, aguardandoAnalise, atendidas, naoAtendidas };
+    };
+
+    // Filtrar termos: apenas aguardando_resposta ou com respostas pendentes de análise
+    const termosFiltrados = termos.filter(termo => {
+        // Status do termo: deve ter resposta registrada (aguardando análise) ou estar aguardando resposta
+        const statusTermo = termo.status;
+        if (statusTermo !== 'aguardando_resposta' && statusTermo !== 'respondido') return false;
+
+        const fisc = fiscalizacoes.find(f => f.id === termo.fiscalizacao_id);
+        if (!fisc || fisc.status !== 'finalizada') return false;
+
+        // Aplicar filtros
+        if (filtros.busca && !termo.numero_termo_notificacao?.toLowerCase().includes(filtros.busca.toLowerCase())) return false;
+        if (filtros.camaraTecnica && termo.camara_tecnica !== filtros.camaraTecnica) return false;
+        if (filtros.dataInicio && new Date(termo.data_geracao) < new Date(filtros.dataInicio)) return false;
+        if (filtros.dataFim && new Date(termo.data_geracao) > new Date(filtros.dataFim)) return false;
+
+        const stats = contarStatusDeterminacoes(fisc.id);
+        if (filtros.status === 'aguardando_analise' && stats.aguardandoAnalise === 0) return false;
+        if (filtros.status === 'analisado' && (stats.atendidas + stats.naoAtendidas) === 0) return false;
+
+        return true;
+    });
+
+    const getStatusBadge = (termo) => {
+        const fisc = fiscalizacoes.find(f => f.id === termo.fiscalizacao_id);
+        if (!fisc) return { label: 'Sem fiscalização', color: 'bg-gray-500' };
+
+        const stats = contarStatusDeterminacoes(fisc.id);
+        
+        if (stats.aguardandoAnalise > 0) {
+            return { label: 'Aguardando Análise', color: 'bg-yellow-600' };
+        } else if (stats.atendidas + stats.naoAtendidas === stats.total) {
+            return { label: 'Análise Concluída', color: 'bg-green-600' };
+        } else {
+            return { label: 'Aguardando Resposta', color: 'bg-blue-600' };
+        }
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="flex items-center gap-2 mb-6">
-                    <Link to={createPageUrl('AcompanhamentoDeterminacoes')}>
-                        <Button variant="ghost" size="icon">
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                    </Link>
-                    <h1 className="text-2xl font-bold">Análise de Manifestação</h1>
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <Link to={createPageUrl('Home')}>
+                            <Button variant="ghost" size="icon">
+                                <ArrowLeft className="h-4 w-4" />
+                            </Button>
+                        </Link>
+                        <h1 className="text-3xl font-bold">Análise de Determinações</h1>
+                    </div>
                 </div>
 
-                {/* Info do Auto */}
-                <Card className="mb-6">
-                    <CardHeader>
-                        <CardTitle>{auto.numero_auto}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-3 gap-4">
-                            <div>
-                                <label className="text-sm font-medium">Data de Geração</label>
-                                <p className="text-gray-600">{new Date(auto.data_geracao).toLocaleDateString('pt-BR')}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Prazo para Manifestação</label>
-                                <p className="text-gray-600">{auto.prazo_manifestacao} dias</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Data Limite</label>
-                                {manifestacaoAtrasada ? (
-                                    <Badge className="bg-red-600">Vencida há {Math.abs(diasAteManifestacao)} dias</Badge>
-                                ) : (
-                                    <Badge className="bg-orange-600">{diasAteManifestacao} dias restantes</Badge>
-                                )}
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium">Motivo da Infração</label>
-                            <p className="text-gray-600">{auto.motivo_infracao}</p>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium">Determinação Relacionada</label>
-                            <p className="text-gray-600">{determinacao?.numero_determinacao}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Manifestação do Prestador */}
-                {manifestacao && (
-                    <Card className="mb-6 border-blue-300 bg-blue-50">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Manifestação do Prestador</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <label className="text-sm font-medium">Data da Manifestação</label>
-                                <p className="text-gray-600">{new Date(manifestacao.data_manifestacao).toLocaleDateString('pt-BR')}</p>
-                                {manifestacao.dentro_prazo ? (
-                                    <Badge className="bg-green-600 mt-2">Dentro do Prazo</Badge>
-                                ) : (
-                                    <Badge className="bg-red-600 mt-2">Fora do Prazo</Badge>
-                                )}
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium">Manifesto</label>
-                                <p className="text-gray-600 mt-2">{manifestacao.descricao_manifestacao}</p>
-                            </div>
-                            {manifestacao.arquivos_anexos?.length > 0 && (
+                {/* Dashboard KPI */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <Card>
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
                                 <div>
-                                    <label className="text-sm font-medium">Anexos</label>
-                                    <div className="mt-2 space-y-1">
-                                        {manifestacao.arquivos_anexos.map((arquivo, idx) => (
-                                            <div key={idx} className="flex items-center gap-2 text-sm">
-                                                <Download className="h-4 w-4" />
-                                                <a href={arquivo.url} target="_blank" rel="noopener noreferrer" className="text-blue-600">
-                                                    {arquivo.nome}
-                                                </a>
-                                            </div>
-                                        ))}
-                                    </div>
+                                    <p className="text-sm text-gray-600">Total TNs</p>
+                                    <p className="text-2xl font-bold">{termosFiltrados.length}</p>
                                 </div>
-                            )}
+                                <FileText className="h-8 w-8 text-blue-600" />
+                            </div>
                         </CardContent>
                     </Card>
-                )}
+                    <Card>
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Aguardando Análise</p>
+                                    <p className="text-2xl font-bold">
+                                        {termosFiltrados.filter(t => {
+                                            const fisc = fiscalizacoes.find(f => f.id === t.fiscalizacao_id);
+                                            if (!fisc) return false;
+                                            const stats = contarStatusDeterminacoes(fisc.id);
+                                            return stats.aguardandoAnalise > 0;
+                                        }).length}
+                                    </p>
+                                </div>
+                                <Clock className="h-8 w-8 text-yellow-600" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Análises Concluídas</p>
+                                    <p className="text-2xl font-bold">
+                                        {termosFiltrados.filter(t => {
+                                            const fisc = fiscalizacoes.find(f => f.id === t.fiscalizacao_id);
+                                            if (!fisc) return false;
+                                            const stats = contarStatusDeterminacoes(fisc.id);
+                                            return stats.atendidas + stats.naoAtendidas === stats.total && stats.total > 0;
+                                        }).length}
+                                    </p>
+                                </div>
+                                <CheckCircle className="h-8 w-8 text-green-600" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600">Autos Gerados</p>
+                                    <p className="text-2xl font-bold">
+                                        {termosFiltrados.reduce((acc, t) => {
+                                            const fisc = fiscalizacoes.find(f => f.id === t.fiscalizacao_id);
+                                            if (!fisc) return acc;
+                                            const stats = contarStatusDeterminacoes(fisc.id);
+                                            return acc + stats.naoAtendidas;
+                                        }, 0)}
+                                    </p>
+                                </div>
+                                <AlertCircle className="h-8 w-8 text-red-600" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                {/* Parecer Técnico */}
+                {/* Filtros */}
                 <Card className="mb-6">
-                    <CardHeader>
-                        <CardTitle>Parecer Técnico</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Análise */}
-                        <div>
-                            <Label>Análise Técnica</Label>
-                            <Textarea
-                                placeholder="Descreva sua análise sobre a manifestação do prestador..."
-                                value={parerForm.analise}
-                                onChange={(e) => setPalerForm({ ...parerForm, analise: e.target.value })}
-                                className="min-h-32"
+                    <CardContent className="p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <Input
+                                placeholder="Buscar TN..."
+                                value={filtros.busca}
+                                onChange={(e) => setFiltros({ ...filtros, busca: e.target.value })}
+                            />
+                            <Select value={filtros.camaraTecnica} onValueChange={(v) => setFiltros({ ...filtros, camaraTecnica: v })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Câmara Técnica" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={null}>Todas</SelectItem>
+                                    <SelectItem value="CATESA">CATESA</SelectItem>
+                                    <SelectItem value="CATERS">CATERS</SelectItem>
+                                    <SelectItem value="CRES">CRES</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select value={filtros.status} onValueChange={(v) => setFiltros({ ...filtros, status: v })}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={null}>Todos</SelectItem>
+                                    <SelectItem value="aguardando_analise">Aguardando Análise</SelectItem>
+                                    <SelectItem value="analisado">Analisado</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Input
+                                type="date"
+                                placeholder="Data Início"
+                                value={filtros.dataInicio}
+                                onChange={(e) => setFiltros({ ...filtros, dataInicio: e.target.value })}
+                            />
+                            <Input
+                                type="date"
+                                placeholder="Data Fim"
+                                value={filtros.dataFim}
+                                onChange={(e) => setFiltros({ ...filtros, dataFim: e.target.value })}
                             />
                         </div>
-
-                        {/* Recomendação */}
-                        <div>
-                            <Label>Recomendação</Label>
-                            <div className="grid grid-cols-3 gap-2 mt-2">
-                                <Button
-                                    variant={parerForm.recomendacao === 'aplicar_multa' ? 'default' : 'outline'}
-                                    onClick={() => setPalerForm({ ...parerForm, recomendacao: 'aplicar_multa' })}
-                                    className={parerForm.recomendacao === 'aplicar_multa' ? 'bg-red-600 hover:bg-red-700' : ''}
-                                >
-                                    Aplicar Multa
-                                </Button>
-                                <Button
-                                    variant={parerForm.recomendacao === 'rejeitar_multa' ? 'default' : 'outline'}
-                                    onClick={() => setPalerForm({ ...parerForm, recomendacao: 'rejeitar_multa' })}
-                                    className={parerForm.recomendacao === 'rejeitar_multa' ? 'bg-green-600 hover:bg-green-700' : ''}
-                                >
-                                    Rejeitar Multa
-                                </Button>
-                                <Button
-                                    variant={parerForm.recomendacao === 'analise_adicional' ? 'default' : 'outline'}
-                                    onClick={() => setPalerForm({ ...parerForm, recomendacao: 'analise_adicional' })}
-                                    className={parerForm.recomendacao === 'analise_adicional' ? 'bg-blue-600 hover:bg-blue-700' : ''}
-                                >
-                                    Análise Adicional
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Valor Multa */}
-                        {parerForm.recomendacao === 'aplicar_multa' && (
-                            <div>
-                                <Label>Valor Multa Sugerido (R$)</Label>
-                                <Input
-                                    type="number"
-                                    placeholder="0,00"
-                                    value={parerForm.valor_multa}
-                                    onChange={(e) => setPalerForm({ ...parerForm, valor_multa: e.target.value })}
-                                />
-                            </div>
-                        )}
-
-                        {/* Ações */}
-                        <div className="flex gap-2 pt-4 border-t">
-                            <Button variant="outline">
-                                Cancelar
-                            </Button>
+                        {(filtros.busca || filtros.camaraTecnica || filtros.status || filtros.dataInicio || filtros.dataFim) && (
                             <Button
-                                onClick={handleSalvarParecer}
-                                disabled={!parerForm.analise}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                variant="outline"
+                                size="sm"
+                                className="mt-2"
+                                onClick={() => setFiltros({ busca: '', camaraTecnica: '', status: '', dataInicio: '', dataFim: '' })}
                             >
-                                Salvar Parecer
+                                Limpar Filtros
                             </Button>
-                            <Button className="bg-purple-600 hover:bg-purple-700">
-                                Enviar para Câmara de Julgamento
-                            </Button>
-                        </div>
+                        )}
                     </CardContent>
                 </Card>
+
+                {/* Lista de TNs */}
+                <div className="space-y-4">
+                    {termosFiltrados.length === 0 ? (
+                        <Card className="p-8">
+                            <div className="text-center text-gray-500">
+                                <FileText className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                                <p>Nenhum TN encontrado para análise</p>
+                            </div>
+                        </Card>
+                    ) : (
+                        termosFiltrados.map(termo => {
+                            const fisc = fiscalizacoes.find(f => f.id === termo.fiscalizacao_id);
+                            const stats = contarStatusDeterminacoes(fisc?.id);
+                            const statusInfo = getStatusBadge(termo);
+
+                            return (
+                                <Card key={termo.id} className="hover:shadow-lg transition-shadow">
+                                    <CardContent className="p-4">
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-lg mb-2">{termo.numero_termo_notificacao || termo.numero_termo}</h3>
+                                                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
+                                                    <div>
+                                                        <span className="font-medium">Município:</span> {getMunicipioNome(termo.municipio_id)}
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-medium">Prestador:</span> {getPrestadorNome(termo.prestador_servico_id)}
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-medium">Câmara:</span> {termo.camara_tecnica}
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-medium">Fiscalização:</span> {fisc?.numero_termo}
+                                                    </div>
+                                                </div>
+                                                <div className="flex gap-2 text-xs">
+                                                    <Badge className="bg-blue-600">Total: {stats.total} determinações</Badge>
+                                                    {stats.aguardandoAnalise > 0 && (
+                                                        <Badge className="bg-yellow-600">{stats.aguardandoAnalise} aguardando análise</Badge>
+                                                    )}
+                                                    {stats.atendidas > 0 && (
+                                                        <Badge className="bg-green-600">{stats.atendidas} atendidas</Badge>
+                                                    )}
+                                                    {stats.naoAtendidas > 0 && (
+                                                        <Badge className="bg-red-600">{stats.naoAtendidas} não atendidas</Badge>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col gap-2 items-end">
+                                                <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
+                                                <Link to={createPageUrl('AnalisarResposta') + `?termo=${termo.id}`}>
+                                                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                                        Analisar Determinações
+                                                    </Button>
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            );
+                        })
+                    )}
+                </div>
             </div>
         </div>
     );
