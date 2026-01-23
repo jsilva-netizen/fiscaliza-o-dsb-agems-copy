@@ -28,6 +28,8 @@ export default function AnaliseManifestacao() {
         dataInicio: '',
         dataFim: ''
     });
+    const [termoExcluindo, setTermoExcluindo] = useState(null);
+    const [confirmarExclusao, setConfirmarExclusao] = useState(false);
 
     const { data: termos = [], refetch: refetchTermos } = useQuery({
         queryKey: ['termos-notificacao'],
