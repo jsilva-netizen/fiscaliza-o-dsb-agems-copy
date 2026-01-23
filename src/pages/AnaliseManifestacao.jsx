@@ -508,14 +508,26 @@ export default function AnaliseManifestacao() {
                                                     </Link>
                                                 )}
                                                 {stats.total > 0 && todasDeterminacoesAnalisadas(termo) && (
-                                                    <Button 
-                                                        size="sm" 
-                                                        className="bg-green-600 hover:bg-green-700"
-                                                        onClick={() => gerarAnaliseManifestacao(termo)}
-                                                    >
-                                                        <Download className="h-4 w-4 mr-1" />
-                                                        Gerar Análise
-                                                    </Button>
+                                                    <div className="flex gap-2">
+                                                        <Button 
+                                                            size="sm" 
+                                                            className="bg-green-600 hover:bg-green-700"
+                                                            onClick={() => gerarAnaliseManifestacao(termo)}
+                                                        >
+                                                            <Download className="h-4 w-4 mr-1" />
+                                                            Gerar Análise
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="destructive"
+                                                            onClick={() => {
+                                                                setTermoExcluindo(termo);
+                                                                setConfirmarExclusao(false);
+                                                            }}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
