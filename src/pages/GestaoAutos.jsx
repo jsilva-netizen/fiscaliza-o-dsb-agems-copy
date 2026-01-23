@@ -39,8 +39,18 @@ export default function GestaoAutos() {
     });
 
     const { data: prestadores = [] } = useQuery({
-        queryKey: ['prestadores'],
-        queryFn: () => base44.entities.PrestadorServico.list()
+       queryKey: ['prestadores'],
+       queryFn: () => base44.entities.PrestadorServico.list()
+    });
+
+    const { data: fiscalizacoes = [] } = useQuery({
+       queryKey: ['fiscalizacoes'],
+       queryFn: () => base44.entities.Fiscalizacao.list()
+    });
+
+    const { data: municipios = [] } = useQuery({
+       queryKey: ['municipios'],
+       queryFn: () => base44.entities.Municipio.list()
     });
 
     const criarAutoMutation = useMutation({
@@ -100,6 +110,13 @@ export default function GestaoAutos() {
     const getPrestadorNome = (id) => {
         const p = prestadores.find(pres => pres.id === id);
         return p?.nome || 'N/A';
+    };
+
+    const getMunicipioNome = (autoId) => {
+        const auto = autos.find(a => a.id === autoId);
+        const fisc = fiscalizacoes.find(f => f.id === auto?.fiscalizacao_id);
+        const mun = municipios.find(m => m.id === fisc?.municipio_id);
+        return mun?.nome || 'N/A';
     };
 
     const getStatusBadge = (status) => {
@@ -218,11 +235,13 @@ export default function GestaoAutos() {
                         {autosPorStatus.gerados.map(auto => (
                             <Card key={auto.id}>
                                 <CardContent className="p-4">
-                                    <div className="flex justify-between items-start">
+                                    <div className="flex justify-between items-start mb-4">
                                         <div className="flex-1">
                                             <h3 className="font-semibold">{auto.numero_auto}</h3>
                                             <p className="text-xs text-gray-500 mt-1">Prestador: {getPrestadorNome(auto.prestador_servico_id)}</p>
-                                            <p className="text-xs text-gray-500">{auto.motivo_infracao}</p>
+                                            <p className="text-xs text-gray-500">Município: {getMunicipioNome(auto.id)}</p>
+                                            <p className="text-xs text-gray-500">Processo: {auto.numero_processo || 'N/A'}</p>
+                                            <p className="text-xs text-gray-500 mt-2">{auto.motivo_infracao}</p>
                                         </div>
                                         <div className="flex gap-2">
                                             <input
@@ -247,6 +266,16 @@ export default function GestaoAutos() {
                                             >
                                                 Enviar
                                             </Button>
+                                        </div>
+                                    </div>
+                                    <div className="border-t pt-4 grid grid-cols-2 gap-4">
+                                        <div>
+                                            <Label>Pena Base (UFERMS)</Label>
+                                            <Input type="number" placeholder="0" className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Pena Base (R$)</Label>
+                                            <Input type="text" placeholder="R$ 0,00" className="mt-1" />
                                         </div>
                                     </div>
                                 </CardContent>
