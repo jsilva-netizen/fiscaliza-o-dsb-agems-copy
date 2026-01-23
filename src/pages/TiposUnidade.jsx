@@ -58,7 +58,7 @@ export default function TiposUnidade() {
     });
 
     const resetForm = () => {
-        setFormData({ nome: '', descricao: '', servicos_aplicaveis: [], ativo: true });
+        setFormData({ nome: '', tipo_unidade_codigo: '', servicos_aplicaveis: [], ativo: true });
         setEditing(null);
         setShowForm(false);
     };
