@@ -1165,36 +1165,43 @@ export default function GerenciarTermos() {
                                                                               <DialogTitle>Data de Protocolo / AR</DialogTitle>
                                                                           </DialogHeader>
                                                                           <div className="space-y-3">
-                                                                              <Label>Data de Protocolo *</Label>
-                                                                              <Input
-                                                                                  type="date"
-                                                                                  id={`data-proto-${termo.id}`}
-                                                                              />
-                                                                              <Label>Arquivo de Protocolo / AR (PDF)</Label>
-                                                                              <Input
-                                                                                  type="file"
-                                                                                  accept=".pdf"
-                                                                                  id={`file-proto-${termo.id}`}
-                                                                                  onChange={async (e) => {
-                                                                                      const file = e.target.files?.[0];
-                                                                                      if (file) {
-                                                                                          setUploadingProtocolo(true);
-                                                                                          try {
-                                                                                              const { file_url } = await base44.integrations.Core.UploadFile({ file });
-                                                                                              setProtocoloTemp(file_url);
-                                                                                          } catch (error) {
-                                                                                              alert('Erro ao enviar arquivo');
-                                                                                          } finally {
-                                                                                              setUploadingProtocolo(false);
-                                                                                          }
-                                                                                      }
-                                                                                  }}
-                                                                                  disabled={uploadingProtocolo}
-                                                                              />
-                                                                              {uploadingProtocolo && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
-                                                                              {protocoNoTemp && !uploadingProtocolo && (
-                                                                                  <p className="text-xs text-green-600 mt-1">✓ Arquivo carregado. Clique em "Salvar" para confirmar.</p>
-                                                                              )}
+                                                                             <Label>Data de Protocolo *</Label>
+                                                                             <Input
+                                                                                 type="date"
+                                                                                 id={`data-proto-${termo.id}`}
+                                                                             />
+                                                                             <Label>Arquivo de Protocolo / AR (PDF)</Label>
+                                                                             <Input
+                                                                                 type="file"
+                                                                                 accept=".pdf"
+                                                                                 id={`file-proto-${termo.id}`}
+                                                                                 onChange={async (e) => {
+                                                                                     const file = e.target.files?.[0];
+                                                                                     if (file) {
+                                                                                         setUploadingProtocolo(true);
+                                                                                         try {
+                                                                                             const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                                                                                             setProtocoloTemp(file_url);
+                                                                                         } catch (error) {
+                                                                                             alert('Erro ao enviar arquivo');
+                                                                                         } finally {
+                                                                                             setUploadingProtocolo(false);
+                                                                                         }
+                                                                                     }
+                                                                                 }}
+                                                                                 disabled={uploadingProtocolo}
+                                                                             />
+                                                                             <Label>Ofício que Acompanha o Protocolo (PDF)</Label>
+                                                                             <Input
+                                                                                 type="file"
+                                                                                 accept=".pdf"
+                                                                                 id={`file-oficio-proto-${termo.id}`}
+                                                                                 disabled={uploadingProtocolo}
+                                                                             />
+                                                                             {uploadingProtocolo && <p className="text-xs text-gray-500 mt-1">Enviando arquivo...</p>}
+                                                                             {protocoNoTemp && !uploadingProtocolo && (
+                                                                                 <p className="text-xs text-green-600 mt-1">✓ Arquivo carregado. Clique em "Salvar" para confirmar.</p>
+                                                                             )}
                                                                               <Button
                                                                                   onClick={async () => {
                                                                                       const dataInput = document.getElementById(`data-proto-${termo.id}`);
@@ -1207,6 +1214,15 @@ export default function GerenciarTermos() {
 
                                                                                       try {
                                                                                           setUploadingProtocoloData(true);
+                                                                                          
+                                                                                          // Upload do ofício se houver
+                                                                                          let oficioUrl = null;
+                                                                                          const oficioFile = document.getElementById(`file-oficio-proto-${termo.id}`)?.files?.[0];
+                                                                                          if (oficioFile) {
+                                                                                              const { file_url } = await base44.integrations.Core.UploadFile({ file: oficioFile });
+                                                                                              oficioUrl = file_url;
+                                                                                          }
+                                                                                          
                                                                                           const dprot = new Date(data + 'T00:00:00');
                                                                                           const prazo = termo.prazo_resposta_dias || 30;
                                                                                           const dmax = new Date(dprot);
@@ -1215,17 +1231,24 @@ export default function GerenciarTermos() {
 
                                                                                           const archivoParaSalvar = protocoNoTemp || termo.arquivo_protocolo_url;
 
-                                                                                          await base44.entities.TermoNotificacao.update(termo.id, {
+                                                                                          const updateData = {
                                                                                               data_protocolo: data,
                                                                                               data_maxima_resposta: dmax_str,
                                                                                               arquivo_protocolo_url: archivoParaSalvar
-                                                                                          });
+                                                                                          };
+                                                                                          
+                                                                                          if (oficioUrl) {
+                                                                                              updateData.arquivo_oficio_protocolo = oficioUrl;
+                                                                                          }
+
+                                                                                          await base44.entities.TermoNotificacao.update(termo.id, updateData);
 
                                                                                           await queryClient.invalidateQueries({ queryKey: ['termos-notificacao'] });
                                                                                           setDataProtocoloOpen(false);
                                                                                           setProtocoloTemp(null);
                                                                                           document.getElementById(`file-proto-${termo.id}`).value = '';
-                                                                                          alert('Data de protocolo e arquivo salvos!');
+                                                                                          document.getElementById(`file-oficio-proto-${termo.id}`).value = '';
+                                                                                          alert('Data de protocolo e arquivos salvos!');
                                                                                       } catch (error) {
                                                                                           alert('Erro: ' + error.message);
                                                                                       } finally {
