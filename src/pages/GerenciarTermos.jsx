@@ -932,7 +932,7 @@ export default function GerenciarTermos() {
                                                               {termo.arquivo_url && termo.data_protocolo && !termo.data_recebimento_resposta && (
                                                               <Dialog open={respostaOpenId === termo.id} onOpenChange={(open) => setRespostaOpenId(open ? termo.id : null)}>
                                                               <DialogTrigger asChild>
-                                                              <Button size="sm" variant={verificaPrazoVencido(termo) ? "destructive" : "outline"}>
+                                                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
                                                               {verificaPrazoVencido(termo) ? '⚠ Resposta Atrasada' : 'Registrar Resposta'}
                                                               </Button>
                                                               </DialogTrigger>
