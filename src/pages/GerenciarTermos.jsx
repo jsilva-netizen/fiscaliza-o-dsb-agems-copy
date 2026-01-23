@@ -372,12 +372,8 @@ export default function GerenciarTermos() {
                                     <Label>Número do RFP *</Label>
                                     <Input
                                         value={termoForm.numero_rfp}
-                                        onChange={(e) => {
-                                            const valor = e.target.value.replace(/\D/g, '').slice(0, 3);
-                                            setTermoForm({ ...termoForm, numero_rfp: valor });
-                                        }}
-                                        placeholder="001"
-                                        maxLength={3}
+                                        disabled
+                                        placeholder="Gerado automaticamente"
                                     />
                                     {termoForm.numero_rfp && termoForm.camara_tecnica && (
                                         <p className="text-xs text-gray-500 mt-1">
