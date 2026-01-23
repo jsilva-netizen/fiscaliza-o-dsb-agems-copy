@@ -59,8 +59,9 @@ export default function AnaliseManifestacao() {
         return m?.nome || 'N/A';
     };
 
-    const getDeterminacoesPorFiscalizacao = (fiscId) => {
-        return determinacoes.filter(d => d.fiscalizacao_id === fiscId);
+    const getDeterminacoesPorTermo = (termo) => {
+        if (!termo.fiscalizacao_id) return [];
+        return determinacoes.filter(d => d.fiscalizacao_id === termo.fiscalizacao_id);
     };
 
     const getStatusDeterminacao = (detId) => {
@@ -68,8 +69,8 @@ export default function AnaliseManifestacao() {
         return resposta?.status || 'pendente';
     };
 
-    const contarStatusDeterminacoes = (fiscId) => {
-        const dets = getDeterminacoesPorFiscalizacao(fiscId);
+    const contarStatusDeterminacoes = (termo) => {
+        const dets = getDeterminacoesPorTermo(termo);
         const total = dets.length;
         const aguardandoAnalise = dets.filter(d => getStatusDeterminacao(d.id) === 'aguardando_analise').length;
         const atendidas = dets.filter(d => getStatusDeterminacao(d.id) === 'atendida').length;
@@ -92,7 +93,7 @@ export default function AnaliseManifestacao() {
         if (filtros.dataInicio && new Date(termo.data_geracao) < new Date(filtros.dataInicio)) return false;
         if (filtros.dataFim && new Date(termo.data_geracao) > new Date(filtros.dataFim)) return false;
 
-        const stats = contarStatusDeterminacoes(fisc.id);
+        const stats = contarStatusDeterminacoes(termo);
         if (filtros.status === 'aguardando_analise' && stats.aguardandoAnalise === 0) return false;
         if (filtros.status === 'analisado' && (stats.atendidas + stats.naoAtendidas) === 0) return false;
 
@@ -100,10 +101,9 @@ export default function AnaliseManifestacao() {
     });
 
     const getStatusBadge = (termo) => {
-        const fisc = fiscalizacoes.find(f => f.id === termo.fiscalizacao_id);
-        if (!fisc) return { label: 'Sem fiscalização', color: 'bg-gray-500' };
-
-        const stats = contarStatusDeterminacoes(fisc.id);
+        const stats = contarStatusDeterminacoes(termo);
+        
+        if (stats.total === 0) return { label: 'Sem determinações', color: 'bg-gray-500' };
         
         if (stats.aguardandoAnalise > 0) {
             return { label: 'Aguardando Análise', color: 'bg-yellow-600' };
@@ -125,7 +125,7 @@ export default function AnaliseManifestacao() {
                                 <ArrowLeft className="h-4 w-4" />
                             </Button>
                         </Link>
-                        <h1 className="text-3xl font-bold">Análise de Determinações</h1>
+                        <h1 className="text-3xl font-bold">Análise da Manifestação</h1>
                     </div>
                 </div>
 
@@ -149,9 +149,7 @@ export default function AnaliseManifestacao() {
                                     <p className="text-sm text-gray-600">Aguardando Análise</p>
                                     <p className="text-2xl font-bold">
                                         {termosFiltrados.filter(t => {
-                                            const fisc = fiscalizacoes.find(f => f.id === t.fiscalizacao_id);
-                                            if (!fisc) return false;
-                                            const stats = contarStatusDeterminacoes(fisc.id);
+                                            const stats = contarStatusDeterminacoes(t);
                                             return stats.aguardandoAnalise > 0;
                                         }).length}
                                     </p>
@@ -167,9 +165,7 @@ export default function AnaliseManifestacao() {
                                     <p className="text-sm text-gray-600">Análises Concluídas</p>
                                     <p className="text-2xl font-bold">
                                         {termosFiltrados.filter(t => {
-                                            const fisc = fiscalizacoes.find(f => f.id === t.fiscalizacao_id);
-                                            if (!fisc) return false;
-                                            const stats = contarStatusDeterminacoes(fisc.id);
+                                            const stats = contarStatusDeterminacoes(t);
                                             return stats.atendidas + stats.naoAtendidas === stats.total && stats.total > 0;
                                         }).length}
                                     </p>
@@ -185,9 +181,7 @@ export default function AnaliseManifestacao() {
                                     <p className="text-sm text-gray-600">Autos Gerados</p>
                                     <p className="text-2xl font-bold">
                                         {termosFiltrados.reduce((acc, t) => {
-                                            const fisc = fiscalizacoes.find(f => f.id === t.fiscalizacao_id);
-                                            if (!fisc) return acc;
-                                            const stats = contarStatusDeterminacoes(fisc.id);
+                                            const stats = contarStatusDeterminacoes(t);
                                             return acc + stats.naoAtendidas;
                                         }, 0)}
                                     </p>
@@ -266,7 +260,7 @@ export default function AnaliseManifestacao() {
                     ) : (
                         termosFiltrados.map(termo => {
                             const fisc = fiscalizacoes.find(f => f.id === termo.fiscalizacao_id);
-                            const stats = contarStatusDeterminacoes(fisc?.id);
+                            const stats = contarStatusDeterminacoes(termo);
                             const statusInfo = getStatusBadge(termo);
 
                             return (
@@ -286,7 +280,10 @@ export default function AnaliseManifestacao() {
                                                         <span className="font-medium">Câmara:</span> {termo.camara_tecnica}
                                                     </div>
                                                     <div>
-                                                        <span className="font-medium">Fiscalização:</span> {fisc?.numero_termo}
+                                                        <span className="font-medium">Processo:</span> {termo.numero_processo || 'N/A'}
+                                                    </div>
+                                                    <div className="col-span-2">
+                                                        <span className="font-medium">Serviços:</span> {fisc?.servicos?.join(', ') || 'N/A'}
                                                     </div>
                                                 </div>
                                                 <div className="flex gap-2 text-xs">
