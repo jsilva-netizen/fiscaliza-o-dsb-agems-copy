@@ -20,7 +20,7 @@ export default function AnaliseManifestacao() {
         dataFim: ''
     });
 
-    const { data: termos = [] } = useQuery({
+    const { data: termos = [], refetch: refetchTermos } = useQuery({
         queryKey: ['termos-notificacao'],
         queryFn: () => base44.entities.TermoNotificacao.list()
     });
