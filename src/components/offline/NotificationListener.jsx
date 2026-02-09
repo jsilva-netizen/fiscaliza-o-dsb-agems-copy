@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { NotificationService } from './NotificationService.js';
-import { SyncService } from './SyncService';
+import { NotificationService } from '@/components/offline/NotificationService.js';
+import { SyncService } from '@/components/offline/SyncService';
 
 /**
  * Componente que escuta mensagens do Service Worker
