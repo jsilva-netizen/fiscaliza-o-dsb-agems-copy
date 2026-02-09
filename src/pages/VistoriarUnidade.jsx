@@ -188,9 +188,6 @@ export default function VistoriarUnidade() {
                     setContadoresCarregados(true);
                 }
 
-                // Usar contadores para numeração contínua
-                const numero = gerarNumeroConstatacao(contadoresAtuais);
-
                 // Definir texto da constatação baseado na resposta
                 let textoConstatacao = data.resposta === 'SIM' 
                     ? item.texto_constatacao_sim 
@@ -202,6 +199,11 @@ export default function VistoriarUnidade() {
                 if (textoConstatacao && !textoConstatacao.trim().endsWith(';')) {
                     textoConstatacao = textoConstatacao.trim() + ';';
                 }
+
+                // Só gerar número de constatação para SIM ou NÃO (não para N/A)
+                const numero = (data.resposta === 'SIM' || data.resposta === 'NAO') 
+                    ? gerarNumeroConstatacao(contadoresAtuais) 
+                    : null;
 
                 if (item.gera_nc && data.resposta === 'NAO') {
                     // Gerar números ANTES de chamar a função (importante para ordem correta)
