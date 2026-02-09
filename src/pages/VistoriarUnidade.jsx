@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
-import { DataService } from '@/functions/dataService';
+import DataService from '@/functions/dataService';
+import OfflineSyncButton from '@/components/offline/OfflineSyncButton';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,6 @@ export default function VistoriarUnidade() {
     const [constatacaoParaEditar, setConstatacaoParaEditar] = useState(null);
     const [showConfirmaExclusao, setShowConfirmaExclusao] = useState(false);
     const [constatacaoParaExcluir, setConstatacaoParaExcluir] = useState(null);
-    const [isSavingResposta, setIsSavingResposta] = useState(false);
 
     // Queries - Carregamento offline-first
     const { data: unidade, isLoading: loadingUnidade } = useQuery({
@@ -148,20 +148,19 @@ export default function VistoriarUnidade() {
         }
     }, [respostasExistentes.length]);
 
-    // Salvar resposta instantaneamente (offline-first)
+    // Salvar resposta instantaneamente (offline-first) - SEM spinner bloqueante
     const handleSalvarResposta = async (itemId, data) => {
         try {
             if (fiscalizacao?.status === 'finalizada' && !modoEdicao) {
                 alert('Não é possível modificar uma fiscalização finalizada');
                 return;
             }
-            
-            setIsSavingResposta(true);
+
             const item = itensChecklist.find(i => i.id === itemId);
             if (!item) return;
 
             const resposta = respostasExistentes.find(r => r.item_checklist_id === itemId);
-            
+
             if (resposta?.id) {
                 // Atualizar resposta existente
                 let textoConstatacao = data.resposta === 'SIM' 
@@ -169,7 +168,7 @@ export default function VistoriarUnidade() {
                     : data.resposta === 'NAO' 
                         ? item.texto_constatacao_nao 
                         : null;
-                
+
                 if (!textoConstatacao || !textoConstatacao.trim()) {
                     textoConstatacao = null;
                 } else if (!textoConstatacao.trim().endsWith(';')) {
@@ -180,7 +179,7 @@ export default function VistoriarUnidade() {
                    resposta: data.resposta,
                    observacao: data.observacao || '',
                    pergunta: textoConstatacao || ''
-                });
+                 });
             } else {
                 // Nova resposta
                 const proximaNumeracao = await DataService.calcularProximaNumeracao(unidadeId);
@@ -190,9 +189,9 @@ export default function VistoriarUnidade() {
                     : data.resposta === 'NAO' 
                         ? item.texto_constatacao_nao 
                         : null;
-                
+
                 const temTextoConstatacao = textoConstatacao && textoConstatacao.trim();
-                
+
                 if (temTextoConstatacao && !textoConstatacao.trim().endsWith(';')) {
                     textoConstatacao = textoConstatacao.trim() + ';';
                 } else if (!temTextoConstatacao) {
@@ -228,7 +227,7 @@ export default function VistoriarUnidade() {
                     });
                 }
             }
-            
+
             // Update UI locally
             setRespostas(prev => ({
                 ...prev,
@@ -237,8 +236,6 @@ export default function VistoriarUnidade() {
         } catch (error) {
             console.error('Erro ao salvar resposta:', error);
             alert('Erro ao salvar resposta: ' + error.message);
-        } finally {
-            setIsSavingResposta(false);
         }
     };
 
@@ -328,18 +325,21 @@ export default function VistoriarUnidade() {
             {/* Header */}
             <div className="bg-blue-900 text-white sticky top-0 z-40">
                 <div className="max-w-4xl mx-auto px-4 py-3">
-                    <div className="flex items-center gap-3">
-                        <Link to={createPageUrl('ExecutarFiscalizacao') + `?id=${unidade?.fiscalizacao_id}`}>
-                            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                                <ArrowLeft className="h-5 w-5" />
-                            </Button>
-                        </Link>
-                        <div className="flex-1">
-                            <h1 className="font-bold">{unidade?.tipo_unidade_nome}</h1>
-                            {unidade?.nome_unidade && (
-                                <p className="text-blue-200 text-sm">{unidade.nome_unidade}</p>
-                            )}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <Link to={createPageUrl('ExecutarFiscalizacao') + `?id=${unidade?.fiscalizacao_id}`}>
+                                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                                    <ArrowLeft className="h-5 w-5" />
+                                </Button>
+                            </Link>
+                            <div className="flex-1">
+                                <h1 className="font-bold">{unidade?.tipo_unidade_nome}</h1>
+                                {unidade?.nome_unidade && (
+                                    <p className="text-blue-200 text-sm">{unidade.nome_unidade}</p>
+                                )}
+                            </div>
                         </div>
+                        <OfflineSyncButton />
                     </div>
                     
                     {/* Progress */}
@@ -453,7 +453,7 @@ export default function VistoriarUnidade() {
                             itensChecklist.map((item, index) => {
                                 const itemAnterior = index > 0 ? itensChecklist[index - 1] : null;
                                 const itemAnteriorRespondido = !itemAnterior || respostas[itemAnterior.id]?.resposta;
-                                const liberado = itemAnteriorRespondido && !isSavingResposta;
+                                const liberado = itemAnteriorRespondido;
                                 
                                 return (
                                     <ChecklistItem
@@ -462,7 +462,7 @@ export default function VistoriarUnidade() {
                                         resposta={respostas[item.id]}
                                         onResponder={(data) => handleResponder(item.id, data)}
                                         numero={index + 1}
-                                        desabilitado={(unidade?.status === 'finalizada' && !modoEdicao) || !liberado || isSavingResposta}
+                                        desabilitado={(unidade?.status === 'finalizada' && !modoEdicao) || !liberado}
                                     />
                                 );
                             })
