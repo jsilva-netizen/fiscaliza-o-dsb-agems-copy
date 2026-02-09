@@ -49,7 +49,7 @@ export default function TesteOffline() {
                 longitude: -54.6201
             };
             
-            await db.municipios.add(testData);
+            await db.table('municipios').add(testData);
             
             setResult({
                 success: true,
@@ -72,7 +72,7 @@ export default function TesteOffline() {
             
             if (!db.isOpen()) await db.open();
             
-            const data = await db.municipios.toArray();
+            const data = await db.table('municipios').toArray();
             
             setResult({
                 count: data.length,
@@ -117,8 +117,8 @@ export default function TesteOffline() {
             
             if (!db.isOpen()) await db.open();
             
-            const count = await db.municipios.count();
-            await db.municipios.clear();
+            const count = await db.table('municipios').count();
+            await db.table('municipios').clear();
             
             setResult({
                 success: true,
