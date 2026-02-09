@@ -212,12 +212,17 @@ export default function VistoriarUnidade() {
                         tipo_unidade_id: unidade.tipo_unidade_id
                     }, 'ordem', 100);
 
-                    // 3. Deletar TODAS as NCs, Determinações e Recomendações existentes desta unidade
-                    const ncsExistentes = await base44.entities.NaoConformidade.filter({
+                    // 3. Deletar APENAS as NCs, Determinações e Recomendações do CHECKLIST (não manuais)
+                    // Buscar respostas antigas para saber quais NCs foram geradas pelo checklist
+                    const ncsGeradasPorChecklist = await base44.entities.NaoConformidade.filter({
                         unidade_fiscalizada_id: unidadeId
                     });
-                    
-                    for (const nc of ncsExistentes) {
+
+                    // Filtrar apenas as NCs que foram geradas por respostas do checklist (associadas a resposta_checklist_id)
+                    const ncsDoChecklist = ncsGeradasPorChecklist.filter(nc => nc.resposta_checklist_id);
+
+                    // Deletar apenas NCs do checklist e suas determinações
+                    for (const nc of ncsDoChecklist) {
                         const dets = await base44.entities.Determinacao.filter({
                             nao_conformidade_id: nc.id
                         });
@@ -227,7 +232,7 @@ export default function VistoriarUnidade() {
                         await base44.entities.NaoConformidade.delete(nc.id);
                     }
 
-                    // Deletar todas as Recomendações do checklist (origem: checklist)
+                    // Deletar apenas as Recomendações do checklist (origem: checklist)
                     const recsExistentes = await base44.entities.Recomendacao.filter({
                         unidade_fiscalizada_id: unidadeId,
                         origem: 'checklist'
