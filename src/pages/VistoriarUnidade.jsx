@@ -206,7 +206,7 @@ export default function VistoriarUnidade() {
                         tipo_unidade_id: unidade.tipo_unidade_id
                     }, 'ordem', 100);
 
-                    // 3. Deletar TODAS as NCs e Determinações existentes desta unidade
+                    // 3. Deletar TODAS as NCs, Determinações e Recomendações existentes desta unidade
                     const ncsExistentes = await base44.entities.NaoConformidade.filter({
                         unidade_fiscalizada_id: unidadeId
                     });
@@ -221,10 +221,20 @@ export default function VistoriarUnidade() {
                         await base44.entities.NaoConformidade.delete(nc.id);
                     }
 
-                    // 4. Renumerar constatações e recriar NCs/Ds
+                    // Deletar todas as Recomendações do checklist (origem: checklist)
+                    const recsExistentes = await base44.entities.Recomendacao.filter({
+                        unidade_fiscalizada_id: unidadeId,
+                        origem: 'checklist'
+                    });
+                    for (const rec of recsExistentes) {
+                        await base44.entities.Recomendacao.delete(rec.id);
+                    }
+
+                    // 4. Renumerar constatações e recriar NCs/Ds/Rs
                     let contadorC = 1;
                     let contadorNC = 1;
                     let contadorD = 1;
+                    let contadorR = 1;
 
                     for (const resp of todasRespostas) {
                         const itemResp = todosItens.find(it => it.id === resp.item_checklist_id);
@@ -242,6 +252,7 @@ export default function VistoriarUnidade() {
                             if (itemResp?.gera_nc && resp.resposta === 'NAO') {
                                 const numeroNC = `NC${contadorNC}`;
                                 const numeroDet = `D${contadorD}`;
+                                const numeroRec = `R${contadorR}`;
 
                                 // Criar NC
                                 const nc = await base44.entities.NaoConformidade.create({
@@ -264,6 +275,17 @@ export default function VistoriarUnidade() {
                                     status: 'pendente'
                                 });
 
+                                // Criar Recomendação se houver texto
+                                if (itemResp.texto_recomendacao) {
+                                    await base44.entities.Recomendacao.create({
+                                        unidade_fiscalizada_id: unidadeId,
+                                        numero_recomendacao: numeroRec,
+                                        descricao: itemResp.texto_recomendacao,
+                                        origem: 'checklist'
+                                    });
+                                    contadorR++;
+                                }
+
                                 contadorNC++;
                                 contadorD++;
                             }
@@ -272,12 +294,25 @@ export default function VistoriarUnidade() {
                         }
                     }
 
+                    // Renumerar recomendações manuais (se existirem)
+                    const recsManuais = await base44.entities.Recomendacao.filter({
+                        unidade_fiscalizada_id: unidadeId,
+                        origem: 'manual'
+                    }, 'created_date', 100);
+                    
+                    for (const recManual of recsManuais) {
+                        await base44.entities.Recomendacao.update(recManual.id, {
+                            numero_recomendacao: `R${contadorR}`
+                        });
+                        contadorR++;
+                    }
+
                     // Atualizar contadores locais
                     setContadores({
                         C: contadorC,
                         NC: contadorNC,
                         D: contadorD,
-                        R: 1
+                        R: contadorR
                     });
                 }
             } else {
