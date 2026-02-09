@@ -76,28 +76,34 @@ export default function NovaFiscalizacao() {
         getLocation();
     }, []);
 
-    const createMutation = useMutation({
-        mutationFn: async (data) => {
-            const municipio = municipios.find(m => m.id === data.municipio_id);
-            const prestador = prestadores.find(p => p.id === data.prestador_servico_id);
-            const fiscalizacaoData = {
-                ...data,
-                municipio_nome: municipio?.nome,
-                prestador_servico_nome: prestador?.nome,
-                fiscal_nome: user?.full_name || 'Fiscal',
-                fiscal_email: user?.email,
-                data_inicio: new Date().toISOString(),
-                latitude_inicio: location?.lat,
-                longitude_inicio: location?.lng,
-                status: 'em_andamento'
-            };
+    const [isCreating, setIsCreating] = useState(false);
 
-            return DataService.create('Fiscalizacao', fiscalizacaoData);
-        },
-        onSuccess: (result) => {
+    const handleCreateFiscalizacao = async (data) => {
+        const municipio = municipios.find(m => m.id === data.municipio_id);
+        const prestador = prestadores.find(p => p.id === data.prestador_servico_id);
+        const fiscalizacaoData = {
+            ...data,
+            municipio_nome: municipio?.nome,
+            prestador_servico_nome: prestador?.nome,
+            fiscal_nome: user?.full_name || 'Fiscal',
+            fiscal_email: user?.email,
+            data_inicio: new Date().toISOString(),
+            latitude_inicio: location?.lat,
+            longitude_inicio: location?.lng,
+            status: 'em_andamento'
+        };
+
+        setIsCreating(true);
+        try {
+            const result = await DataService.create('Fiscalizacao', fiscalizacaoData);
+            // Otimistic UI: redireciona imediatamente
             navigate(`/ExecutarFiscalizacao?id=${result.id}`);
+        } catch (error) {
+            console.error('Erro ao criar fiscalização:', error);
+            alert('Erro ao criar fiscalização: ' + error.message);
+            setIsCreating(false);
         }
-    });
+    };
 
     const toggleServico = (servico) => {
         setFormData(prev => ({
