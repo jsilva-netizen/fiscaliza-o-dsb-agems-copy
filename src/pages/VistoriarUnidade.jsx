@@ -22,7 +22,6 @@ import EditarNCModal from '@/components/fiscalizacao/EditarNCModal';
 import { calcularProximaNumeracao, gerarNumeroConstatacao, gerarNumeroNC, gerarNumeroDeterminacao, gerarNumeroRecomendacao } from '@/components/utils/numerationHelper';
 
 export default function VistoriarUnidade() {
-    const queryClient = useQueryClient();
     const navigate = useNavigate();
     const urlParams = new URLSearchParams(window.location.search);
     const unidadeId = urlParams.get('id');
