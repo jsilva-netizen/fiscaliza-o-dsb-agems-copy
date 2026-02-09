@@ -95,7 +95,7 @@ export default function NovaFiscalizacao() {
             return DataService.create('Fiscalizacao', fiscalizacaoData);
         },
         onSuccess: (result) => {
-            navigate(createPageUrl('ExecutarFiscalizacao') + `?id=${result.id}`);
+            navigate(`/ExecutarFiscalizacao?id=${result.id}`);
         }
     });
 
