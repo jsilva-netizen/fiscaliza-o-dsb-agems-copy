@@ -1,4 +1,7 @@
 import React from 'react';
+import OfflineStatusBar from '@/components/offline/OfflineStatusBar';
+import PushNotificationInitializer from '@/components/offline/PushNotificationInitializer';
+import NotificationListener from '@/components/offline/NotificationListener';
 
 export default function Layout({ children, currentPageName }) {
     // Páginas que não precisam de layout (fullscreen)
@@ -16,12 +19,24 @@ export default function Layout({ children, currentPageName }) {
     ];
 
     if (fullscreenPages.includes(currentPageName)) {
-        return <>{children}</>;
+        return (
+            <>
+                <PushNotificationInitializer />
+                <NotificationListener />
+                <OfflineStatusBar />
+                {children}
+            </>
+        );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {children}
-        </div>
+        <>
+            <PushNotificationInitializer />
+            <NotificationListener />
+            <OfflineStatusBar />
+            <div className="min-h-screen bg-gray-50">
+                {children}
+            </div>
+        </>
     );
 }
