@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { 
     ArrowLeft, ClipboardCheck, Camera, AlertTriangle, FileText, 
-    CheckCircle2, Loader2, Plus, Save, AlertCircle
+    CheckCircle2, Loader2, Plus, Save, AlertCircle, Pencil, Trash2
 } from 'lucide-react';
 import ChecklistItem from '@/components/fiscalizacao/ChecklistItem';
 import PhotoGrid from '@/components/fiscalizacao/PhotoGrid';
@@ -41,6 +41,9 @@ export default function VistoriarUnidade() {
     const [showEditarNC, setShowEditarNC] = useState(false);
     const [constatacaoParaNC, setConstatacaoParaNC] = useState(null);
     const [numerosParaNC, setNumerosParaNC] = useState(null);
+    const [constatacaoParaEditar, setConstatacaoParaEditar] = useState(null);
+    const [showConfirmaExclusao, setShowConfirmaExclusao] = useState(false);
+    const [constatacaoParaExcluir, setConstatacaoParaExcluir] = useState(null);
 
     // Queries
     const { data: unidade, isLoading: loadingUnidade } = useQuery({
@@ -516,7 +519,22 @@ export default function VistoriarUnidade() {
                 throw new Error('Não é possível modificar uma fiscalização finalizada');
             }
 
-            // Buscar TODAS as constatações existentes para calcular o próximo número correto
+            // Se for edição, atualizar
+            if (constatacaoParaEditar) {
+                let descricaoFinal = data.descricao;
+                if (descricaoFinal && !descricaoFinal.trim().endsWith(';')) {
+                    descricaoFinal = descricaoFinal.trim() + ';';
+                }
+
+                await base44.entities.ConstatacaoManual.update(constatacaoParaEditar.id, {
+                    descricao: descricaoFinal,
+                    gera_nc: data.gera_nc
+                });
+
+                return { constatacao: { ...constatacaoParaEditar, descricao: descricaoFinal, gera_nc: data.gera_nc }, numeroConstatacao: constatacaoParaEditar.numero_constatacao };
+            }
+
+            // Se for nova constatação, criar
             const respostasComConstatacao = await base44.entities.RespostaChecklist.filter({
                 unidade_fiscalizada_id: unidadeId
             }, 'created_date', 200);
@@ -525,21 +543,17 @@ export default function VistoriarUnidade() {
                 unidade_fiscalizada_id: unidadeId
             }, 'ordem', 100);
 
-            // Contar apenas respostas que tem texto de constatação
             const totalConstatacoes = respostasComConstatacao.filter(r => 
                 r.pergunta && r.pergunta.trim()
             ).length + constatacoesManuaisExistentes.length;
 
-            // Gerar número da constatação baseado no total real
             const numeroConstatacao = `C${totalConstatacoes + 1}`;
 
-            // Adicionar ';' ao final se não existir
             let descricaoFinal = data.descricao;
             if (descricaoFinal && !descricaoFinal.trim().endsWith(';')) {
                 descricaoFinal = descricaoFinal.trim() + ';';
             }
 
-            // Criar a constatação manual
             const constatacao = await base44.entities.ConstatacaoManual.create({
                 unidade_fiscalizada_id: unidadeId,
                 numero_constatacao: numeroConstatacao,
@@ -548,7 +562,6 @@ export default function VistoriarUnidade() {
                 ordem: Date.now()
             });
 
-            // Recalcular contadores após criação
             const contadoresAtualizados = await calcularProximaNumeracao(unidade.fiscalizacao_id, unidadeId, base44);
             setContadores(contadoresAtualizados);
 
@@ -557,8 +570,14 @@ export default function VistoriarUnidade() {
         onSuccess: async ({ constatacao, novosContadores, numeroConstatacao }) => {
             queryClient.invalidateQueries({ queryKey: ['constatacoes-manuais', unidadeId] });
             setShowAddConstatacao(false);
+            setConstatacaoParaEditar(null);
 
-            // Se gera NC, abrir modal de edição
+            // Se for edição, não abrir modal de NC
+            if (constatacaoParaEditar) {
+                return;
+            }
+
+            // Se gera NC e é nova constatação, abrir modal de edição
             if (constatacao.gera_nc) {
                 // Buscar contagem REAL de NCs e Determinações do banco
                 const ncsExistentesAgora = await base44.entities.NaoConformidade.filter({
@@ -586,6 +605,33 @@ export default function VistoriarUnidade() {
                 });
                 setShowEditarNC(true);
             }
+        },
+        onError: (err) => {
+            alert(err.message);
+        }
+    });
+
+    const excluirConstatacaoManualMutation = useMutation({
+        mutationFn: async (constatacaoId) => {
+            if (fiscalizacao?.status === 'finalizada' && !modoEdicao) {
+                throw new Error('Não é possível modificar uma fiscalização finalizada');
+            }
+
+            const response = await base44.functions.invoke('deleteConstatacaoManualComCascade', {
+                constatacao_manual_id: constatacaoId,
+                unidade_fiscalizada_id: unidadeId
+            });
+
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['constatacoes-manuais', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
+            setShowConfirmaExclusao(false);
+            setConstatacaoParaExcluir(null);
         },
         onError: (err) => {
             alert(err.message);
@@ -868,6 +914,31 @@ export default function VistoriarUnidade() {
                                                 </Badge>
                                             )}
                                         </div>
+                                        {(fiscalizacao?.status !== 'finalizada' || modoEdicao) && (
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                        setConstatacaoParaEditar(constatacao);
+                                                        setShowAddConstatacao(true);
+                                                    }}
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => {
+                                                        setConstatacaoParaExcluir(constatacao);
+                                                        setShowConfirmaExclusao(true);
+                                                    }}
+                                                    className="text-red-600 hover:text-red-700"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -1104,9 +1175,13 @@ export default function VistoriarUnidade() {
             {/* Dialog Constatação Manual */}
             <ConstatacaoManualForm
                 open={showAddConstatacao}
-                onOpenChange={setShowAddConstatacao}
+                onOpenChange={(open) => {
+                    setShowAddConstatacao(open);
+                    if (!open) setConstatacaoParaEditar(null);
+                }}
                 onSave={(data) => adicionarConstatacaoManualMutation.mutate(data)}
                 isSaving={adicionarConstatacaoManualMutation.isPending}
+                constatacaoParaEditar={constatacaoParaEditar}
             />
 
             {/* Dialog Editar NC */}
@@ -1121,6 +1196,44 @@ export default function VistoriarUnidade() {
                 numeroConstatacao={numerosParaNC?.numeroConstatacao}
                 constatacaoTexto={constatacaoParaNC?.descricao}
             />
+
+            {/* Dialog Confirmação Exclusão Constatação */}
+            <Dialog open={showConfirmaExclusao} onOpenChange={setShowConfirmaExclusao}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-700">
+                            <AlertCircle className="h-5 w-5" />
+                            Excluir Constatação
+                        </DialogTitle>
+                        <DialogDescription>
+                            Tem certeza que deseja excluir a constatação <strong>{constatacaoParaExcluir?.numero_constatacao}</strong>?
+                            {constatacaoParaExcluir?.gera_nc && (
+                                <span className="block mt-2 text-yellow-700 font-medium">
+                                    Esta ação também excluirá as Não Conformidades, Determinações e Recomendações associadas.
+                                </span>
+                            )}
+                            <span className="block mt-2">
+                                Todas as constatações seguintes serão renumeradas automaticamente.
+                            </span>
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex gap-2">
+                        <Button 
+                            className="flex-1 bg-red-600 hover:bg-red-700"
+                            onClick={() => excluirConstatacaoManualMutation.mutate(constatacaoParaExcluir?.id)}
+                            disabled={excluirConstatacaoManualMutation.isPending}
+                        >
+                            {excluirConstatacaoManualMutation.isPending ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : null}
+                            Sim, Excluir
+                        </Button>
+                        <Button variant="outline" onClick={() => setShowConfirmaExclusao(false)}>
+                            Cancelar
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* Dialog Confirmação Sem Fotos */}
             <Dialog open={showConfirmaSemFotos} onOpenChange={setShowConfirmaSemFotos}>
