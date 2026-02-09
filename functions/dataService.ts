@@ -582,7 +582,7 @@ class DataServiceClass {
       return { C: 1, NC: 1, D: 1, R: 1 };
     }
   }
-  }
+}
 
-  export const DataService = new DataServiceClass();
-  export default DataService;
+export const DataService = new DataServiceClass();
+export default DataService;
