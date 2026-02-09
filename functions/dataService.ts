@@ -199,7 +199,7 @@ class DataServiceClass {
 
       // 3. Adiciona à fila de sync
       await db.syncQueue.add({
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         operation: 'update',
         entityName,
         localId: isLocal ? id : current._localId || id,
