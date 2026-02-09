@@ -6,7 +6,7 @@ const db = new Dexie('AgemsFiscalizacaoOffline');
 db.version(1).stores({
   // Dados de referência (somente leitura local)
   municipios: 'id, nome',
-  prestadores: 'id, nome, ativo',
+  prestadores_servico: 'id, nome, ativo',
   tipos_unidade: 'id, nome, &tipo_unidade_codigo',
   item_checklist: 'id, tipo_unidade_id, ordem',
   
