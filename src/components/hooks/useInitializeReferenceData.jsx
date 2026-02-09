@@ -16,12 +16,11 @@ export function useInitializeReferenceData() {
       try {
         console.log('[useInitializeReferenceData] Carregando dados de referência...');
         
-        // Carrega cada tabela de referência
         await Promise.all([
-          DataService.read('Municipio'),
-          DataService.read('PrestadorServico'),
-          DataService.read('TipoUnidade'),
-          DataService.read('ItemChecklist'),
+          DataService.getMunicipios(),
+          DataService.getPrestadores(),
+          DataService.getTiposUnidade(),
+          DataService.getItemChecklist(),
         ]);
 
         console.log('[useInitializeReferenceData] Dados de referência carregados com sucesso');

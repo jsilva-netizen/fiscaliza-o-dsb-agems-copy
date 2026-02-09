@@ -546,6 +546,24 @@ class DataServiceClass {
   }
 }
 
-var DataService = new DataServiceClass();
+// Métodos de conveniência para dados de referência
+DataServiceClass.prototype.getMunicipios = async function() {
+  return this.readReferenceData('Municipio', 'municipios', {});
+};
+
+DataServiceClass.prototype.getPrestadores = async function(filter) {
+  return this.readReferenceData('PrestadorServico', 'prestadores_servico', filter || {});
+};
+
+DataServiceClass.prototype.getTiposUnidade = async function(filter) {
+  return this.readReferenceData('TipoUnidade', 'tipos_unidade', filter || {});
+};
+
+DataServiceClass.prototype.getItemChecklist = async function(filter) {
+  return this.readReferenceData('ItemChecklist', 'item_checklist', filter || {});
+};
+
+const DataService = new DataServiceClass();
+console.log('[DataService] Instância criada. Métodos disponíveis:', Object.getOwnPropertyNames(Object.getPrototypeOf(DataService)).join(', '));
 export { DataService };
 export default DataService;

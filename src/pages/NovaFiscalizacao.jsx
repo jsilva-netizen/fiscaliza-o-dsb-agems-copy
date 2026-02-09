@@ -41,14 +41,14 @@ export default function NovaFiscalizacao() {
 
     const { data: municipios = [], isLoading: loadingMunicipios, error: errorMunicipios } = useQuery({
         queryKey: ['municipios'],
-        queryFn: () => DataService.read('Municipio', {}, 'nome', 500),
-        staleTime: 1000 * 60 * 30, // 30 minutos
-        gcTime: 1000 * 60 * 60, // 1 hora
+        queryFn: () => DataService.getMunicipios(),
+        staleTime: 1000 * 60 * 30,
+        gcTime: 1000 * 60 * 60,
     });
 
     const { data: prestadores = [], isLoading: loadingPrestadores, error: errorPrestadores } = useQuery({
         queryKey: ['prestadores'],
-        queryFn: () => DataService.read('PrestadorServico', { ativo: true }, 'nome', 500),
+        queryFn: () => DataService.getPrestadores({ ativo: true }),
         staleTime: 1000 * 60 * 30,
         gcTime: 1000 * 60 * 60,
     });
