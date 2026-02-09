@@ -262,7 +262,7 @@ export default function ExecutarFiscalizacao() {
                                             <div className="flex-1">
                                                 <div className="flex items-start justify-between">
                                                     <div>
-                                                        <h3 className="font-medium">{unidade.tipo_unidade_nome}</h3>
+                                                        <h3 className="font-medium">{unidade.codigo_unidade || unidade.tipo_unidade_nome}</h3>
                                                         {unidade.nome_unidade && (
                                                             <p className="text-sm text-gray-500">{unidade.nome_unidade}</p>
                                                         )}
