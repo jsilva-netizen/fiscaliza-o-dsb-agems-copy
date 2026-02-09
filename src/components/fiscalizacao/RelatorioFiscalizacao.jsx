@@ -53,6 +53,12 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 )
             );
 
+            const todasConstatacoesManuais = await Promise.all(
+                unidades.map(u => 
+                    base44.entities.ConstatacaoManual.filter({ unidade_fiscalizada_id: u.id }, 'ordem', 500)
+                )
+            );
+
             const todasNcs = await Promise.all(
                 unidades.map(u => 
                     base44.entities.NaoConformidade.filter({ unidade_fiscalizada_id: u.id }, 'id', 200)
@@ -146,7 +152,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
             pdf.setTextColor(0, 0, 0);
             yPos += 14;
 
-            const totalConstatacoes = todasRespostas.flat().filter(r => r.resposta === 'SIM' || r.resposta === 'NAO').length;
+            const totalConstatacoes = todasRespostas.flat().filter(r => r.resposta === 'SIM' || r.resposta === 'NAO').length + todasConstatacoesManuais.flat().length;
             const totalNCs = todasNcs.flat().length;
             const totalDeterminacoes = todasDeterminacoes.flat().length;
             const totalRecomendacoes = todasRecomendacoes.flat().length;
@@ -213,6 +219,16 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                     return numA - numB;
                 });
                 constaOrd.forEach(c => {
+                    contadores.constatacoes++;
+                    mapeamentoUnidade.constatacoes[c.id] = contadores.constatacoes;
+                });
+
+                const constaManualOrd = (todasConstatacoesManuais[idx] || []).sort((a, b) => {
+                    const numA = parseInt(a.numero_constatacao?.replace('C', '') || '999');
+                    const numB = parseInt(b.numero_constatacao?.replace('C', '') || '999');
+                    return numA - numB;
+                });
+                constaManualOrd.forEach(c => {
                     contadores.constatacoes++;
                     mapeamentoUnidade.constatacoes[c.id] = contadores.constatacoes;
                 });
@@ -295,11 +311,35 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                     return numA - numB;
                 });
                 
+                const constatacoesManuais = todasConstatacoesManuais[idx] || [];
+                
                 constatacoes.forEach((resp) => {
                     const novoNum = mapeamento.constatacoes[resp.id];
                     const numConst = `C${novoNum}`;
                     const textoConstatacao = resp.pergunta;
                     const texto = `${textoConstatacao}${resp.observacao ? ` Observação: ${resp.observacao}` : ''}`;
+                    const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
+                    const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
+
+                    if (yPos + cellHeight > pageHeight - bottomMargin) {
+                        pdf.addPage();
+                        addTimbradoToPage(pdf, timbradoBase64);
+                        yPos = topMargin;
+                    }
+
+                    pdf.rect(margin, yPos, tableWidth, cellHeight, 'S');
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text(numConst + '.', margin + 2, yPos + 5);
+                    pdf.setFont('helvetica', 'normal');
+                    pdf.text(restLines, margin + 12, yPos + 5);
+
+                    yPos += cellHeight;
+                });
+
+                constatacoesManuais.forEach((manual) => {
+                    const novoNum = mapeamento.constatacoes[manual.id];
+                    const numConst = `C${novoNum}`;
+                    const texto = manual.descricao;
                     const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
                     const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
 
