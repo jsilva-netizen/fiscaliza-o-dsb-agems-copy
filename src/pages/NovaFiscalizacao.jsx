@@ -39,14 +39,18 @@ export default function NovaFiscalizacao() {
         };
     }, []);
 
-    const { data: municipios = [], isLoading: loadingMunicipios } = useQuery({
+    const { data: municipios = [], isLoading: loadingMunicipios, error: errorMunicipios } = useQuery({
         queryKey: ['municipios'],
-        queryFn: () => DataService.read('Municipio', {}, 'nome', 100)
+        queryFn: () => DataService.read('Municipio', {}, 'nome', 500),
+        staleTime: 1000 * 60 * 30, // 30 minutos
+        gcTime: 1000 * 60 * 60, // 1 hora
     });
 
-    const { data: prestadores = [] } = useQuery({
+    const { data: prestadores = [], isLoading: loadingPrestadores, error: errorPrestadores } = useQuery({
         queryKey: ['prestadores'],
-        queryFn: () => DataService.read('PrestadorServico', { ativo: true }, 'nome', 200)
+        queryFn: () => DataService.read('PrestadorServico', { ativo: true }, 'nome', 500),
+        staleTime: 1000 * 60 * 30,
+        gcTime: 1000 * 60 * 60,
     });
 
     useEffect(() => {
@@ -197,27 +201,47 @@ export default function NovaFiscalizacao() {
                     </Card>
 
                     {/* Município */}
-                    <div className="space-y-2">
-                        <Label>Município *</Label>
-                        <Select 
-                            value={formData.municipio_id} 
-                            onValueChange={(v) => setFormData({...formData, municipio_id: v})}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione o município..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {municipios.map(m => (
-                                    <SelectItem key={m.id} value={m.id}>
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="h-4 w-4 text-gray-400" />
-                                            {m.nome}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                     <div className="space-y-2">
+                         <Label>Município *</Label>
+                         {loadingMunicipios ? (
+                             <div className="flex items-center justify-center p-3 border rounded bg-gray-50">
+                                 <Loader2 className="h-4 w-4 animate-spin mr-2 text-blue-600" />
+                                 <span className="text-sm text-gray-600">Carregando municípios...</span>
+                             </div>
+                         ) : errorMunicipios ? (
+                             <div className="flex items-start gap-2 p-3 border border-red-200 rounded bg-red-50">
+                                 <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                 <div>
+                                     <p className="text-sm font-medium text-red-800">Erro ao carregar municípios</p>
+                                     <p className="text-xs text-red-600">{errorMunicipios.message}</p>
+                                 </div>
+                             </div>
+                         ) : municipios.length === 0 ? (
+                             <div className="flex items-center justify-center p-3 border border-yellow-200 rounded bg-yellow-50">
+                                 <AlertCircle className="h-4 w-4 text-yellow-600 mr-2" />
+                                 <span className="text-sm text-yellow-800">Nenhum município disponível</span>
+                             </div>
+                         ) : (
+                             <Select 
+                                 value={formData.municipio_id} 
+                                 onValueChange={(v) => setFormData({...formData, municipio_id: v})}
+                             >
+                                 <SelectTrigger>
+                                     <SelectValue placeholder="Selecione o município..." />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                     {municipios.map(m => (
+                                         <SelectItem key={m.id} value={m.id}>
+                                             <div className="flex items-center gap-2">
+                                                 <MapPin className="h-4 w-4 text-gray-400" />
+                                                 {m.nome}
+                                             </div>
+                                         </SelectItem>
+                                     ))}
+                                 </SelectContent>
+                             </Select>
+                         )}
+                     </div>
 
                     {/* Serviços */}
                     <div className="space-y-3">
@@ -240,29 +264,49 @@ export default function NovaFiscalizacao() {
                     </div>
 
                     {/* Prestador de Serviço */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <Label>Prestador de Serviço *</Label>
-                            <Link to={createPageUrl('PrestadoresServico')}>
-                                <Button type="button" size="sm" variant="outline">
-                                    <Plus className="h-3 w-3" />
-                                </Button>
-                            </Link>
-                        </div>
-                        <Select 
-                            value={formData.prestador_servico_id} 
-                            onValueChange={(v) => setFormData({...formData, prestador_servico_id: v})}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione o prestador..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {prestadores.map(p => (
-                                    <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
+                     <div className="space-y-2">
+                         <div className="flex items-center justify-between">
+                             <Label>Prestador de Serviço *</Label>
+                             <Link to={createPageUrl('PrestadoresServico')}>
+                                 <Button type="button" size="sm" variant="outline">
+                                     <Plus className="h-3 w-3" />
+                                 </Button>
+                             </Link>
+                         </div>
+                         {loadingPrestadores ? (
+                             <div className="flex items-center justify-center p-3 border rounded bg-gray-50">
+                                 <Loader2 className="h-4 w-4 animate-spin mr-2 text-blue-600" />
+                                 <span className="text-sm text-gray-600">Carregando prestadores...</span>
+                             </div>
+                         ) : errorPrestadores ? (
+                             <div className="flex items-start gap-2 p-3 border border-red-200 rounded bg-red-50">
+                                 <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                 <div>
+                                     <p className="text-sm font-medium text-red-800">Erro ao carregar prestadores</p>
+                                     <p className="text-xs text-red-600">{errorPrestadores.message}</p>
+                                 </div>
+                             </div>
+                         ) : prestadores.length === 0 ? (
+                             <div className="flex items-center justify-center p-3 border border-yellow-200 rounded bg-yellow-50">
+                                 <AlertCircle className="h-4 w-4 text-yellow-600 mr-2" />
+                                 <span className="text-sm text-yellow-800">Nenhum prestador disponível</span>
+                             </div>
+                         ) : (
+                             <Select 
+                                 value={formData.prestador_servico_id} 
+                                 onValueChange={(v) => setFormData({...formData, prestador_servico_id: v})}
+                             >
+                                 <SelectTrigger>
+                                     <SelectValue placeholder="Selecione o prestador..." />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                     {prestadores.map(p => (
+                                         <SelectItem key={p.id} value={p.id}>{p.nome}</SelectItem>
+                                     ))}
+                                 </SelectContent>
+                             </Select>
+                         )}
+                     </div>
 
                     {/* Fiscal Info */}
                     {user && (
