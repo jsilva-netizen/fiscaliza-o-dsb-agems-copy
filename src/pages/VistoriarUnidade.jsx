@@ -314,6 +314,12 @@ export default function VistoriarUnidade() {
                         D: contadorD,
                         R: contadorR
                     });
+
+                    // Forçar recarregamento dos dados após renumeração
+                    await queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] });
+                    await queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+                    await queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+                    await queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
                 }
             } else {
                 // Buscar contagem REAL do banco para garantir numeração correta
