@@ -248,9 +248,9 @@ export default function ExecutarFiscalizacao() {
                 <div className="space-y-3">
                     {unidades.map((unidade) => (
                         <div key={unidade.id} className="relative">
-                            <Link to={createPageUrl('VistoriarUnidade') + `?id=${unidade.id}`}>
-                                <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                                    <CardContent className="p-4">
+                            <Card className="hover:shadow-md transition-shadow">
+                                <CardContent className="p-4">
+                                    <Link to={createPageUrl('VistoriarUnidade') + `?id=${unidade.id}`} className="block">
                                         <div className="flex items-start gap-3">
                                             <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
                                                 unidade.status === 'finalizada' ? 'bg-green-100' : 'bg-blue-100'
@@ -289,34 +289,34 @@ export default function ExecutarFiscalizacao() {
                                                         {unidade.fotos_unidade?.length || 0} fotos
                                                     </span>
                                                 </div>
-                                                {podeEditarOuExcluir() && (
-                                                    <div className="flex gap-2 mt-3">
-                                                        {unidade.status === 'finalizada' && (
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                onClick={(e) => handleEditarUnidade(e, unidade.id)}
-                                                            >
-                                                                <Edit className="w-3 h-3 mr-1" />
-                                                                Editar
-                                                            </Button>
-                                                        )}
-                                                        <Button
-                                                            size="sm"
-                                                            variant="destructive"
-                                                            onClick={(e) => handleExcluirUnidade(e, unidade)}
-                                                            disabled={excluirUnidadeMutation.isPending}
-                                                        >
-                                                            <Trash2 className="w-3 h-3 mr-1" />
-                                                            Excluir
-                                                        </Button>
-                                                    </div>
-                                                )}
                                             </div>
                                         </div>
-                                    </CardContent>
-                                </Card>
-                            </Link>
+                                    </Link>
+                                    {podeEditarOuExcluir() && (
+                                        <div className="flex gap-2 mt-3">
+                                            {unidade.status === 'finalizada' && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={(e) => handleEditarUnidade(e, unidade.id)}
+                                                >
+                                                    <Edit className="w-3 h-3 mr-1" />
+                                                    Editar
+                                                </Button>
+                                            )}
+                                            <Button
+                                                size="sm"
+                                                variant="destructive"
+                                                onClick={(e) => handleExcluirUnidade(e, unidade)}
+                                                disabled={excluirUnidadeMutation.isPending}
+                                            >
+                                                <Trash2 className="w-3 h-3 mr-1" />
+                                                Excluir
+                                            </Button>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
                         </div>
                     ))}
                 </div>
