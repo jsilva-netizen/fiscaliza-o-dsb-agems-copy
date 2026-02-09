@@ -30,7 +30,7 @@ export default function NovaFiscalizacao() {
 
     const { data: municipios = [], isLoading: loadingMunicipios } = useQuery({
         queryKey: ['municipios'],
-        queryFn: () => DataService.read('Municipio', {}, '-nome', 100)
+        queryFn: () => DataService.read('Municipio', {}, 'nome', 100)
     });
 
     const { data: prestadores = [] } = useQuery({
