@@ -473,7 +473,117 @@ class DataServiceClass {
       }
     }
   }
-}
 
-export const DataService = new DataServiceClass();
-export default DataService;
+  /**
+   * ============================================
+   * OPERAÇÕES TRANSACIONAIS (OFFLINE-FIRST)
+   * ============================================
+   */
+
+  /**
+   * Cria Resposta do Checklist + NC + Determinação + Recomendação de forma transacional
+   * Tudo é salvo localmente no Dexie, preparado para sincronização
+   */
+  async createRespostaComNCeDeterminacao(unidadeId, itemChecklistId, itemData, respostaData) {
+    try {
+      // 1. Criar Resposta do Checklist
+      const resposta = await this.create('RespostaChecklist', {
+        unidade_fiscalizada_id: unidadeId,
+        item_checklist_id: itemChecklistId,
+        pergunta: respostaData.textoConstatacao || '',
+        resposta: respostaData.resposta,
+        gera_nc: itemData.gera_nc,
+        numero_constatacao: respostaData.numeroConstatacao,
+        observacao: respostaData.observacao || ''
+      });
+
+      // 2. Se gera NC e resposta é NÃO, criar NC + Determinação + Recomendação
+      if (itemData.gera_nc && respostaData.resposta === 'NAO') {
+        // Criar NC
+        const ncDescricao = itemData.texto_nc || 
+          `A constatação ${respostaData.numeroConstatacao} não cumpre o disposto no ${itemData.artigo_portaria || 'artigo não especificado'}.`;
+
+        const nc = await this.create('NaoConformidade', {
+          unidade_fiscalizada_id: unidadeId,
+          resposta_checklist_id: resposta.id,
+          numero_nc: respostaData.numeroNC,
+          artigo_portaria: itemData.artigo_portaria || '',
+          descricao: ncDescricao,
+          fotos: []
+        });
+
+        // Criar Determinação
+        const textoDet = itemData.texto_determinacao || 'regularizar a situação identificada';
+        const textoFinalDet = `Para sanar a ${respostaData.numeroNC} ${textoDet}. Prazo: 30 dias.`;
+
+        await this.create('Determinacao', {
+          unidade_fiscalizada_id: unidadeId,
+          nao_conformidade_id: nc.id,
+          numero_determinacao: respostaData.numeroDeterminacao,
+          descricao: textoFinalDet,
+          prazo_dias: 30,
+          status: 'pendente'
+        });
+
+        // Criar Recomendação se existir
+        if (itemData.texto_recomendacao) {
+          await this.create('Recomendacao', {
+            unidade_fiscalizada_id: unidadeId,
+            numero_recomendacao: respostaData.numeroRecomendacao,
+            descricao: itemData.texto_recomendacao,
+            origem: 'checklist'
+          });
+        }
+      }
+
+      return resposta;
+    } catch (error) {
+      console.error('Erro ao criar resposta com NC e determinação:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Calcula próxima numeração para C, NC, D, R lendo dados locais
+   */
+  async calcularProximaNumeracao(unidadeId) {
+    try {
+      // Ler todas as respostas com constatação
+      const respostas = await this.readLocalData('respostas_checklist', { 
+        unidade_fiscalizada_id: unidadeId 
+      });
+      const respostasComConstatacao = respostas.filter(r => 
+        (r.resposta === 'SIM' || r.resposta === 'NAO') && r.pergunta?.trim()
+      ).length;
+
+      // Ler constatações manuais
+      const constatacoes = await this.readLocalData('constatacoes_manuais', { 
+        unidade_fiscalizada_id: unidadeId 
+      });
+
+      // Ler NCs, Determinações e Recomendações
+      const ncs = await this.readLocalData('nao_conformidades', { 
+        unidade_fiscalizada_id: unidadeId 
+      });
+      const dets = await this.readLocalData('determinacoes', { 
+        unidade_fiscalizada_id: unidadeId 
+      });
+      const recs = await this.readLocalData('recomendacao', { 
+        unidade_fiscalizada_id: unidadeId 
+      });
+
+      return {
+        C: respostasComConstatacao + constatacoes.length + 1,
+        NC: ncs.length + 1,
+        D: dets.length + 1,
+        R: recs.length + 1
+      };
+    } catch (error) {
+      console.error('Erro ao calcular próxima numeração:', error);
+      return { C: 1, NC: 1, D: 1, R: 1 };
+    }
+  }
+  }
+
+  export const DataService = new DataServiceClass();
+  export default DataService;
