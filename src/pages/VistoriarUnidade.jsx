@@ -836,7 +836,7 @@ export default function VistoriarUnidade() {
 
                         {/* Constatações do Checklist (depois) */}
                         {respostasExistentes
-                            .filter(r => r.resposta === 'SIM' || r.resposta === 'NAO')
+                            .filter(r => (r.resposta === 'SIM' || r.resposta === 'NAO') && r.pergunta && r.pergunta.trim())
                             .map(resp => (
                                 <Card key={resp.id}>
                                     <CardContent className="p-4">
