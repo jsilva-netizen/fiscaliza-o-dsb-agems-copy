@@ -359,17 +359,20 @@ export default function VistoriarUnidade() {
                     ? item.texto_constatacao_sim 
                     : data.resposta === 'NAO' 
                         ? item.texto_constatacao_nao 
-                        : item.pergunta;
+                        : null;
                 
-                // Adicionar ';' ao final se não existir
-                if (textoConstatacao && !textoConstatacao.trim().endsWith(';')) {
+                // Verificar se tem texto configurado
+                const temTextoConstatacao = textoConstatacao && textoConstatacao.trim();
+                
+                // Adicionar ';' ao final se existir texto
+                if (temTextoConstatacao && !textoConstatacao.trim().endsWith(';')) {
                     textoConstatacao = textoConstatacao.trim() + ';';
+                } else if (!temTextoConstatacao) {
+                    textoConstatacao = null;
                 }
 
-                // Só gerar número de constatação para SIM ou NÃO (não para N/A)
-                const numeroConstatacao = (data.resposta === 'SIM' || data.resposta === 'NAO') 
-                    ? `C${contadorC}`
-                    : null;
+                // Só gerar número de constatação se tiver texto configurado
+                const numeroConstatacao = temTextoConstatacao ? `C${contadorC}` : null;
 
                 if (item.gera_nc && data.resposta === 'NAO') {
                     const numeroNC = `NC${contadorNC}`;
