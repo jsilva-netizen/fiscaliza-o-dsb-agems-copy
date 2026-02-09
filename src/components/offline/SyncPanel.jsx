@@ -117,7 +117,8 @@ export default function SyncPanel({ isOpen, onClose }) {
         });
         // Atualiza contagem
         const pending = await db.syncQueue.where('status').equals('pending').toArray();
-        setPendingCount(pending.length);
+        const updatedStatus = await DataService.getSyncStatus();
+        setPendingCount(updatedStatus.pendingCount);
       } else {
         setUploadStatus({
           type: 'warning',
