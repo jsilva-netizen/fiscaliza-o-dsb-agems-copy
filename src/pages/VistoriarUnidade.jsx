@@ -242,8 +242,16 @@ export default function VistoriarUnidade() {
                     for (const resp of todasRespostas) {
                         const itemResp = todosItens.find(it => it.id === resp.item_checklist_id);
                         
-                        // Só numerar se for SIM ou NÃO (não N/A)
-                        if (resp.resposta === 'SIM' || resp.resposta === 'NAO') {
+                        // Verificar se tem texto configurado para a resposta
+                        let temTextoConstatacao = false;
+                        if (resp.resposta === 'SIM' && itemResp?.texto_constatacao_sim?.trim()) {
+                            temTextoConstatacao = true;
+                        } else if (resp.resposta === 'NAO' && itemResp?.texto_constatacao_nao?.trim()) {
+                            temTextoConstatacao = true;
+                        }
+                        
+                        // Só numerar se for SIM ou NÃO E tiver texto configurado
+                        if ((resp.resposta === 'SIM' || resp.resposta === 'NAO') && temTextoConstatacao) {
                             const numeroConstatacao = `C${contadorC}`;
                             
                             // Atualizar número da constatação
