@@ -77,11 +77,16 @@ class DataServiceClass {
   async readReferenceData(entityName, tableName, filter = {}) {
     try {
       let results = [];
+      
+      console.log(`[DataService] Lendo ${entityName} de ${tableName}`);
 
       // Se online, sempre tenta buscar do servidor primeiro
       if (this.isConnected()) {
         try {
+          console.log(`[DataService] Online - buscando ${entityName} do servidor`);
           const serverData = await base44.entities[entityName].list();
+          console.log(`[DataService] Servidor retornou:`, serverData?.length || 0, 'registros');
+          
           if (serverData && serverData.length > 0) {
             // Atualiza cache com dados do servidor
             await db[tableName].clear();
@@ -90,20 +95,25 @@ class DataServiceClass {
           } else {
             // Se servidor retornar vazio, usa cache
             results = await db[tableName].toArray();
+            console.log(`[DataService] Servidor vazio, retornando cache:`, results.length, 'registros');
           }
           return this.applyFilter(results, filter);
         } catch (serverError) {
+          console.error(`[DataService] Erro ao buscar ${entityName} do servidor:`, serverError);
           // Se falhar no servidor, usa cache
           results = await db[tableName].toArray();
+          console.log(`[DataService] Usando cache após erro:`, results.length, 'registros');
           return this.applyFilter(results, filter);
         }
       } else {
         // Se offline, usa cache
+        console.log(`[DataService] Offline - usando cache`);
         results = await db[tableName].toArray();
+        console.log(`[DataService] Cache retornou:`, results.length, 'registros');
         return this.applyFilter(results, filter);
       }
     } catch (error) {
-      console.error(`Erro ao ler ${tableName}:`, error);
+      console.error(`[DataService] Erro ao ler ${tableName}:`, error);
       return [];
     }
   }
