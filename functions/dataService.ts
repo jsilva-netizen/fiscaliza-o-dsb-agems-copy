@@ -62,42 +62,44 @@ class DataServiceClass {
 
     const { table, isReference } = mapping;
 
-    // Para tabelas de referência: tenta cache, depois servidor
+    // Para tabelas de referência: sempre tenta servidor primeiro se online
     if (isReference) {
-      return this.readReferenceData(table, filter, entityName);
+      return this.readReferenceData(entityName, table, filter);
     }
 
     // Para tabelas transacionais: retorna dados locais
-    // (podem conter edições não sincronizadas)
     return this.readLocalData(table, filter);
   }
 
   /**
    * Lê dados de tabela de referência com fallback ao servidor
    */
-  async readReferenceData(tableName, filter = {}, entityName) {
+  async readReferenceData(entityName, tableName, filter = {}) {
     try {
-      // Tenta ler do Dexie
-      let results = await db[tableName].toArray();
+      let results = [];
 
-      // Se vazio e online, busca do servidor
-      if (results.length === 0 && this.isConnected()) {
-        console.log(`Buscando ${entityName} do servidor...`);
-        results = await base44.entities[entityName].list();
-        console.log(`${entityName} recebido:`, results);
-        // Salva no cache em background
-        if (results && results.length > 0) {
-          await db[tableName].bulkPut(results);
+      // Se online, sempre tenta buscar do servidor primeiro
+      if (this.isConnected()) {
+        try {
+          results = await base44.entities[entityName].list();
+          if (results && results.length > 0) {
+            // Atualiza cache com dados do servidor
+            await db[tableName].clear();
+            await db[tableName].bulkPut(results);
+            return this.applyFilter(results, filter);
+          }
+        } catch (serverError) {
+          console.warn(`Erro ao buscar ${entityName} do servidor:`, serverError);
+          // Continua com fallback ao cache local
         }
       }
 
-      // Aplica filtro simples
+      // Fallback: retorna dados locais
+      results = await db[tableName].toArray();
       return this.applyFilter(results, filter);
     } catch (error) {
       console.error(`Erro ao ler ${tableName}:`, error);
-      // Fallback: retorna cache mesmo que vazio
-      const cached = await db[tableName].toArray();
-      return this.applyFilter(cached, filter);
+      return [];
     }
   }
 
