@@ -46,86 +46,76 @@ export default function VistoriarUnidade() {
     const [showConfirmaExclusao, setShowConfirmaExclusao] = useState(false);
     const [constatacaoParaExcluir, setConstatacaoParaExcluir] = useState(null);
 
-    // Queries
+    // Queries - Carregamento de dados localmente (offline-first)
     const { data: unidade, isLoading: loadingUnidade } = useQuery({
         queryKey: ['unidade', unidadeId],
-        queryFn: () => base44.entities.UnidadeFiscalizada.filter({ id: unidadeId }).then(r => r[0]),
+        queryFn: () => DataService.read('UnidadeFiscalizada', { id: unidadeId }).then(r => r[0]),
         enabled: !!unidadeId,
-        staleTime: 30000,
-        gcTime: 300000
+        staleTime: 5000,
     });
 
     const { data: fiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', unidade?.fiscalizacao_id],
-        queryFn: () => base44.entities.Fiscalizacao.filter({ id: unidade?.fiscalizacao_id }).then(r => r[0]),
+        queryFn: () => DataService.read('Fiscalizacao', { id: unidade?.fiscalizacao_id }).then(r => r[0]),
         enabled: !!unidade?.fiscalizacao_id,
-        staleTime: 60000,
-        gcTime: 300000
+        staleTime: 5000,
     });
 
     const { data: itensChecklist = [] } = useQuery({
         queryKey: ['itensChecklist', unidade?.tipo_unidade_id],
-        queryFn: () => base44.entities.ItemChecklist.filter({ tipo_unidade_id: unidade?.tipo_unidade_id }, 'ordem', 100),
+        queryFn: () => DataService.read('ItemChecklist', { tipo_unidade_id: unidade?.tipo_unidade_id }, 'ordem', 100),
         enabled: !!unidade?.tipo_unidade_id,
         staleTime: 60000,
-        gcTime: 300000
     });
 
     const { data: respostasExistentes = [] } = useQuery({
         queryKey: ['respostas', unidadeId],
         queryFn: async () => {
-            const result = await base44.entities.RespostaChecklist.filter({ unidade_fiscalizada_id: unidadeId }, 'created_date', 200);
+            const result = await DataService.read('RespostaChecklist', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,
-        staleTime: 30000,
-        gcTime: 300000
+        staleTime: 1000,
     });
 
     const { data: ncsExistentes = [] } = useQuery({
         queryKey: ['ncs', unidadeId],
         queryFn: async () => {
-            const result = await base44.entities.NaoConformidade.filter({ unidade_fiscalizada_id: unidadeId });
+            const result = await DataService.read('NaoConformidade', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,
-        staleTime: 30000,
-        gcTime: 300000
+        staleTime: 1000,
     });
-
-
 
     const { data: determinacoesExistentes = [] } = useQuery({
         queryKey: ['determinacoes', unidadeId],
         queryFn: async () => {
-            const result = await base44.entities.Determinacao.filter({ unidade_fiscalizada_id: unidadeId });
+            const result = await DataService.read('Determinacao', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,
-        staleTime: 30000,
-        gcTime: 300000
+        staleTime: 1000,
     });
 
     const { data: recomendacoesExistentes = [] } = useQuery({
         queryKey: ['recomendacoes', unidadeId],
         queryFn: async () => {
-            const result = await base44.entities.Recomendacao.filter({ unidade_fiscalizada_id: unidadeId });
+            const result = await DataService.read('Recomendacao', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,
-        staleTime: 30000,
-        gcTime: 300000
+        staleTime: 1000,
     });
 
     const { data: constatacoesManuais = [] } = useQuery({
         queryKey: ['constatacoes-manuais', unidadeId],
         queryFn: async () => {
-            const result = await base44.entities.ConstatacaoManual.filter({ unidade_fiscalizada_id: unidadeId }, 'ordem', 100);
+            const result = await DataService.read('ConstatacaoManual', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,
-        staleTime: 30000,
-        gcTime: 300000
+        staleTime: 1000,
     });
 
     useEffect(() => {
