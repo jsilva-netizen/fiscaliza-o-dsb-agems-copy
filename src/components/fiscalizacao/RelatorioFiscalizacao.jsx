@@ -462,7 +462,7 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
 
                     detsSorted.forEach((det) => {
                         const novoNumDet = `D${mapeamento.determinacoes[det.id]}`;
-                        const texto = `${det.descricao} Prazo: ${det.prazo_dias} dias.`;
+                        const texto = det.descricao;
                         const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
                         const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
 
