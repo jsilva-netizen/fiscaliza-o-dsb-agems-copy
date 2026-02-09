@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { NotificationService } from '@/components/offline/NotificationService.js';
+import { NotificationService } from '@/components/offline/NotificationService';
 import { SyncService } from '@/components/offline/SyncService';
 
 /**

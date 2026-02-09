@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
-import { usePushNotifications } from '@/components/hooks/usePushNotifications.js';
-import { useBackgroundSync } from '@/components/offline/useBackgroundSync.js';
+import { usePushNotifications } from '@/components/hooks/usePushNotifications';
+import { useBackgroundSync } from '@/components/offline/useBackgroundSync';
 import { SyncService } from '@/components/offline/SyncService';
-import { NotificationService } from '@/components/offline/NotificationService.js';
+import { NotificationService } from '@/components/offline/NotificationService';
 
 /**
  * Componente que inicializa notificações push e background sync
