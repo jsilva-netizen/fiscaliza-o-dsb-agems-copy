@@ -181,9 +181,12 @@ export default function VistoriarUnidade() {
                     ? item.texto_constatacao_sim 
                     : data.resposta === 'NAO' 
                         ? item.texto_constatacao_nao 
-                        : item.pergunta;
+                        : null;
                 
-                if (textoConstatacao && !textoConstatacao.trim().endsWith(';')) {
+                // Se não houver texto configurado para a resposta, não gera constatação
+                if (!textoConstatacao || !textoConstatacao.trim()) {
+                    textoConstatacao = null;
+                } else if (!textoConstatacao.trim().endsWith(';')) {
                     textoConstatacao = textoConstatacao.trim() + ';';
                 }
 
