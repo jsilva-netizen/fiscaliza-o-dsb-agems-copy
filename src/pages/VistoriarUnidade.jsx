@@ -173,104 +173,111 @@ export default function VistoriarUnidade() {
 
             const resposta = respostasExistentes.find(r => r.item_checklist_id === itemId);
             const respostaAnterior = resposta?.resposta;
+            const mudouResposta = respostaAnterior !== data.resposta;
 
             if (resposta?.id) {
-                // Se está mudando a resposta, precisa tratar NC/D
-                if (respostaAnterior !== data.resposta) {
-                    // Se tinha NC (era NÃO e gerava NC), remover NC/D relacionadas
-                    if (respostaAnterior === 'NAO' && item.gera_nc) {
-                        const ncsRelacionadas = await base44.entities.NaoConformidade.filter({
-                            unidade_fiscalizada_id: unidadeId
-                        });
-                        
-                        // Encontrar NC criada por esta resposta
-                        const ncDaResposta = ncsRelacionadas.find(nc => {
-                            // A NC tem o mesmo numero_constatacao que a resposta
-                            return resposta.numero_constatacao && 
-                                   nc.descricao?.includes(item.texto_nc);
-                        });
+                // Definir novo texto da constatação
+                let textoConstatacao = data.resposta === 'SIM' 
+                    ? item.texto_constatacao_sim 
+                    : data.resposta === 'NAO' 
+                        ? item.texto_constatacao_nao 
+                        : item.pergunta;
+                
+                if (textoConstatacao && !textoConstatacao.trim().endsWith(';')) {
+                    textoConstatacao = textoConstatacao.trim() + ';';
+                }
 
-                        if (ncDaResposta) {
-                            // Remover determinações relacionadas
-                            const detsRelacionadas = await base44.entities.Determinacao.filter({
-                                nao_conformidade_id: ncDaResposta.id
-                            });
-                            for (const det of detsRelacionadas) {
-                                await base44.entities.Determinacao.delete(det.id);
-                            }
-                            // Remover NC
-                            await base44.entities.NaoConformidade.delete(ncDaResposta.id);
-                        }
-                    }
+                // Atualizar a resposta
+                await base44.entities.RespostaChecklist.update(resposta.id, {
+                    resposta: data.resposta,
+                    observacao: data.observacao || '',
+                    pergunta: textoConstatacao || ''
+                });
 
-                    // Definir novo texto da constatação
-                    let textoConstatacao = data.resposta === 'SIM' 
-                        ? item.texto_constatacao_sim 
-                        : data.resposta === 'NAO' 
-                            ? item.texto_constatacao_nao 
-                            : item.pergunta;
-                    
-                    if (textoConstatacao && !textoConstatacao.trim().endsWith(';')) {
-                        textoConstatacao = textoConstatacao.trim() + ';';
-                    }
+                // Se mudou a resposta, renumerar tudo
+                if (mudouResposta) {
+                    // 1. Buscar todas as respostas da unidade (incluindo a que acabamos de atualizar)
+                    const todasRespostas = await base44.entities.RespostaChecklist.filter({
+                        unidade_fiscalizada_id: unidadeId
+                    }, 'created_date', 200);
 
-                    // Se a nova resposta é NÃO e gera NC, criar NC/D
-                    if (data.resposta === 'NAO' && item.gera_nc) {
-                        // Carregar contadores
-                        let contadoresAtuais = contadores;
-                        if (!contadoresCarregados || !contadoresAtuais) {
-                            const contadoresCalc = await calcularProximaNumeracao(unidade.fiscalizacao_id, unidadeId, base44);
-                            contadoresAtuais = contadoresCalc;
-                            setContadores(contadoresCalc);
-                            setContadoresCarregados(true);
-                        }
+                    // 2. Buscar todos os itens do checklist para saber quais geram NC
+                    const todosItens = await base44.entities.ItemChecklist.filter({
+                        tipo_unidade_id: unidade.tipo_unidade_id
+                    }, 'ordem', 100);
 
-                        const numeroNC = gerarNumeroNC(contadoresAtuais);
-                        const numeroDeterminacao = gerarNumeroDeterminacao(contadoresAtuais);
-                        const numeroRecomendacao = gerarNumeroRecomendacao(contadoresAtuais);
-
-                        // Incrementar contadores
-                        const novoContadores = {
-                            ...contadoresAtuais,
-                            NC: contadoresAtuais.NC + 1,
-                            D: contadoresAtuais.D + 1,
-                            R: contadoresAtuais.R + 1
-                        };
-                        setContadores(novoContadores);
-
-                        // Criar NC
-                        const nc = await base44.entities.NaoConformidade.create({
-                            unidade_fiscalizada_id: unidadeId,
-                            numero_nc: numeroNC,
-                            artigo_portaria: item.artigo_portaria || '',
-                            descricao: item.texto_nc || item.texto_constatacao_nao || item.pergunta,
-                            fotos: []
-                        });
-
-                        // Criar Determinação
-                        const textoDet = item.texto_determinacao || 'regularizar a situação identificada';
-                        const textoFinalDeterminacao = `Para sanar a ${numeroNC} ${textoDet}. Prazo: 30 dias.`;
-                        await base44.entities.Determinacao.create({
-                            unidade_fiscalizada_id: unidadeId,
-                            nao_conformidade_id: nc.id,
-                            numero_determinacao: numeroDeterminacao,
-                            descricao: textoFinalDeterminacao,
-                            prazo_dias: 30,
-                            status: 'pendente'
-                        });
-                    }
-
-                    // Atualizar resposta com novo texto
-                    await base44.entities.RespostaChecklist.update(resposta.id, {
-                        resposta: data.resposta,
-                        observacao: data.observacao,
-                        pergunta: textoConstatacao
+                    // 3. Deletar TODAS as NCs e Determinações existentes desta unidade
+                    const ncsExistentes = await base44.entities.NaoConformidade.filter({
+                        unidade_fiscalizada_id: unidadeId
                     });
-                } else {
-                    // Apenas atualizando observação, sem mudar resposta
-                    await base44.entities.RespostaChecklist.update(resposta.id, {
-                        resposta: data.resposta,
-                        observacao: data.observacao
+                    
+                    for (const nc of ncsExistentes) {
+                        const dets = await base44.entities.Determinacao.filter({
+                            nao_conformidade_id: nc.id
+                        });
+                        for (const det of dets) {
+                            await base44.entities.Determinacao.delete(det.id);
+                        }
+                        await base44.entities.NaoConformidade.delete(nc.id);
+                    }
+
+                    // 4. Renumerar constatações e recriar NCs/Ds
+                    let contadorC = 1;
+                    let contadorNC = 1;
+                    let contadorD = 1;
+
+                    for (const resp of todasRespostas) {
+                        const itemResp = todosItens.find(it => it.id === resp.item_checklist_id);
+                        
+                        // Só numerar se for SIM ou NÃO (não N/A)
+                        if (resp.resposta === 'SIM' || resp.resposta === 'NAO') {
+                            const numeroConstatacao = `C${contadorC}`;
+                            
+                            // Atualizar número da constatação
+                            await base44.entities.RespostaChecklist.update(resp.id, {
+                                numero_constatacao: numeroConstatacao
+                            });
+
+                            // Se gera NC e resposta é NÃO, criar NC e Determinação
+                            if (itemResp?.gera_nc && resp.resposta === 'NAO') {
+                                const numeroNC = `NC${contadorNC}`;
+                                const numeroDet = `D${contadorD}`;
+
+                                // Criar NC
+                                const nc = await base44.entities.NaoConformidade.create({
+                                    unidade_fiscalizada_id: unidadeId,
+                                    numero_nc: numeroNC,
+                                    artigo_portaria: itemResp.artigo_portaria || '',
+                                    descricao: itemResp.texto_nc || itemResp.texto_constatacao_nao || itemResp.pergunta || '',
+                                    fotos: []
+                                });
+
+                                // Criar Determinação
+                                const textoDet = itemResp.texto_determinacao || 'regularizar a situação identificada';
+                                const textoFinalDet = `Para sanar a ${numeroNC} ${textoDet}. Prazo: 30 dias.`;
+                                await base44.entities.Determinacao.create({
+                                    unidade_fiscalizada_id: unidadeId,
+                                    nao_conformidade_id: nc.id,
+                                    numero_determinacao: numeroDet,
+                                    descricao: textoFinalDet || '',
+                                    prazo_dias: 30,
+                                    status: 'pendente'
+                                });
+
+                                contadorNC++;
+                                contadorD++;
+                            }
+
+                            contadorC++;
+                        }
+                    }
+
+                    // Atualizar contadores locais
+                    setContadores({
+                        C: contadorC,
+                        NC: contadorNC,
+                        D: contadorD,
+                        R: 1
                     });
                 }
             } else {
