@@ -308,9 +308,16 @@ export default function VistoriarUnidade() {
                                 contadorNC++;
                                 contadorD++;
                             }
-
-                            contadorC++;
                         }
+                    }
+
+                    // Depois, renumerar constatações manuais
+                    for (const constManual of constatacoesManuaisParaRenumerar) {
+                        const numeroConstatacao = `C${contadorC}`;
+                        await base44.entities.ConstatacaoManual.update(constManual.id, {
+                            numero_constatacao: numeroConstatacao
+                        });
+                        contadorC++;
                     }
 
                     // Renumerar recomendações manuais (se existirem)
