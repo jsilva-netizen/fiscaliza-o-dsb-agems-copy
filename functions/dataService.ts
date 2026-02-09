@@ -573,7 +573,7 @@ class DataServiceClass {
       const dets = await this.readLocalData('determinacoes', { 
         unidade_fiscalizada_id: unidadeId 
       });
-      const recs = await this.readLocalData('recomendacao', { 
+      const recs = await this.readLocalData('recomendacoes', { 
         unidade_fiscalizada_id: unidadeId 
       });
 
