@@ -467,6 +467,36 @@ class DataServiceClass {
     }
   }
 
+  async getPendingCount() {
+    try {
+      if (!db || !db.syncQueue) return 0;
+      return await db.syncQueue.where('status').equals('pending').count();
+    } catch (error) {
+      console.error('Erro ao contar pendentes:', error);
+      return 0;
+    }
+  }
+
+  async getLastSync() {
+    try {
+      if (!db || !db.syncMeta) return null;
+      var lastSync = await db.syncMeta.get('lastSync');
+      return lastSync ? lastSync.value : null;
+    } catch (error) {
+      console.error('Erro ao obter ultimo sync:', error);
+      return null;
+    }
+  }
+
+  async saveLastSync(timestamp) {
+    try {
+      if (!db || !db.syncMeta) return;
+      await db.syncMeta.put({ key: 'lastSync', value: timestamp });
+    } catch (error) {
+      console.error('Erro ao salvar ultimo sync:', error);
+    }
+  }
+
   async clearSyncQueue() {
     await db.syncQueue.clear();
   }
