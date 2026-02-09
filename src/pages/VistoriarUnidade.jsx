@@ -520,11 +520,13 @@ export default function VistoriarUnidade() {
             if (constatacao.gera_nc) {
                 const numeroNC = gerarNumeroNC(novosContadores);
                 const numeroDeterminacao = gerarNumeroDeterminacao(novosContadores);
+                const numeroRecomendacao = gerarNumeroRecomendacao(novosContadores);
                 
                 setConstatacaoParaNC(constatacao);
                 setNumerosParaNC({
                     numeroNC,
                     numeroDeterminacao,
+                    numeroRecomendacao,
                     numeroConstatacao
                 });
                 setShowEditarNC(true);
