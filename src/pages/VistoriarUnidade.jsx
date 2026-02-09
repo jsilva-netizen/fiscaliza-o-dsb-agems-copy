@@ -150,8 +150,8 @@ export default function VistoriarUnidade() {
         }
     }, [respostasExistentes.length]);
 
-    const salvarRespostaMutation = useMutation({
-        mutationFn: async ({ itemId, data }) => {
+    // Salvar resposta de forma instantânea (offline-first)
+    const handleSalvarResposta = async (itemId, data) => {
             if (fiscalizacao?.status === 'finalizada' && !modoEdicao) {
                 throw new Error('Não é possível modificar uma fiscalização finalizada');
             }
