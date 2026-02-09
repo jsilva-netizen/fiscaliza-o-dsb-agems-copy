@@ -549,15 +549,28 @@ export default function VistoriarUnidade() {
 
             return { constatacao, novosContadores: contadoresAtualizados, numeroConstatacao };
         },
-        onSuccess: ({ constatacao, novosContadores, numeroConstatacao }) => {
+        onSuccess: async ({ constatacao, novosContadores, numeroConstatacao }) => {
             queryClient.invalidateQueries({ queryKey: ['constatacoes-manuais', unidadeId] });
             setShowAddConstatacao(false);
 
             // Se gera NC, abrir modal de edição
             if (constatacao.gera_nc) {
-                const numeroNC = gerarNumeroNC(novosContadores);
-                const numeroDeterminacao = gerarNumeroDeterminacao(novosContadores);
-                const numeroRecomendacao = gerarNumeroRecomendacao(novosContadores);
+                // Buscar contagem REAL de NCs e Determinações do banco
+                const ncsExistentesAgora = await base44.entities.NaoConformidade.filter({
+                    unidade_fiscalizada_id: unidadeId
+                });
+                
+                const determinacoesExistentesAgora = await base44.entities.Determinacao.filter({
+                    unidade_fiscalizada_id: unidadeId
+                });
+
+                const recomendacoesExistentesAgora = await base44.entities.Recomendacao.filter({
+                    unidade_fiscalizada_id: unidadeId
+                });
+
+                const numeroNC = `NC${ncsExistentesAgora.length + 1}`;
+                const numeroDeterminacao = `D${determinacoesExistentesAgora.length + 1}`;
+                const numeroRecomendacao = `R${recomendacoesExistentesAgora.length + 1}`;
                 
                 setConstatacaoParaNC(constatacao);
                 setNumerosParaNC({
