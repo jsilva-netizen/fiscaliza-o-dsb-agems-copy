@@ -324,12 +324,54 @@ export default function VistoriarUnidade() {
                         }
                     }
 
-                    // Depois, renumerar constatações manuais
+                    // Depois, renumerar constatações manuais E suas NCs/Ds associadas
                     for (const constManual of constatacoesManuaisParaRenumerar) {
                         const numeroConstatacao = `C${contadorC}`;
+                        
+                        // Atualizar número da constatação manual
                         await base44.entities.ConstatacaoManual.update(constManual.id, {
                             numero_constatacao: numeroConstatacao
                         });
+                        
+                        // Se gera NC, procurar e renumerar a NC/D associada
+                        if (constManual.gera_nc) {
+                            // Buscar NC associada à constatação manual
+                            const ncsAssociadas = await base44.entities.NaoConformidade.filter({
+                                unidade_fiscalizada_id: unidadeId
+                            });
+                            
+                            // Encontrar NC da constatação manual (não tem resposta_checklist_id)
+                            const ncManual = ncsAssociadas.find(nc => 
+                                !nc.resposta_checklist_id && 
+                                nc.descricao && 
+                                nc.descricao.includes(constManual.numero_constatacao)
+                            );
+                            
+                            if (ncManual) {
+                                const numeroNC = `NC${contadorNC}`;
+                                const numeroDet = `D${contadorD}`;
+                                
+                                // Atualizar NC
+                                await base44.entities.NaoConformidade.update(ncManual.id, {
+                                    numero_nc: numeroNC
+                                });
+                                
+                                // Buscar e atualizar Determinação associada
+                                const detsAssociadas = await base44.entities.Determinacao.filter({
+                                    nao_conformidade_id: ncManual.id
+                                });
+                                
+                                if (detsAssociadas.length > 0) {
+                                    await base44.entities.Determinacao.update(detsAssociadas[0].id, {
+                                        numero_determinacao: numeroDet
+                                    });
+                                }
+                                
+                                contadorNC++;
+                                contadorD++;
+                            }
+                        }
+                        
                         contadorC++;
                     }
 
