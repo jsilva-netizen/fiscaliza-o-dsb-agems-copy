@@ -239,22 +239,12 @@ export default function VistoriarUnidade() {
             
             return { itemId, data };
         },
-        onSuccess: async ({ itemId, data }) => {
-            // Aguardar invalidação e refetch das queries
-            await Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] }),
-                queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] }),
-                queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] }),
-                queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] })
-            ]);
-            
-            // Aguardar refetch completar
-            await queryClient.refetchQueries({ queryKey: ['respostas', unidadeId] });
-            await queryClient.refetchQueries({ queryKey: ['ncs', unidadeId] });
-            await queryClient.refetchQueries({ queryKey: ['determinacoes', unidadeId] });
-            
-            // Atualizar estado local APENAS após tudo ser recarregado
-            setRespostas(prev => ({ ...prev, [itemId]: data }));
+        onSuccess: ({ itemId, data }) => {
+            // Invalidar queries - React Query faz refetch automaticamente
+            queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
         },
         onError: (err) => {
             alert(err.message);
