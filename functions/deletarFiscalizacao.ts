@@ -21,9 +21,12 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Fiscalização não encontrada' }, { status: 404 });
         }
 
-        // Apenas o criador pode deletar
-        if (fiscalizacao[0].created_by !== user.email) {
-            return Response.json({ error: 'Apenas o criador pode deletar esta fiscalização' }, { status: 403 });
+        // Apenas o criador ou admin pode deletar
+        const isAdmin = user.role === 'admin';
+        const isCriador = fiscalizacao[0].created_by === user.email;
+        
+        if (!isAdmin && !isCriador) {
+            return Response.json({ error: 'Apenas o criador ou administrador pode deletar esta fiscalização' }, { status: 403 });
         }
 
         // Buscar todas as unidades
