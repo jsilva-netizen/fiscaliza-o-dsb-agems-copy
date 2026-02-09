@@ -10,7 +10,7 @@ import { NotificationService } from '@/components/offline/NotificationService';
  */
 export default function PushNotificationInitializer() {
     const { requestPermission } = usePushNotifications();
-    const { registerSync } = useBackgroundSync(true);
+    const { register } = useBackgroundSync();
 
     useEffect(() => {
         // Inicializar notificações

@@ -91,4 +91,8 @@ export class NotificationService {
     }
     return null;
   }
+
+  static async showPendingDataNotification(count) {
+    await this.showSyncNotification('pending', { count });
+  }
 }
