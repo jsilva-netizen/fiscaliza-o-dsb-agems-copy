@@ -48,6 +48,10 @@ class SyncServiceClass {
     window.dispatchEvent(new CustomEvent('sync-started'));
 
     try {
+      if (!db || !db.syncQueue) {
+        this.isSyncing = false;
+        return;
+      }
       const pending = await db.syncQueue.toArray();
       const byEntity = this.groupByEntity(pending);
 
@@ -225,23 +229,44 @@ class SyncServiceClass {
    * Retorna status de sincronização
    */
   async getSyncStatus() {
-    const pending = await db.syncQueue.where('status').equals('pending').toArray();
-    const failed = await db.syncQueue.where('status').equals('failed').toArray();
-    const lastSync = localStorage.getItem('lastSyncTime');
+    try {
+      if (!db || !db.syncQueue) {
+        return {
+          isSyncing: this.isSyncing,
+          pendingCount: 0,
+          failedCount: 0,
+          lastSyncTime: null,
+          hasErrors: false
+        };
+      }
+      const pending = await db.syncQueue.where('status').equals('pending').toArray();
+      const failed = await db.syncQueue.where('status').equals('failed').toArray();
+      const lastSync = localStorage.getItem('lastSyncTime');
 
-    return {
-      isSyncing: this.isSyncing,
-      pendingCount: pending.length,
-      failedCount: failed.length,
-      lastSyncTime: lastSync ? new Date(lastSync) : null,
-      hasErrors: failed.length > 0
-    };
+      return {
+        isSyncing: this.isSyncing,
+        pendingCount: pending.length,
+        failedCount: failed.length,
+        lastSyncTime: lastSync ? new Date(lastSync) : null,
+        hasErrors: failed.length > 0
+      };
+    } catch (err) {
+      console.warn('Error getting sync status:', err);
+      return {
+        isSyncing: this.isSyncing,
+        pendingCount: 0,
+        failedCount: 0,
+        lastSyncTime: null,
+        hasErrors: false
+      };
+    }
   }
 
   /**
-   * Retenta sincronização de falhas
-   */
+    * Retenta sincronização de falhas
+    */
   async retryFailed() {
+    if (!db || !db.syncQueue) return;
     const failed = await db.syncQueue.where('status').equals('failed').toArray();
 
     for (const item of failed) {
