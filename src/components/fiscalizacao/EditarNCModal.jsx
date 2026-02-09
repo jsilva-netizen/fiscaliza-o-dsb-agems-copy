@@ -109,36 +109,74 @@ export default function EditarNCModal({
                         </p>
                     </div>
 
-                    <div>
-                        <Label htmlFor="determinacao">
-                            Determinação ({numeroDeterminacao}) *
-                        </Label>
-                        <Textarea
-                            id="determinacao"
-                            placeholder="Descreva a determinação para sanar a NC..."
-                            value={textoDeterminacao}
-                            onChange={(e) => setTextoDeterminacao(e.target.value)}
-                            rows={4}
-                            className="mt-1"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                            Será formatada como: "Para sanar a {numeroNC} [seu texto aqui]. Prazo: 30 dias."
-                        </p>
+                    <div className="space-y-3 border-t pt-4">
+                        <Label className="text-base font-semibold">Esta NC gera:</Label>
+                        
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="gera_determinacao" 
+                                checked={geraDeterminacao}
+                                onCheckedChange={setGeraDeterminacao}
+                            />
+                            <Label htmlFor="gera_determinacao" className="cursor-pointer">
+                                Determinação ({numeroDeterminacao})
+                            </Label>
+                        </div>
+
+                        {geraDeterminacao && (
+                            <div className="ml-6">
+                                <Textarea
+                                    id="determinacao"
+                                    placeholder="Descreva a determinação para sanar a NC..."
+                                    value={textoDeterminacao}
+                                    onChange={(e) => setTextoDeterminacao(e.target.value)}
+                                    rows={3}
+                                    className="mt-1"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Será formatada como: "Para sanar a {numeroNC} [seu texto aqui]. Prazo: 30 dias."
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="flex items-center space-x-2">
+                            <Checkbox 
+                                id="gera_recomendacao" 
+                                checked={geraRecomendacao}
+                                onCheckedChange={setGeraRecomendacao}
+                            />
+                            <Label htmlFor="gera_recomendacao" className="cursor-pointer">
+                                Recomendação ({numeroRecomendacao})
+                            </Label>
+                        </div>
+
+                        {geraRecomendacao && (
+                            <div className="ml-6">
+                                <Textarea
+                                    id="recomendacao"
+                                    placeholder="Descreva a recomendação..."
+                                    value={textoRecomendacao}
+                                    onChange={(e) => setTextoRecomendacao(e.target.value)}
+                                    rows={3}
+                                    className="mt-1"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex gap-2 pt-4 border-t">
                         <Button 
                             className="flex-1 bg-red-600 hover:bg-red-700"
                             onClick={handleSave}
-                            disabled={!textoNC.trim() || !textoDeterminacao.trim() || isSaving}
+                            disabled={!textoNC.trim() || (!geraDeterminacao && !geraRecomendacao) || isSaving}
                         >
                             {isSaving ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                    Salvando NC e Determinação...
+                                    Salvando...
                                 </>
                             ) : (
-                                'Salvar NC e Determinação'
+                                'Salvar NC'
                             )}
                         </Button>
                         <Button 
