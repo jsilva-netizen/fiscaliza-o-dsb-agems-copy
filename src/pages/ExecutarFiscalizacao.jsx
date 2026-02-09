@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import db from '@/functions/offlineDb';
 
 export default function ExecutarFiscalizacao() {
     const queryClient = useQueryClient();
@@ -43,7 +44,11 @@ export default function ExecutarFiscalizacao() {
 
     const { data: fiscalizacao, isLoading: loadingFiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', fiscalizacaoId],
-        queryFn: () => DataService.read('Fiscalizacao', { id: fiscalizacaoId }).then(r => r[0]),
+        queryFn: async () => {
+            if (!db.isOpen()) await db.open();
+            const result = await DataService.read('Fiscalizacao', { id: fiscalizacaoId });
+            return Array.isArray(result) ? result[0] : null;
+        },
         enabled: !!fiscalizacaoId,
         staleTime: 60000,
         gcTime: 300000
@@ -51,7 +56,11 @@ export default function ExecutarFiscalizacao() {
 
     const { data: unidades = [], isLoading: loadingUnidades } = useQuery({
         queryKey: ['unidades-fiscalizacao', fiscalizacaoId],
-        queryFn: () => DataService.read('UnidadeFiscalizada', { fiscalizacao_id: fiscalizacaoId }, '-created_date', 50),
+        queryFn: async () => {
+            if (!db.isOpen()) await db.open();
+            const result = await DataService.read('UnidadeFiscalizada', { fiscalizacao_id: fiscalizacaoId });
+            return Array.isArray(result) ? result : [];
+        },
         enabled: !!fiscalizacaoId,
         staleTime: 30000,
         gcTime: 300000
@@ -59,7 +68,11 @@ export default function ExecutarFiscalizacao() {
 
     const { data: tipos = [] } = useQuery({
         queryKey: ['tipos-unidade'],
-        queryFn: () => DataService.read('TipoUnidade', {}, 'nome', 100),
+        queryFn: async () => {
+            if (!db.isOpen()) await db.open();
+            const result = await DataService.read('TipoUnidade', {});
+            return Array.isArray(result) ? result : [];
+        },
         staleTime: 3600000,
         gcTime: 86400000
     });

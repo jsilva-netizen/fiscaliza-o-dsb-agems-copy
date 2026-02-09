@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import DataService from '@/functions/dataService';
+import db from '@/functions/offlineDb';
 import OfflineSyncButton from '@/components/offline/OfflineSyncButton';
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,18 +29,30 @@ export default function AdicionarUnidade() {
 
     const { data: fiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', fiscalizacaoId],
-        queryFn: () => DataService.read('Fiscalizacao', { id: fiscalizacaoId }).then(r => r[0]),
+        queryFn: async () => {
+            if (!db.isOpen()) await db.open();
+            const result = await DataService.read('Fiscalizacao', { id: fiscalizacaoId });
+            return Array.isArray(result) ? result[0] : null;
+        },
         enabled: !!fiscalizacaoId
     });
 
     const { data: tipos = [] } = useQuery({
         queryKey: ['tipos-unidade'],
-        queryFn: () => DataService.read('TipoUnidade', {}, 'nome', 100)
+        queryFn: async () => {
+            if (!db.isOpen()) await db.open();
+            const result = await DataService.read('TipoUnidade', {});
+            return Array.isArray(result) ? result : [];
+        }
     });
 
     const { data: unidadesExistentes = [] } = useQuery({
         queryKey: ['unidades-existentes', fiscalizacaoId],
-        queryFn: () => DataService.read('UnidadeFiscalizada', { fiscalizacao_id: fiscalizacaoId }, 'created_date', 500),
+        queryFn: async () => {
+            if (!db.isOpen()) await db.open();
+            const result = await DataService.read('UnidadeFiscalizada', { fiscalizacao_id: fiscalizacaoId });
+            return Array.isArray(result) ? result : [];
+        },
         enabled: !!fiscalizacaoId
     });
 

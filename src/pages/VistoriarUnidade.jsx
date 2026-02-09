@@ -4,6 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import DataService from '@/functions/dataService';
+import db from '@/functions/offlineDb';
 import OfflineSyncButton from '@/components/offline/OfflineSyncButton';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,21 +48,33 @@ export default function VistoriarUnidade() {
     // Queries - Carregamento offline-first
     const { data: unidade, isLoading: loadingUnidade } = useQuery({
         queryKey: ['unidade', unidadeId],
-        queryFn: () => DataService.read('UnidadeFiscalizada', { id: unidadeId }).then(r => r[0]),
+        queryFn: async () => {
+            if (!db.isOpen()) await db.open();
+            const result = await DataService.read('UnidadeFiscalizada', { id: unidadeId });
+            return Array.isArray(result) ? result[0] : null;
+        },
         enabled: !!unidadeId,
         staleTime: 5000,
     });
 
     const { data: fiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', unidade?.fiscalizacao_id],
-        queryFn: () => DataService.read('Fiscalizacao', { id: unidade?.fiscalizacao_id }).then(r => r[0]),
+        queryFn: async () => {
+            if (!db.isOpen()) await db.open();
+            const result = await DataService.read('Fiscalizacao', { id: unidade?.fiscalizacao_id });
+            return Array.isArray(result) ? result[0] : null;
+        },
         enabled: !!unidade?.fiscalizacao_id,
         staleTime: 5000,
     });
 
     const { data: itensChecklist = [] } = useQuery({
         queryKey: ['itensChecklist', unidade?.tipo_unidade_id],
-        queryFn: () => DataService.read('ItemChecklist', { tipo_unidade_id: unidade?.tipo_unidade_id }, 'ordem', 100),
+        queryFn: async () => {
+            if (!db.isOpen()) await db.open();
+            const result = await DataService.read('ItemChecklist', { tipo_unidade_id: unidade?.tipo_unidade_id });
+            return Array.isArray(result) ? result : [];
+        },
         enabled: !!unidade?.tipo_unidade_id,
         staleTime: 60000,
     });
@@ -69,6 +82,7 @@ export default function VistoriarUnidade() {
     const { data: respostasExistentes = [] } = useQuery({
         queryKey: ['respostas', unidadeId],
         queryFn: async () => {
+            if (!db.isOpen()) await db.open();
             const result = await DataService.read('RespostaChecklist', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
@@ -79,6 +93,7 @@ export default function VistoriarUnidade() {
     const { data: ncsExistentes = [] } = useQuery({
         queryKey: ['ncs', unidadeId],
         queryFn: async () => {
+            if (!db.isOpen()) await db.open();
             const result = await DataService.read('NaoConformidade', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
@@ -89,6 +104,7 @@ export default function VistoriarUnidade() {
     const { data: determinacoesExistentes = [] } = useQuery({
         queryKey: ['determinacoes', unidadeId],
         queryFn: async () => {
+            if (!db.isOpen()) await db.open();
             const result = await DataService.read('Determinacao', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
@@ -99,6 +115,7 @@ export default function VistoriarUnidade() {
     const { data: recomendacoesExistentes = [] } = useQuery({
         queryKey: ['recomendacoes', unidadeId],
         queryFn: async () => {
+            if (!db.isOpen()) await db.open();
             const result = await DataService.read('Recomendacao', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },
@@ -109,6 +126,7 @@ export default function VistoriarUnidade() {
     const { data: constatacoesManuais = [] } = useQuery({
         queryKey: ['constatacoes-manuais', unidadeId],
         queryFn: async () => {
+            if (!db.isOpen()) await db.open();
             const result = await DataService.read('ConstatacaoManual', { unidade_fiscalizada_id: unidadeId });
             return Array.isArray(result) ? result : [];
         },

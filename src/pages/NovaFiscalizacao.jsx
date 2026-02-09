@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import DataService from '@/functions/dataService';
 import OfflineSyncButton from '@/components/offline/OfflineSyncButton';
 
+console.log('[NovaFiscalizacao] Componente carregado. DataService:', typeof DataService);
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
