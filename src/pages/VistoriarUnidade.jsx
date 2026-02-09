@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DataService } from '@/components/offline/DataService';
+import { useSyncManager } from '@/components/offline/useSyncManager';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -175,6 +177,7 @@ export default function VistoriarUnidade() {
             if (!item) return;
 
             const resposta = respostasExistentes.find(r => r.item_checklist_id === itemId);
+            // Usar DataService para todas as operações
             const respostaAnterior = resposta?.resposta;
             const mudouResposta = respostaAnterior !== data.resposta;
 
@@ -194,21 +197,21 @@ export default function VistoriarUnidade() {
                 }
 
                 // Atualizar a resposta
-                await base44.entities.RespostaChecklist.update(resposta.id, {
-                    resposta: data.resposta,
-                    observacao: data.observacao || '',
-                    pergunta: textoConstatacao || ''
+                await DataService.update('RespostaChecklist', resposta.id, {
+                   resposta: data.resposta,
+                   observacao: data.observacao || '',
+                   pergunta: textoConstatacao || ''
                 });
 
                 // Se mudou a resposta, renumerar tudo
                 if (mudouResposta) {
                     // 1. Buscar todas as respostas da unidade (incluindo a que acabamos de atualizar)
-                    const todasRespostas = await base44.entities.RespostaChecklist.filter({
+                    const todasRespostas = await DataService.read('RespostaChecklist', {
                         unidade_fiscalizada_id: unidadeId
                     }, 'created_date', 200);
 
                     // 2. Buscar todos os itens do checklist para saber quais geram NC
-                    const todosItens = await base44.entities.ItemChecklist.filter({
+                    const todosItens = await DataService.read('ItemChecklist', {
                         tipo_unidade_id: unidade.tipo_unidade_id
                     }, 'ordem', 100);
 
