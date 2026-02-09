@@ -281,14 +281,26 @@ export default function VistoriarUnidade() {
                     });
                 }
             } else {
-                // Carregar contadores globais na primeira resposta (se não carregou)
-                let contadoresAtuais = contadores;
-                if (!contadoresCarregados || !contadoresAtuais) {
-                    const contadoresCalc = await calcularProximaNumeracao(unidade.fiscalizacao_id, unidadeId, base44);
-                    contadoresAtuais = contadoresCalc;
-                    setContadores(contadoresCalc);
-                    setContadoresCarregados(true);
-                }
+                // Buscar contagem REAL do banco para garantir numeração correta
+                const respostasExistentesAgora = await base44.entities.RespostaChecklist.filter({
+                    unidade_fiscalizada_id: unidadeId
+                }, 'created_date', 200);
+                
+                const ncsExistentesAgora = await base44.entities.NaoConformidade.filter({
+                    unidade_fiscalizada_id: unidadeId
+                });
+                
+                const determinacoesExistentesAgora = await base44.entities.Determinacao.filter({
+                    unidade_fiscalizada_id: unidadeId
+                });
+
+                // Contar apenas respostas SIM/NÃO (não N/A)
+                const contadorC = respostasExistentesAgora.filter(r => 
+                    r.resposta === 'SIM' || r.resposta === 'NAO'
+                ).length + 1;
+                
+                const contadorNC = ncsExistentesAgora.length + 1;
+                const contadorD = determinacoesExistentesAgora.length + 1;
 
                 // Definir texto da constatação baseado na resposta
                 let textoConstatacao = data.resposta === 'SIM' 
@@ -303,32 +315,21 @@ export default function VistoriarUnidade() {
                 }
 
                 // Só gerar número de constatação para SIM ou NÃO (não para N/A)
-                const numero = (data.resposta === 'SIM' || data.resposta === 'NAO') 
-                    ? gerarNumeroConstatacao(contadoresAtuais) 
+                const numeroConstatacao = (data.resposta === 'SIM' || data.resposta === 'NAO') 
+                    ? `C${contadorC}`
                     : null;
 
                 if (item.gera_nc && data.resposta === 'NAO') {
-                    // Gerar números ANTES de chamar a função (importante para ordem correta)
-                    const numeroNC = gerarNumeroNC(contadoresAtuais);
-                    const numeroDeterminacao = gerarNumeroDeterminacao(contadoresAtuais);
-                    const numeroRecomendacao = gerarNumeroRecomendacao(contadoresAtuais);
+                    const numeroNC = `NC${contadorNC}`;
+                    const numeroDeterminacao = `D${contadorD}`;
+                    const numeroRecomendacao = `R${contadorNC}`; // Usa mesmo contador que NC
                     
-                    // Incrementar contadores localmente ANTES da chamada (para sincronizar)
-                    const novoContadores = {
-                        C: contadoresAtuais.C + 1,
-                        NC: contadoresAtuais.NC + 1,
-                        D: contadoresAtuais.D + 1,
-                        R: contadoresAtuais.R + 1
-                    };
-                    setContadores(novoContadores);
-                    contadoresAtuais = novoContadores;
-                    
-                    // Usar backend function para criar Resposta + NC + D/R atomicamente com números contínuos
+                    // Usar backend function para criar Resposta + NC + D/R atomicamente
                     await base44.functions.invoke('criarNcComDeterminacao', {
                         unidade_fiscalizada_id: unidadeId,
                         item_checklist_id: itemId,
                         pergunta: textoConstatacao,
-                        numero_constatacao: numero,
+                        numero_constatacao: numeroConstatacao,
                         numero_nc: numeroNC,
                         numero_determinacao: numeroDeterminacao,
                         numero_recomendacao: numeroRecomendacao,
@@ -346,17 +347,9 @@ export default function VistoriarUnidade() {
                         pergunta: textoConstatacao,
                         resposta: data.resposta,
                         gera_nc: item.gera_nc,
-                        numero_constatacao: numero,
+                        numero_constatacao: numeroConstatacao,
                         observacao: data.observacao
                     });
-                    
-                    // Incrementar apenas o contador de constatações se não for N/A
-                    if (data.resposta === 'SIM' || data.resposta === 'NAO') {
-                        setContadores(prev => ({
-                            ...prev,
-                            C: prev.C + 1
-                        }));
-                    }
                 }
             }
             
