@@ -1,13 +1,16 @@
 import Dexie from 'dexie';
 
+console.log('[OfflineDb] Inicializando Dexie...');
+
 let dbInstance = null;
 
 function initializeDb() {
   if (dbInstance) return dbInstance;
 
+  console.log('[OfflineDb] Criando instância do Dexie...');
   const db = new Dexie('AgemsFiscalizacaoOffline');
 
-  db.version(2).stores({
+  db.version(3).stores({
     // Dados de referência (somente leitura local)
     municipios: 'id, nome',
     prestadores_servico: 'id, nome, ativo',
@@ -40,10 +43,13 @@ function initializeDb() {
   });
 
   dbInstance = db;
+  console.log('[OfflineDb] Dexie inicializado com sucesso');
   return db;
 }
 
 // Inicializa imediatamente
 const db = initializeDb();
+console.log('[OfflineDb] Exportando instância do banco:', db ? 'OK' : 'FALHA');
 
 export default db;
+export { db };

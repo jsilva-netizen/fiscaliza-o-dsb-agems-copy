@@ -65,7 +65,7 @@ class DataServiceClass {
       if (this.isConnected()) {
         try {
           console.log('[DataService] Online - buscando ' + entityName + ' do servidor...');
-          const serverData = await base44.entities[entityName].list('nome', 500);
+          const serverData = await base44.entities[entityName].list();
           console.log('[DataService] Servidor retornou: ' + (serverData ? serverData.length : 0) + ' registros de ' + entityName);
 
           if (serverData && serverData.length > 0) {
@@ -274,6 +274,7 @@ class DataServiceClass {
         error: error.message || 'Erro desconhecido'
       });
     }
+  }
 
     // Download TipoUnidade
     try {
@@ -612,19 +613,55 @@ class DataServiceClass {
 
 // Métodos de conveniência para dados de referência
 DataServiceClass.prototype.getMunicipios = async function() {
-  return this.readReferenceData('Municipio', 'municipios', {});
+  try {
+    if (!db.isOpen()) {
+      console.log('[DataService] Abrindo banco de dados...');
+      await db.open();
+    }
+    return this.readReferenceData('Municipio', 'municipios', {});
+  } catch (error) {
+    console.error('[DataService] Erro em getMunicipios:', error);
+    return [];
+  }
 };
 
 DataServiceClass.prototype.getPrestadores = async function(filter) {
-  return this.readReferenceData('PrestadorServico', 'prestadores_servico', filter || {});
+  try {
+    if (!db.isOpen()) {
+      console.log('[DataService] Abrindo banco de dados...');
+      await db.open();
+    }
+    return this.readReferenceData('PrestadorServico', 'prestadores_servico', filter || {});
+  } catch (error) {
+    console.error('[DataService] Erro em getPrestadores:', error);
+    return [];
+  }
 };
 
 DataServiceClass.prototype.getTiposUnidade = async function(filter) {
-  return this.readReferenceData('TipoUnidade', 'tipos_unidade', filter || {});
+  try {
+    if (!db.isOpen()) {
+      console.log('[DataService] Abrindo banco de dados...');
+      await db.open();
+    }
+    return this.readReferenceData('TipoUnidade', 'tipos_unidade', filter || {});
+  } catch (error) {
+    console.error('[DataService] Erro em getTiposUnidade:', error);
+    return [];
+  }
 };
 
 DataServiceClass.prototype.getItemChecklist = async function(filter) {
-  return this.readReferenceData('ItemChecklist', 'item_checklist', filter || {});
+  try {
+    if (!db.isOpen()) {
+      console.log('[DataService] Abrindo banco de dados...');
+      await db.open();
+    }
+    return this.readReferenceData('ItemChecklist', 'item_checklist', filter || {});
+  } catch (error) {
+    console.error('[DataService] Erro em getItemChecklist:', error);
+    return [];
+  }
 };
 
 const DataService = new DataServiceClass();
