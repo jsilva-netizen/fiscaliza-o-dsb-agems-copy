@@ -346,10 +346,12 @@ export default function VistoriarUnidade() {
                     unidade_fiscalizada_id: unidadeId
                 });
 
-                // Contar apenas respostas SIM/NÃO (não N/A)
-                const contadorC = respostasExistentesAgora.filter(r => 
-                    r.resposta === 'SIM' || r.resposta === 'NAO'
-                ).length + 1;
+                // Contar apenas respostas SIM/NÃO que tenham texto configurado
+                const contadorC = respostasExistentesAgora.filter(r => {
+                    if (r.resposta !== 'SIM' && r.resposta !== 'NAO') return false;
+                    // Verificar se tem texto na pergunta (que é onde salvamos o texto da constatação)
+                    return r.pergunta && r.pergunta.trim();
+                }).length + 1;
                 
                 const contadorNC = ncsExistentesAgora.length + 1;
                 const contadorD = determinacoesExistentesAgora.length + 1;
