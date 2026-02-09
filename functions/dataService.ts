@@ -279,49 +279,66 @@ class DataServiceClass {
    */
 
   /**
-   * Baixa forçadamente todos os dados auxiliares do servidor
-   * Ideal para preparar tablet offline antes de viagem
-   */
-  async downloadAllReferenceData() {
-    if (!this.isConnected()) {
-      throw new Error('Sem conexão de internet. Não é possível baixar dados.');
-    }
+    * Baixa forçadamente todos os dados auxiliares do servidor
+    * Ideal para preparar tablet offline antes de viagem
+    */
+   async downloadAllReferenceData() {
+     if (!this.isConnected()) {
+       throw new Error('Sem conexão de internet. Não é possível baixar dados.');
+     }
 
-    try {
-      const referenceEntities = [
-        'Municipio',
-        'PrestadorServico',
-        'TipoUnidade',
-        'ItemChecklist',
-      ];
+     try {
+       const referenceEntities = [
+         { name: 'Municipio', sort: 'nome', limit: 500 },
+         { name: 'PrestadorServico', sort: 'nome', limit: 500 },
+         { name: 'TipoUnidade', sort: 'nome', limit: 500 },
+         { name: 'ItemChecklist', sort: 'ordem', limit: 1000 },
+       ];
 
-      const results = {
-        success: [],
-        failed: [],
-      };
+       const results = {
+         success: [],
+         failed: [],
+       };
 
-      for (const entityName of referenceEntities) {
-        try {
-          const data = await base44.entities[entityName].list();
-          const mapping = this.entityMappings[entityName];
-          await db[mapping.table].clear();
-          await db[mapping.table].bulkPut(data);
-          results.success.push(entityName);
-        } catch (error) {
-          console.error(`Erro ao baixar ${entityName}:`, error);
-          results.failed.push({ entity: entityName, error: error.message });
-        }
-      }
+       for (const entityConfig of referenceEntities) {
+         try {
+           const entityName = entityConfig.name;
+           console.log(`[DownloadRef] Iniciando download de ${entityName}...`);
 
-      window.dispatchEvent(
-        new CustomEvent('data-service:download-complete', { detail: results })
-      );
-      return results;
-    } catch (error) {
-      console.error('Erro no download de dados de referência:', error);
-      throw error;
-    }
-  }
+           // Chama com os mesmos parâmetros que read() usa
+           const data = await base44.entities[entityName].list(entityConfig.sort, entityConfig.limit);
+
+           if (!data || data.length === 0) {
+             console.warn(`[DownloadRef] ${entityName} retornou vazio do servidor`);
+           }
+
+           const mapping = this.entityMappings[entityName];
+           await db[mapping.table].clear();
+
+           if (data && data.length > 0) {
+             await db[mapping.table].bulkPut(data);
+           }
+
+           console.log(`[DownloadRef] ✓ ${entityName}: ${data?.length || 0} registros`);
+           results.success.push(entityName);
+         } catch (error) {
+           console.error(`[DownloadRef] Erro ao baixar ${entityConfig.name}:`, error);
+           results.failed.push({ 
+             entity: entityConfig.name, 
+             error: error.message || 'Erro desconhecido'
+           });
+         }
+       }
+
+       window.dispatchEvent(
+         new CustomEvent('data-service:download-complete', { detail: results })
+       );
+       return results;
+     } catch (error) {
+       console.error('Erro no download de dados de referência:', error);
+       throw error;
+     }
+   }
 
   /**
    * Processa fila de sincronização
