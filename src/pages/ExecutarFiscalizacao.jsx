@@ -10,8 +10,18 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
     ArrowLeft, Plus, Building2, CheckCircle2, AlertTriangle, 
-    Camera, MapPin, Clock, FileText, Loader2 
+    Camera, MapPin, Clock, FileText, Loader2, Trash2, Edit
 } from 'lucide-react';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -20,6 +30,14 @@ export default function ExecutarFiscalizacao() {
     const navigate = useNavigate();
     const urlParams = new URLSearchParams(window.location.search);
     const fiscalizacaoId = urlParams.get('id');
+    const [unidadeParaExcluir, setUnidadeParaExcluir] = useState(null);
+    const [mostrarConfirmacaoFinalizacao, setMostrarConfirmacaoFinalizacao] = useState(false);
+    const [user, setUser] = useState(null);
+
+    // Buscar usuário atual
+    useEffect(() => {
+        base44.auth.me().then(setUser).catch(() => setUser(null));
+    }, []);
 
     const { data: fiscalizacao, isLoading: loadingFiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', fiscalizacaoId],
@@ -90,6 +108,45 @@ export default function ExecutarFiscalizacao() {
             alert(err.message);
         }
     });
+
+    const excluirUnidadeMutation = useMutation({
+        mutationFn: async (unidadeId) => {
+            return await base44.functions.invoke('deleteUnidadeFiscalizadaComCascade', {
+                unidade_id: unidadeId
+            });
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['unidades-fiscalizacao', fiscalizacaoId] });
+            queryClient.invalidateQueries({ queryKey: ['fiscalizacao', fiscalizacaoId] });
+            setUnidadeParaExcluir(null);
+        }
+    });
+
+    const handleExcluirUnidade = (e, unidade) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setUnidadeParaExcluir(unidade);
+    };
+
+    const confirmarExclusaoUnidade = () => {
+        if (unidadeParaExcluir) {
+            excluirUnidadeMutation.mutate(unidadeParaExcluir.id);
+        }
+    };
+
+    const handleEditarUnidade = (e, unidadeId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        navigate(createPageUrl('VistoriarUnidade') + `?id=${unidadeId}&modo=edicao`);
+    };
+
+    const podeEditarOuExcluir = () => {
+        if (!user) return false;
+        if (fiscalizacao?.status === 'finalizada') return false;
+        const isAdmin = user.role === 'admin';
+        const isFiscalCriador = fiscalizacao?.fiscal_email === user.email;
+        return isAdmin || isFiscalCriador;
+    };
 
     if (loadingFiscalizacao) {
         return (
@@ -190,55 +247,77 @@ export default function ExecutarFiscalizacao() {
                 {/* Units List */}
                 <div className="space-y-3">
                     {unidades.map((unidade) => (
-                        <Link 
-                            key={unidade.id} 
-                            to={createPageUrl('VistoriarUnidade') + `?id=${unidade.id}`}
-                        >
-                            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                                <CardContent className="p-4">
-                                    <div className="flex items-start gap-3">
-                                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                                            unidade.status === 'finalizada' ? 'bg-green-100' : 'bg-blue-100'
-                                        }`}>
-                                            <Building2 className={`h-6 w-6 ${
-                                                unidade.status === 'finalizada' ? 'text-green-600' : 'text-blue-600'
-                                            }`} />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <h3 className="font-medium">{unidade.tipo_unidade_nome}</h3>
-                                                    {unidade.nome_unidade && (
-                                                        <p className="text-sm text-gray-500">{unidade.nome_unidade}</p>
-                                                    )}
+                        <div key={unidade.id} className="relative">
+                            <Link to={createPageUrl('VistoriarUnidade') + `?id=${unidade.id}`}>
+                                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                                    <CardContent className="p-4">
+                                        <div className="flex items-start gap-3">
+                                            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                                                unidade.status === 'finalizada' ? 'bg-green-100' : 'bg-blue-100'
+                                            }`}>
+                                                <Building2 className={`h-6 w-6 ${
+                                                    unidade.status === 'finalizada' ? 'text-green-600' : 'text-blue-600'
+                                                }`} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <h3 className="font-medium">{unidade.tipo_unidade_nome}</h3>
+                                                        {unidade.nome_unidade && (
+                                                            <p className="text-sm text-gray-500">{unidade.nome_unidade}</p>
+                                                        )}
+                                                    </div>
+                                                    <Badge variant={unidade.status === 'finalizada' ? 'default' : 'secondary'} className="text-xs">
+                                                        {unidade.status === 'finalizada' ? (
+                                                            <><CheckCircle2 className="h-3 w-3 mr-1" /> Completa</>
+                                                        ) : (
+                                                            'Pendente'
+                                                        )}
+                                                    </Badge>
                                                 </div>
-                                                <Badge variant={unidade.status === 'finalizada' ? 'default' : 'secondary'} className="text-xs">
-                                                    {unidade.status === 'finalizada' ? (
-                                                        <><CheckCircle2 className="h-3 w-3 mr-1" /> Completa</>
-                                                    ) : (
-                                                        'Pendente'
-                                                    )}
-                                                </Badge>
-                                            </div>
-                                            <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
-                                                <span className="flex items-center gap-1">
-                                                    <CheckCircle2 className="h-3 w-3 text-green-500" />
-                                                    {unidade.total_constatacoes || 0} C
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <AlertTriangle className="h-3 w-3 text-red-500" />
-                                                    {unidade.total_ncs || 0} NC
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Camera className="h-3 w-3" />
-                                                    {unidade.fotos_unidade?.length || 0} fotos
-                                                </span>
+                                                <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
+                                                    <span className="flex items-center gap-1">
+                                                        <CheckCircle2 className="h-3 w-3 text-green-500" />
+                                                        {unidade.total_constatacoes || 0} C
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <AlertTriangle className="h-3 w-3 text-red-500" />
+                                                        {unidade.total_ncs || 0} NC
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Camera className="h-3 w-3" />
+                                                        {unidade.fotos_unidade?.length || 0} fotos
+                                                    </span>
+                                                </div>
+                                                {podeEditarOuExcluir() && (
+                                                    <div className="flex gap-2 mt-3">
+                                                        {unidade.status === 'finalizada' && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={(e) => handleEditarUnidade(e, unidade.id)}
+                                                            >
+                                                                <Edit className="w-3 h-3 mr-1" />
+                                                                Editar
+                                                            </Button>
+                                                        )}
+                                                        <Button
+                                                            size="sm"
+                                                            variant="destructive"
+                                                            onClick={(e) => handleExcluirUnidade(e, unidade)}
+                                                            disabled={excluirUnidadeMutation.isPending}
+                                                        >
+                                                            <Trash2 className="w-3 h-3 mr-1" />
+                                                            Excluir
+                                                        </Button>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
+                                    </CardContent>
+                                </Card>
+                            </Link>
+                        </div>
                     ))}
                 </div>
 
@@ -255,11 +334,7 @@ export default function ExecutarFiscalizacao() {
                     <div className="mt-6 space-y-2">
                         <Button 
                             className="w-full h-14 bg-blue-600 hover:bg-blue-700"
-                            onClick={() => {
-                                if (confirm('Deseja finalizar esta fiscalização? Não será possível adicionar mais unidades.')) {
-                                    finalizarMutation.mutate();
-                                }
-                            }}
+                            onClick={() => setMostrarConfirmacaoFinalizacao(true)}
                             disabled={finalizarMutation.isPending}
                         >
                             {finalizarMutation.isPending ? (
@@ -272,6 +347,90 @@ export default function ExecutarFiscalizacao() {
                     </div>
                 )}
             </div>
+
+            {/* Dialog de confirmação para excluir unidade */}
+            <AlertDialog open={!!unidadeParaExcluir} onOpenChange={() => setUnidadeParaExcluir(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir Unidade</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tem certeza que deseja excluir a unidade <strong>{unidadeParaExcluir?.nome_unidade || unidadeParaExcluir?.tipo_unidade_nome}</strong>?
+                            <br /><br />
+                            Esta ação irá:
+                            <ul className="list-disc ml-6 mt-2">
+                                <li>Excluir todos os dados do checklist</li>
+                                <li>Excluir todas as constatações, NCs e determinações</li>
+                                <li>Excluir todas as fotos e evidências</li>
+                                <li>Recalcular a numeração de todas as outras unidades</li>
+                            </ul>
+                            <br />
+                            <strong>Esta ação não pode ser desfeita.</strong>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={excluirUnidadeMutation.isPending}>
+                            Cancelar
+                        </AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={confirmarExclusaoUnidade}
+                            disabled={excluirUnidadeMutation.isPending}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {excluirUnidadeMutation.isPending ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Excluindo...
+                                </>
+                            ) : (
+                                'Sim, Excluir'
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Dialog de confirmação dupla para finalizar fiscalização */}
+            <AlertDialog open={mostrarConfirmacaoFinalizacao} onOpenChange={setMostrarConfirmacaoFinalizacao}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Finalizar Fiscalização</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Tem certeza que deseja finalizar esta fiscalização?
+                            <br /><br />
+                            Após a finalização:
+                            <ul className="list-disc ml-6 mt-2">
+                                <li>Nenhuma unidade poderá ser editada ou excluída</li>
+                                <li>Nenhuma nova unidade poderá ser adicionada</li>
+                                <li>A fiscalização ficará disponível apenas para visualização</li>
+                            </ul>
+                            <br />
+                            <strong>Esta ação não pode ser desfeita (exceto por administradores).</strong>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={finalizarMutation.isPending}>
+                            Cancelar
+                        </AlertDialogCancel>
+                        <AlertDialogAction 
+                            onClick={() => {
+                                setMostrarConfirmacaoFinalizacao(false);
+                                finalizarMutation.mutate();
+                            }}
+                            disabled={finalizarMutation.isPending}
+                            className="bg-green-600 hover:bg-green-700"
+                        >
+                            {finalizarMutation.isPending ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Finalizando...
+                                </>
+                            ) : (
+                                'Sim, Finalizar'
+                            )}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             </div>
             );
             }
