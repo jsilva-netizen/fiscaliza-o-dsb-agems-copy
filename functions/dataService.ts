@@ -82,9 +82,13 @@ class DataServiceClass {
 
       // Se vazio e online, busca do servidor
       if (results.length === 0 && this.isConnected()) {
+        console.log(`Buscando ${entityName} do servidor...`);
         results = await base44.entities[entityName].list();
+        console.log(`${entityName} recebido:`, results);
         // Salva no cache em background
-        await db[tableName].bulkPut(results);
+        if (results && results.length > 0) {
+          await db[tableName].bulkPut(results);
+        }
       }
 
       // Aplica filtro simples
