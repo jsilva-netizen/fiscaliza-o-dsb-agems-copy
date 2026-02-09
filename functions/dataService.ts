@@ -81,22 +81,27 @@ class DataServiceClass {
       // Se online, sempre tenta buscar do servidor primeiro
       if (this.isConnected()) {
         try {
-          results = await base44.entities[entityName].list();
-          if (results && results.length > 0) {
+          const serverData = await base44.entities[entityName].list();
+          if (serverData && serverData.length > 0) {
             // Atualiza cache com dados do servidor
             await db[tableName].clear();
-            await db[tableName].bulkPut(results);
-            return this.applyFilter(results, filter);
+            await db[tableName].bulkPut(serverData);
+            results = serverData;
+          } else {
+            // Se servidor retornar vazio, usa cache
+            results = await db[tableName].toArray();
           }
+          return this.applyFilter(results, filter);
         } catch (serverError) {
-          console.warn(`Erro ao buscar ${entityName} do servidor:`, serverError);
-          // Continua com fallback ao cache local
+          // Se falhar no servidor, usa cache
+          results = await db[tableName].toArray();
+          return this.applyFilter(results, filter);
         }
+      } else {
+        // Se offline, usa cache
+        results = await db[tableName].toArray();
+        return this.applyFilter(results, filter);
       }
-
-      // Fallback: retorna dados locais
-      results = await db[tableName].toArray();
-      return this.applyFilter(results, filter);
     } catch (error) {
       console.error(`Erro ao ler ${tableName}:`, error);
       return [];
