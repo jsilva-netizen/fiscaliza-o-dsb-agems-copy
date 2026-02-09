@@ -565,14 +565,14 @@ export default function VistoriarUnidade() {
                         )}
 
                         {/* Constatações Manuais (primeiro) */}
-                        {constatacoesManuais.map(const => (
-                            <Card key={const.id} className="border-blue-200 bg-blue-50">
+                        {constatacoesManuais.map(constatacao => (
+                            <Card key={constatacao.id} className="border-blue-200 bg-blue-50">
                                 <CardContent className="p-4">
                                     <div className="flex items-start gap-3">
-                                        <Badge className="bg-blue-600">{const.numero_constatacao}</Badge>
+                                        <Badge className="bg-blue-600">{constatacao.numero_constatacao}</Badge>
                                         <div className="flex-1">
-                                            <p className="text-sm">{const.descricao}</p>
-                                            {const.gera_nc && (
+                                            <p className="text-sm">{constatacao.descricao}</p>
+                                            {constatacao.gera_nc && (
                                                 <Badge variant="outline" className="mt-2 text-xs">
                                                     Gera NC
                                                 </Badge>
