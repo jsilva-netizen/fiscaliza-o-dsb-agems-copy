@@ -429,7 +429,7 @@ class DataServiceClass {
       throw new Error('Sem conexão com a internet');
     }
 
-    const results = { success: [], failed: [] };
+    const results = { success: [], failed: [], details: {} };
 
     // Lista de entidades de referência para baixar
     const referenceEntities = [
@@ -441,15 +441,20 @@ class DataServiceClass {
 
     for (const entityName of referenceEntities) {
       try {
-        const data = await this.read(entityName, {}, '-created_date', 1000);
+        console.log(`[downloadAllReferenceData] Baixando ${entityName}...`);
+        const data = await base44.entities[entityName].list('-created_date', 1000);
+        console.log(`[downloadAllReferenceData] ${entityName}: ${data.length} registros`);
+        
         await this.cacheToLocal(entityName, data);
         results.success.push(entityName);
+        results.details[entityName] = data.length;
       } catch (error) {
-        console.error(`Erro ao baixar ${entityName}:`, error);
+        console.error(`[downloadAllReferenceData] Erro ao baixar ${entityName}:`, error);
         results.failed.push({ entity: entityName, error: error.message });
       }
     }
 
+    console.log('[downloadAllReferenceData] Resultado:', results);
     return results;
   }
 

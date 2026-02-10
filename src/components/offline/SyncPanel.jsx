@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle2, Loader2, Download, Upload } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import DataService from './dataService';
 import db from './offlineDb';
 
 export default function SyncPanel({ isOpen, onClose }) {
+  const queryClient = useQueryClient();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingCount, setPendingCount] = useState(0);
   const [failedCount, setFailedCount] = useState(0);
@@ -64,10 +66,17 @@ export default function SyncPanel({ isOpen, onClose }) {
       const result = await DataService.downloadAllReferenceData();
 
       setDownloadProgress(100);
+      
+      // Invalida queries do React Query para forçar re-fetch
+      queryClient.invalidateQueries({ queryKey: ['municipios'] });
+      queryClient.invalidateQueries({ queryKey: ['prestadores'] });
+      queryClient.invalidateQueries({ queryKey: ['tipos_unidade'] });
+      queryClient.invalidateQueries({ queryKey: ['item_checklist'] });
+      
       if (result.failed.length === 0) {
         setDownloadStatus({
           type: 'success',
-          message: `✓ ${result.success.length} tabelas baixadas com sucesso`,
+          message: `✓ ${result.success.length} tabelas baixadas (Municípios: ${result.details?.Municipio || 0}, Prestadores: ${result.details?.PrestadorServico || 0})`,
         });
       } else {
         setDownloadStatus({
