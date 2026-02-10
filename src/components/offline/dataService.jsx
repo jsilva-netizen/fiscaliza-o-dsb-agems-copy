@@ -257,6 +257,11 @@ class DataServiceClass {
    */
   async getPending(entityName = null) {
     try {
+      if (!db.syncQueue) {
+        console.warn('[DataService] syncQueue table not initialized');
+        return [];
+      }
+
       let pending = await db.syncQueue.toArray();
 
       if (entityName) {
@@ -289,8 +294,18 @@ class DataServiceClass {
    */
   async getSyncStatus() {
     try {
-      const pending = await db.syncQueue.where('status').equals('pending').count();
-      const failed = await db.syncQueue.where('status').equals('failed').count();
+      if (!db.syncQueue) {
+        console.warn('[DataService] syncQueue table not initialized');
+        return {
+          pendingCount: 0,
+          failedCount: 0,
+          isOnline: this.isOnline
+        };
+      }
+
+      const allItems = await db.syncQueue.toArray();
+      const pending = allItems.filter(item => item.status === 'pending').length;
+      const failed = allItems.filter(item => item.status === 'failed').length;
       
       return {
         pendingCount: pending,
