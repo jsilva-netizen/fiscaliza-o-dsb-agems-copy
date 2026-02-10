@@ -494,6 +494,27 @@ class DataServiceClass {
     return this.read('AutoInfracao', filter, '-created_date', 500);
   }
 
+  /**
+   * Atualiza chaves estrangeiras após mapeamento de IDs
+   */
+  async updateForeignKeys(entityName, foreignKeyField, oldId, newId) {
+    const mapping = this.entityMappings[entityName];
+    if (!mapping) return;
+
+    try {
+      const records = await db[mapping.local].where(foreignKeyField).equals(oldId).toArray();
+      console.log(`[DataService] Atualizando ${records.length} registros de ${entityName} com ${foreignKeyField}: ${oldId} -> ${newId}`);
+      
+      for (const record of records) {
+        await db[mapping.local].update(record.id, {
+          [foreignKeyField]: newId
+        });
+      }
+    } catch (error) {
+      console.error(`[DataService] Erro ao atualizar foreign keys em ${entityName}:`, error);
+    }
+  }
+
   // ========== MÉTODOS DE SINCRONIZAÇÃO ==========
 
   /**
@@ -562,6 +583,17 @@ class DataServiceClass {
           await db[mapping.local].put({ ...result, _pending: false });
           
           console.log(`[DataService] ID mapping: ${tempId} -> ${realId}`);
+          
+          // Atualiza referências em entidades relacionadas
+          if (item.entityName === 'Fiscalizacao') {
+            await this.updateForeignKeys('UnidadeFiscalizada', 'fiscalizacao_id', tempId, realId);
+          } else if (item.entityName === 'UnidadeFiscalizada') {
+            await this.updateForeignKeys('RespostaChecklist', 'unidade_fiscalizada_id', tempId, realId);
+            await this.updateForeignKeys('NaoConformidade', 'unidade_fiscalizada_id', tempId, realId);
+            await this.updateForeignKeys('ConstatacaoManual', 'unidade_fiscalizada_id', tempId, realId);
+            await this.updateForeignKeys('Determinacao', 'unidade_fiscalizada_id', tempId, realId);
+            await this.updateForeignKeys('Recomendacao', 'unidade_fiscalizada_id', tempId, realId);
+          }
         } else if (item.operation === 'update') {
           await base44.entities[item.entityName].update(data.id, data);
           await db[mapping.local].update(data.id, { _pending: false });

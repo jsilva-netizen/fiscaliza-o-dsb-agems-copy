@@ -126,8 +126,15 @@ export default function SyncPanel({ isOpen, onClose }) {
           type: 'success',
           message: `✓ ${result.success} itens sincronizados com sucesso`,
         });
+        
+        // Invalida TODAS as queries para forçar refetch com IDs atualizados
+        queryClient.invalidateQueries({ queryKey: ['fiscalizacoes'] });
+        queryClient.invalidateQueries({ queryKey: ['fiscalizacao'] });
+        queryClient.invalidateQueries({ queryKey: ['unidades-fiscalizacao'] });
+        queryClient.invalidateQueries({ queryKey: ['respostas-checklist'] });
+        queryClient.invalidateQueries({ queryKey: ['nao-conformidades'] });
+        
         // Atualiza contagem
-        const pending = await db.syncQueue.where('status').equals('pending').toArray();
         const updatedStatus = await DataService.getSyncStatus();
         setPendingCount(updatedStatus.pendingCount);
       } else {
