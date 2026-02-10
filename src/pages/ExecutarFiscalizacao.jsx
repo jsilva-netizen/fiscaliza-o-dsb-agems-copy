@@ -46,15 +46,7 @@ export default function ExecutarFiscalizacao() {
         queryKey: ['fiscalizacao', fiscalizacaoId],
         queryFn: async () => {
             console.log('[ExecutarFiscalizacao] Buscando fiscalização:', fiscalizacaoId);
-            let result = await DataService.getFiscalizacaoById(fiscalizacaoId);
-            
-            // Retry com delay se não encontrar (pode estar sincronizando)
-            if (!result && !navigator.onLine) {
-                console.log('[ExecutarFiscalizacao] Não encontrado, aguardando 500ms (offline)...');
-                await new Promise(resolve => setTimeout(resolve, 500));
-                result = await DataService.getFiscalizacaoById(fiscalizacaoId);
-            }
-            
+            const result = await DataService.getFiscalizacaoById(fiscalizacaoId);
             console.log('[ExecutarFiscalizacao] Fiscalização encontrada:', result);
             return result || null;
         },
