@@ -15,6 +15,8 @@ export default function Municipios() {
         queryKey: ['municipios'],
         queryFn: () => DataService.getMunicipios(),
         staleTime: 5 * 60 * 1000,
+        retry: false,
+        networkMode: 'always'
     });
 
     const filteredMunicipios = municipios.filter(m => 

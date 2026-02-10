@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import DataService from '@/components/offline/dataService';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,9 @@ export default function TiposUnidade() {
 
     const { data: tipos = [], isLoading } = useQuery({
         queryKey: ['tipos-unidade'],
-        queryFn: () => base44.entities.TipoUnidade.list('nome', 100)
+        queryFn: () => DataService.getTiposUnidade(),
+        retry: false,
+        networkMode: 'always'
     });
 
     const createMutation = useMutation({
