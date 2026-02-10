@@ -135,7 +135,19 @@ class DataServiceClass {
     };
 
     try {
+      console.log(`[DataService.create] Salvando ${entityName} offline com ID temp:`, tempId, 'table:', mapping.local);
       await db[mapping.local].put(result);
+      console.log(`[DataService.create] ✓ Salvo no IndexedDB:`, tempId);
+      
+      // Valida imediatamente que foi salvo
+      const verify = await db[mapping.local].get(tempId);
+      console.log(`[DataService.create] ✓ Validação: registro encontrado =`, !!verify);
+      
+      if (!verify) {
+        console.error(`[DataService.create] ERRO: Registro não foi salvo corretamente!`);
+        throw new Error('Falha ao salvar registro no IndexedDB');
+      }
+      
       await this.addToSyncQueue('create', entityName, result);
       console.log(`[DataService.create] ${entityName} salvo localmente (ID temp):`, tempId);
     } catch (err) {
