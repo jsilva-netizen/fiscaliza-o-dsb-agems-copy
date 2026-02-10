@@ -28,7 +28,7 @@ export default function Layout({ children, currentPageName }) {
                 <PushNotificationInitializer />
                 <NotificationListener />
                 <OfflineStatusBar />
-                <div className="fixed top-4 right-4 z-50">
+                <div className="fixed top-4 right-4 z-40 pointer-events-auto">
                     <OfflineSyncButton />
                 </div>
                 {children}
@@ -41,7 +41,7 @@ export default function Layout({ children, currentPageName }) {
             <PushNotificationInitializer />
             <NotificationListener />
             <OfflineStatusBar />
-            <div className="fixed top-4 right-4 z-50">
+            <div className="fixed top-4 right-4 z-40 pointer-events-auto">
                 <OfflineSyncButton />
             </div>
             <div className="min-h-screen bg-gray-50">
