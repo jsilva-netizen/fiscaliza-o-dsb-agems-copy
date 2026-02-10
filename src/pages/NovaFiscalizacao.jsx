@@ -69,7 +69,7 @@ export default function NovaFiscalizacao() {
             }
 
             // Se online, tenta atualizar com dados frescos
-            if (isOnline) {
+            if (navigator.onLine) {
                 try {
                     const u = await base44.auth.me();
                     if (u) {
