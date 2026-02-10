@@ -40,21 +40,30 @@ class DataServiceClass {
   // ========== MÉTODOS GENÉRICOS ==========
 
   /**
-   * Lê dados - tenta online primeiro, depois fallback para local
+   * Lê dados - prioriza cache local, sincroniza em background quando online
    */
   async read(entityName, filter = {}, sort = '-created_date', limit = 100) {
     const mapping = this.entityMappings[entityName];
     if (!mapping) throw new Error(`Entity ${entityName} not mapped`);
 
-    // Se estiver online, busca do servidor
-    if (this.isOnline) {
+    // SEMPRE lê do cache primeiro (offline-first)
+    const cachedData = await this.readLocal(entityName, filter);
+    console.log(`[DataService] Retrieved ${cachedData.length} ${entityName} from local cache`);
+    
+    // Se online, atualiza cache em background (não bloqueia a UI)
+    if (this.isOnline && cachedData.length > 0) {
+      this.syncInBackground(entityName, filter, sort, limit);
+    }
+    
+    // Se não tem dados no cache e está online, busca do servidor
+    if (cachedData.length === 0 && this.isOnline) {
       try {
         const hasFilter = Object.keys(filter).length > 0;
         const data = hasFilter 
           ? await base44.entities[entityName].filter(filter, sort, limit)
           : await base44.entities[entityName].list(sort, limit);
         
-        console.log(`[DataService] Fetched ${data.length} ${entityName} from server`);
+        console.log(`[DataService] Fetched ${data.length} ${entityName} from server (cache was empty)`);
         
         // Atualiza cache local
         await this.cacheToLocal(entityName, data);
@@ -64,10 +73,24 @@ class DataServiceClass {
       }
     }
 
-    // Fallback: dados locais
-    const cachedData = await this.readLocal(entityName, filter);
-    console.log(`[DataService] Retrieved ${cachedData.length} ${entityName} from cache`);
     return cachedData;
+  }
+
+  /**
+   * Sincroniza dados em background (não bloqueia)
+   */
+  async syncInBackground(entityName, filter, sort, limit) {
+    try {
+      const hasFilter = Object.keys(filter).length > 0;
+      const data = hasFilter 
+        ? await base44.entities[entityName].filter(filter, sort, limit)
+        : await base44.entities[entityName].list(sort, limit);
+      
+      await this.cacheToLocal(entityName, data);
+      console.log(`[DataService] Background sync completed for ${entityName}: ${data.length} items`);
+    } catch (err) {
+      console.warn(`[DataService] Background sync failed for ${entityName}:`, err);
+    }
   }
 
   /**
