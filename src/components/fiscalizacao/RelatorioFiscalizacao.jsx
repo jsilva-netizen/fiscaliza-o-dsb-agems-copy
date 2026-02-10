@@ -26,18 +26,6 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
         });
     };
 
-    const addTimbradoToPage = (pdf, timbradoBase64) => {
-        try {
-            if (timbradoBase64) {
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                pdf.addImage(timbradoBase64, 'JPEG', 0, 0, pageWidth, pageHeight);
-            }
-        } catch (err) {
-            console.error('Erro ao adicionar timbrado:', err);
-        }
-    };
-
     const gerarRelatorio = async () => {
         setIsGenerating(true);
         try {
