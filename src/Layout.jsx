@@ -1,6 +1,5 @@
 import React from 'react';
-import OfflineStatusBar from '@/components/offline/OfflineStatusBar';
-import OfflineSyncButton from '@/components/offline/OfflineSyncButton';
+import StatusBar from '@/components/offline/StatusBar';
 import PushNotificationInitializer from '@/components/offline/PushNotificationInitializer';
 import NotificationListener from '@/components/offline/NotificationListener';
 import { useInitializeReferenceData } from '@/components/hooks/useInitializeReferenceData';
@@ -27,10 +26,7 @@ export default function Layout({ children, currentPageName }) {
             <>
                 <PushNotificationInitializer />
                 <NotificationListener />
-                <OfflineStatusBar />
-                <div className="fixed top-4 right-4 z-40 pointer-events-auto">
-                    <OfflineSyncButton />
-                </div>
+                <StatusBar />
                 {children}
             </>
         );
@@ -40,10 +36,7 @@ export default function Layout({ children, currentPageName }) {
         <>
             <PushNotificationInitializer />
             <NotificationListener />
-            <OfflineStatusBar />
-            <div className="fixed top-4 right-4 z-40 pointer-events-auto">
-                <OfflineSyncButton />
-            </div>
+            <StatusBar />
             <div className="min-h-screen bg-gray-50">
                 {children}
             </div>
