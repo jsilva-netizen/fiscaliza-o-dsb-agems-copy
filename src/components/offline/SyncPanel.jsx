@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle2, Loader2, Download, Upload } from 'lucide-react';
 import DataService from './dataService';
-import db from '@/functions/offlineDb';
+import db from './offlineDb';
 
 export default function SyncPanel({ isOpen, onClose }) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
