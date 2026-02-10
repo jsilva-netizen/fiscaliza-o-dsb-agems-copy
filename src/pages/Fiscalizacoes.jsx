@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import DataService from '@/components/offline/dataService';
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,9 +38,11 @@ export default function Fiscalizacoes() {
 
     const { data: fiscalizacoes = [], isLoading } = useQuery({
         queryKey: ['fiscalizacoes'],
-        queryFn: () => base44.entities.Fiscalizacao.list('-created_date', 100),
+        queryFn: () => DataService.getFiscalizacoes(),
         staleTime: 60000,
-        gcTime: 300000
+        gcTime: 300000,
+        retry: false,
+        networkMode: 'always'
     });
 
     const deletarFiscalizacaoMutation = useMutation({
