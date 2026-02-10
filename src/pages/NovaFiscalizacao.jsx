@@ -61,24 +61,30 @@ export default function NovaFiscalizacao() {
 
     useEffect(() => {
         const loadUser = async () => {
-            try {
-                const u = await base44.auth.me();
-                setUser(u);
-                // Cache do usuário no localStorage
-                if (u) {
-                    localStorage.setItem('cached_user', JSON.stringify(u));
-                }
-            } catch (error) {
-                console.log('[NovaFiscalizacao] Offline - usando cache do usuário');
-                // Tenta usar cache offline
-                const cached = localStorage.getItem('cached_user');
-                if (cached) {
-                    setUser(JSON.parse(cached));
+            // Sempre tenta cache primeiro (offline-first)
+            const cached = localStorage.getItem('cached_user');
+            if (cached) {
+                console.log('[NovaFiscalizacao] Carregando usuário do cache');
+                setUser(JSON.parse(cached));
+            }
+
+            // Se online, tenta atualizar com dados frescos
+            if (isOnline) {
+                try {
+                    const u = await base44.auth.me();
+                    if (u) {
+                        setUser(u);
+                        localStorage.setItem('cached_user', JSON.stringify(u));
+                        console.log('[NovaFiscalizacao] Usuário carregado online');
+                    }
+                } catch (error) {
+                    console.log('[NovaFiscalizacao] Erro ao carregar usuário online, usando cache');
+                    // Mantém o cache anterior se houver
                 }
             }
         };
         loadUser();
-    }, []);
+    }, [isOnline]);
 
     const getLocation = () => {
         setGettingLocation(true);
