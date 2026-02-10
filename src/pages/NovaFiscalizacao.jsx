@@ -148,10 +148,10 @@ export default function NovaFiscalizacao() {
             // Aguarda um pequeno delay para garantir que foi salvo no IndexedDB
             await new Promise(resolve => setTimeout(resolve, 300));
             
-            // Valida que a fiscalização foi salva
-            console.log('[NovaFiscalizacao] Validando fiscalização no cache...');
-            const saved = await DataService.getFiscalizacaoById(result.id);
-            if (!saved) {
+            // Valida que a fiscalização foi salva NO CACHE LOCAL (não no servidor)
+            console.log('[NovaFiscalizacao] Validando fiscalização no cache local...');
+            const saved = await DataService.readLocal('Fiscalizacao', { id: result.id });
+            if (!saved || saved.length === 0) {
                 console.error('[NovaFiscalizacao] ERRO: Fiscalização não foi salva!', result.id);
                 throw new Error('Fiscalização não foi salva corretamente no cache');
             }
