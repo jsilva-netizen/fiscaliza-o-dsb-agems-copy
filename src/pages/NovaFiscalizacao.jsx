@@ -57,8 +57,21 @@ export default function NovaFiscalizacao() {
 
     useEffect(() => {
         const loadUser = async () => {
-            const u = await base44.auth.me();
-            setUser(u);
+            try {
+                const u = await base44.auth.me();
+                setUser(u);
+                // Cache do usuário no localStorage
+                if (u) {
+                    localStorage.setItem('cached_user', JSON.stringify(u));
+                }
+            } catch (error) {
+                console.log('[NovaFiscalizacao] Offline - usando cache do usuário');
+                // Tenta usar cache offline
+                const cached = localStorage.getItem('cached_user');
+                if (cached) {
+                    setUser(JSON.parse(cached));
+                }
+            }
         };
         loadUser();
     }, []);
