@@ -52,11 +52,19 @@ class DataServiceClass {
     const cachedData = await this.readLocal(entityName, filter);
     console.log(`[DataService.read] Cache retornou ${cachedData.length} ${entityName}`);
     
-    // Se não tem dados no cache e está online, busca do servidor
+    // Se está online, SEMPRE sincroniza dados de referência em background (exceto se houver filtro)
+    const isReferenceEntity = ['Municipio', 'TipoUnidade', 'PrestadorServico', 'ItemChecklist'].includes(entityName);
+    const hasFilter = Object.keys(filter).length > 0;
+    
+    if (this.isOnline && isReferenceEntity && !hasFilter) {
+      // Para dados de referência sem filtro, sempre sincroniza em background
+      this.syncInBackground(entityName, filter, sort, limit);
+    }
+    
+    // Se não tem dados no cache e está online, busca do servidor sincronamente
     if (cachedData.length === 0 && this.isOnline) {
       try {
         console.log(`[DataService.read] Cache vazio, buscando do servidor...`);
-        const hasFilter = Object.keys(filter).length > 0;
         const data = hasFilter 
           ? await base44.entities[entityName].filter(filter, sort, limit)
           : await base44.entities[entityName].list(sort, limit);
@@ -69,11 +77,6 @@ class DataServiceClass {
       } catch (err) {
         console.warn(`[DataService.read] Erro ao buscar do servidor:`, err);
       }
-    }
-    
-    // Se online e tem cache, atualiza em background (não bloqueia)
-    if (this.isOnline && cachedData.length > 0) {
-      this.syncInBackground(entityName, filter, sort, limit);
     }
 
     console.log(`[DataService.read] Retornando ${cachedData.length} ${entityName} do cache`);
