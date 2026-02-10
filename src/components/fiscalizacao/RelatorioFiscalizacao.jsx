@@ -343,7 +343,8 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 yPos += rowHeight;
 
                 if (ncs.length > 0) {
-                    const ncsSorted = [...ncs].sort((a, b) => {
+                    const ncsComResposta = ncs.filter(nc => nc.resposta_checklist_id);
+                    const ncsSorted = [...ncsComResposta].sort((a, b) => {
                         const numA = parseInt(a.numero_nc?.replace('NC', '') || '999');
                         const numB = parseInt(b.numero_nc?.replace('NC', '') || '999');
                         return numA - numB;
