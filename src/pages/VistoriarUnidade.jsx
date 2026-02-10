@@ -181,6 +181,8 @@ export default function VistoriarUnidade() {
 
             if (resposta?.id) {
                 // Atualizar resposta existente
+                const respostaAnterior = resposta.resposta;
+                
                 let textoConstatacao = data.resposta === 'SIM' 
                     ? item.texto_constatacao_sim 
                     : data.resposta === 'NAO' 
@@ -193,11 +195,59 @@ export default function VistoriarUnidade() {
                     textoConstatacao = textoConstatacao.trim() + ';';
                 }
 
+                // Se mudou de NAO para outra resposta e gerava NC, deletar NC/D
+                if (respostaAnterior === 'NAO' && data.resposta !== 'NAO' && item.gera_nc) {
+                    console.log('[VistoriarUnidade] Deletando NC/D associadas...');
+                    const ncsAssociadas = ncsExistentes.filter(nc => nc.resposta_checklist_id === resposta.id);
+                    for (const nc of ncsAssociadas) {
+                        // Deletar determinações da NC
+                        const detsAssociadas = determinacoesExistentes.filter(d => d.nao_conformidade_id === nc.id);
+                        for (const det of detsAssociadas) {
+                            await DataService.delete('Determinacao', det.id);
+                        }
+                        // Deletar NC
+                        await DataService.delete('NaoConformidade', nc.id);
+                    }
+                }
+
                 await DataService.update('RespostaChecklist', resposta.id, {
                    resposta: data.resposta,
                    observacao: data.observacao || '',
                    pergunta: textoConstatacao || ''
                  });
+                 
+                // Se mudou para NAO e gera NC, criar NC/D
+                if (respostaAnterior !== 'NAO' && data.resposta === 'NAO' && item.gera_nc) {
+                    console.log('[VistoriarUnidade] Criando NC/D para resposta alterada...');
+                    const proximaNumeracao = await DataService.calcularProximaNumeracao(unidadeId);
+                    
+                    const nc = await DataService.create('NaoConformidade', {
+                        unidade_fiscalizada_id: unidadeId,
+                        resposta_checklist_id: resposta.id,
+                        numero_nc: `NC${proximaNumeracao.NC}`,
+                        artigo_portaria: item.artigo_portaria,
+                        descricao: item.texto_nc || textoConstatacao
+                    });
+
+                    if (item.texto_determinacao) {
+                        await DataService.create('Determinacao', {
+                            unidade_fiscalizada_id: unidadeId,
+                            nao_conformidade_id: nc.id,
+                            numero_determinacao: `D${proximaNumeracao.D}`,
+                            descricao: item.texto_determinacao,
+                            status: 'pendente'
+                        });
+                    }
+
+                    if (item.texto_recomendacao) {
+                        await DataService.create('Recomendacao', {
+                            unidade_fiscalizada_id: unidadeId,
+                            numero_recomendacao: `R${proximaNumeracao.R}`,
+                            descricao: item.texto_recomendacao,
+                            origem: 'checklist'
+                        });
+                    }
+                }
                  
                 console.log('[VistoriarUnidade] Resposta atualizada');
             } else {
