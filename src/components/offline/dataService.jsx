@@ -421,33 +421,34 @@ class DataServiceClass {
     
     console.log('[DataService.getFiscalizacaoById] Buscando:', id, 'online:', this.isOnline);
     
-    // Se é um ID temporário, busca direto do IndexedDB sem filtro complexo
-    if (id && id.toString().startsWith('temp_')) {
-      try {
-        console.log('[DataService.getFiscalizacaoById] Buscando ID temporário direto do IndexedDB');
-        const all = await db[mapping.local].toArray();
-        const found = all.find(f => f.id === id);
-        console.log('[DataService.getFiscalizacaoById] Busca em array:', found ? 'encontrado' : 'não encontrado', 'total:', all.length);
-        if (found) return found;
-      } catch (error) {
-        console.error('[DataService.getFiscalizacaoById] Erro ao buscar ID temporário:', error);
-      }
-      
-      // Se não achou um ID temporário offline, retorna null
-      console.log('[DataService.getFiscalizacaoById] ID temporário não encontrado, retornando null');
-      return null;
-    }
-    
-    // Para IDs normais, usa get() do Dexie
+    // SEMPRE busca no IndexedDB primeiro, independente do tipo de ID
     try {
+      console.log('[DataService.getFiscalizacaoById] Tentando get() do Dexie');
       const cached = await db[mapping.local].get(id);
-      console.log('[DataService.getFiscalizacaoById] Cache lookup:', id, 'encontrado:', !!cached);
-      if (cached) return cached;
+      if (cached) {
+        console.log('[DataService.getFiscalizacaoById] Encontrado no cache:', cached.id);
+        return cached;
+      }
+      console.log('[DataService.getFiscalizacaoById] Não encontrado com get(), tentando toArray()');
     } catch (error) {
-      console.warn('[DataService.getFiscalizacaoById] Erro ao ler cache:', error);
+      console.warn('[DataService.getFiscalizacaoById] Erro ao usar get():', error);
+    }
+
+    // Fallback: busca em array (útil para IDs temporários)
+    try {
+      const all = await db[mapping.local].toArray();
+      console.log('[DataService.getFiscalizacaoById] toArray retornou:', all.length, 'registros');
+      const found = all.find(f => f.id === id);
+      if (found) {
+        console.log('[DataService.getFiscalizacaoById] Encontrado no array:', found.id);
+        return found;
+      }
+      console.log('[DataService.getFiscalizacaoById] Não encontrado no array com ID:', id);
+    } catch (error) {
+      console.error('[DataService.getFiscalizacaoById] Erro ao buscar em array:', error);
     }
     
-    // Se não achou no cache e está offline, retorna null
+    // Se está offline, não tenta buscar do servidor
     if (!this.isOnline) {
       console.log('[DataService.getFiscalizacaoById] Offline e não encontrado no cache:', id);
       return null;
@@ -459,12 +460,14 @@ class DataServiceClass {
       const result = await base44.entities.Fiscalizacao.filter({ id }, '-created_date', 1);
       if (result && result.length > 0) {
         await this.cacheToLocal('Fiscalizacao', result[0]);
+        console.log('[DataService.getFiscalizacaoById] Encontrado no servidor e cacheado');
         return result[0];
       }
     } catch (err) {
       console.warn('[DataService.getFiscalizacaoById] Erro ao buscar do servidor:', err);
     }
     
+    console.log('[DataService.getFiscalizacaoById] Não encontrado em lugar algum, retornando null');
     return null;
   }
 
