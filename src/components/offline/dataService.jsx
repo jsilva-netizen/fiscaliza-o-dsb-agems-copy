@@ -345,7 +345,18 @@ class DataServiceClass {
 
   // Municípios
   async getMunicipios() {
-    return this.read('Municipio', {}, 'nome', 100);
+    const data = await this.read('Municipio', {}, 'nome', 100);
+    // Se online e cache vazio no resultado, força fetch do servidor
+    if (this.isOnline && data.length === 0) {
+      try {
+        const serverData = await base44.entities.Municipio.list('nome', 100);
+        await this.cacheToLocal('Municipio', serverData);
+        return serverData;
+      } catch (err) {
+        console.warn('[DataService.getMunicipios] Erro ao buscar do servidor:', err);
+      }
+    }
+    return data;
   }
 
   async getMunicipioById(id) {
@@ -355,7 +366,18 @@ class DataServiceClass {
 
   // Prestadores de Serviço
   async getPrestadores() {
-    return this.read('PrestadorServico', {}, 'nome', 200);
+    const data = await this.read('PrestadorServico', {}, 'nome', 200);
+    // Se online e cache vazio no resultado, força fetch do servidor
+    if (this.isOnline && data.length === 0) {
+      try {
+        const serverData = await base44.entities.PrestadorServico.list('nome', 200);
+        await this.cacheToLocal('PrestadorServico', serverData);
+        return serverData;
+      } catch (err) {
+        console.warn('[DataService.getPrestadores] Erro ao buscar do servidor:', err);
+      }
+    }
+    return data;
   }
 
   async savePrestador(data) {
