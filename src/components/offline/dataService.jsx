@@ -156,9 +156,11 @@ class DataServiceClass {
       try {
         const result = await base44.entities[entityName].update(id, data);
         await db[mapping.local].put(result);
+        console.log(`[DataService.update] ${entityName} atualizado online:`, id);
         return result;
       } catch (err) {
-        console.error(`Failed to update ${entityName} online:`, err);
+        console.warn(`[DataService.update] Falha ao atualizar ${entityName} online (fallback):`, err.message);
+        this.isOnline = false;
       }
     }
 
@@ -167,6 +169,7 @@ class DataServiceClass {
     const updated = { ...current, ...data, _pending: !isRemote, _syncError: null };
     await db[mapping.local].put(updated);
     await this.addToSyncQueue('update', entityName, updated);
+    console.log(`[DataService.update] ${entityName} atualizado localmente:`, id);
 
     return updated;
   }
