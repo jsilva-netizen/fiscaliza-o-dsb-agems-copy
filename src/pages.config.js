@@ -64,9 +64,9 @@ import Municipios from './pages/Municipios';
 import NovaFiscalizacao from './pages/NovaFiscalizacao';
 import PrestadoresServico from './pages/PrestadoresServico';
 import Relatorios from './pages/Relatorios';
+import TesteOffline from './pages/TesteOffline';
 import TiposUnidade from './pages/TiposUnidade';
 import VistoriarUnidade from './pages/VistoriarUnidade';
-import TesteOffline from './pages/TesteOffline';
 import __Layout from './Layout.jsx';
 
 
@@ -88,9 +88,9 @@ export const PAGES = {
     "NovaFiscalizacao": NovaFiscalizacao,
     "PrestadoresServico": PrestadoresServico,
     "Relatorios": Relatorios,
+    "TesteOffline": TesteOffline,
     "TiposUnidade": TiposUnidade,
     "VistoriarUnidade": VistoriarUnidade,
-    "TesteOffline": TesteOffline,
 }
 
 export const pagesConfig = {

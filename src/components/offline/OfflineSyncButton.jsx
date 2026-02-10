@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Cloud, CloudOff } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import DataService from '@/functions/dataService';
+import DataService from './dataService';
 import SyncPanel from './SyncPanel';
 
 export default function OfflineSyncButton() {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import DataService from '@/lib/dataService';
+import DataService from '@/components/offline/dataService';
 import db from '@/functions/offlineDb';
 import OfflineSyncButton from '@/components/offline/OfflineSyncButton';
 

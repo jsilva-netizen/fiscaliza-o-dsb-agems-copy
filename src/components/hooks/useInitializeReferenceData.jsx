@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import DataService from '@/lib/dataService';
+import DataService from '@/components/offline/dataService';
 import { useOnlineStatus } from './useOnlineStatus';
 
 /**

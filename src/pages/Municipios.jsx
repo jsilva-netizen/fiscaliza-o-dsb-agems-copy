@@ -1,10 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-// REMOVIDO: import { base44 } from '@/api/base44Client'; <- Não é mais necessário
-import DataService from '@/lib/dataService';
+import DataService from '@/components/offline/dataService';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent } from "@/components/ui/card"; // Removido imports não usados (CardHeader, CardTitle)
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Search, MapPin } from 'lucide-react';
