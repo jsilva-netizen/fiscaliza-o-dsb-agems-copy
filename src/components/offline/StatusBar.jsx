@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import DataService from './dataService';
 import SyncPanel from './SyncPanel';
 
@@ -7,6 +8,7 @@ export default function StatusBar() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [pendingCount, setPendingCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -38,36 +40,49 @@ export default function StatusBar() {
     };
   }, []);
 
+  const handleSync = () => {
+    setIsOpen(true);
+    setIsSyncing(true);
+  };
+
   return (
     <>
-      <div className={`${isOnline ? 'bg-white border-b border-gray-200' : 'bg-red-50 border-b border-red-200'} px-4 py-2 flex items-center justify-between`}>
-        <div className="flex items-center gap-3">
-          <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
-          <span className={`text-sm ${isOnline ? 'text-gray-600' : 'text-red-600'} font-medium`}>
-            {isOnline ? 'Online' : 'Offline'}
-          </span>
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {isOnline ? (
+            <>
+              <Wifi className="w-5 h-5 text-blue-500" />
+              <span className="text-sm font-medium text-blue-500">Online</span>
+            </>
+          ) : (
+            <>
+              <WifiOff className="w-5 h-5 text-red-500" />
+              <span className="text-sm font-medium text-red-500">Offline</span>
+            </>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
-          {pendingCount > 0 && (
-            <span className="text-xs text-gray-500">
-              {pendingCount} pendente{pendingCount !== 1 ? 's' : ''}
-            </span>
-          )}
-          {(pendingCount > 0 || isOnline) && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsOpen(true)}
-              className="h-6 px-3 text-xs hover:bg-gray-100"
-            >
-              Sincronizar
-            </Button>
-          )}
-        </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleSync}
+          className="h-8 px-3 text-xs gap-2 hover:bg-gray-100"
+        >
+          <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+          Sincronizar
+        </Button>
       </div>
 
-      <SyncPanel isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      {/* Padding no final da página para a barra não sobrepor */}
+      <div className="h-12" />
+
+      <SyncPanel 
+        isOpen={isOpen} 
+        onClose={() => {
+          setIsOpen(false);
+          setIsSyncing(false);
+        }} 
+      />
     </>
   );
 }
