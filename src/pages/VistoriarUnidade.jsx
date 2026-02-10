@@ -693,35 +693,28 @@ export default function VistoriarUnidade() {
             </Dialog>
 
             {/* Dialog Constatação Manual */}
-            <Dialog open={showAddConstatacao} onOpenChange={setShowAddConstatacao}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Nova Constatação Manual</DialogTitle>
-                    </DialogHeader>
-                    <ConstatacaoManualForm
-                        unidadeId={unidadeId}
-                        onSave={async (data) => {
-                            try {
-                                const proximaNumeracao = await DataService.calcularProximaNumeracao(unidadeId);
-                                await DataService.create('ConstatacaoManual', {
-                                    unidade_fiscalizada_id: unidadeId,
-                                    numero_constatacao: `C${proximaNumeracao.C}`,
-                                    descricao: data.descricao,
-                                    gera_nc: data.gera_nc || false,
-                                    artigo_portaria: data.artigo_portaria,
-                                    texto_determinacao: data.texto_determinacao,
-                                    ordem: proximaNumeracao.C
-                                });
-                                queryClient.invalidateQueries({ queryKey: ['constatacoes-manuais', unidadeId] });
-                                setShowAddConstatacao(false);
-                            } catch (error) {
-                                alert('Erro ao adicionar constatação: ' + error.message);
-                            }
-                        }}
-                        onCancel={() => setShowAddConstatacao(false)}
-                    />
-                </DialogContent>
-            </Dialog>
+            <ConstatacaoManualForm
+                open={showAddConstatacao}
+                onOpenChange={setShowAddConstatacao}
+                constatacaoParaEditar={constatacaoParaEditar}
+                isSaving={false}
+                onSave={async (data) => {
+                    try {
+                        const proximaNumeracao = await DataService.calcularProximaNumeracao(unidadeId);
+                        await DataService.create('ConstatacaoManual', {
+                            unidade_fiscalizada_id: unidadeId,
+                            numero_constatacao: `C${proximaNumeracao.C}`,
+                            descricao: data.descricao,
+                            gera_nc: data.gera_nc || false,
+                            ordem: proximaNumeracao.C
+                        });
+                        queryClient.invalidateQueries({ queryKey: ['constatacoes-manuais', unidadeId] });
+                        setShowAddConstatacao(false);
+                    } catch (error) {
+                        alert('Erro ao adicionar constatação: ' + error.message);
+                    }
+                }}
+            />
 
             {/* Dialog Confirmação Sem Fotos */}
             <Dialog open={showConfirmaSemFotos} onOpenChange={setShowConfirmaSemFotos}>
