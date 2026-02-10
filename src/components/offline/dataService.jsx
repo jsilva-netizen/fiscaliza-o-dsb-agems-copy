@@ -239,6 +239,10 @@ class DataServiceClass {
    */
   async addToSyncQueue(operation, entityName, data) {
     try {
+      if (!db.syncQueue) {
+        console.warn('[DataService] syncQueue not available');
+        return;
+      }
       await db.syncQueue.add({
         operation,
         entityName,
