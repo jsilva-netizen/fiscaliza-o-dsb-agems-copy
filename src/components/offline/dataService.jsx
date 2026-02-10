@@ -46,33 +46,37 @@ class DataServiceClass {
     const mapping = this.entityMappings[entityName];
     if (!mapping) throw new Error(`Entity ${entityName} not mapped`);
 
+    console.log(`[DataService.read] Lendo ${entityName}, online=${this.isOnline}, filter=`, filter);
+
     // SEMPRE lê do cache primeiro (offline-first)
     const cachedData = await this.readLocal(entityName, filter);
-    console.log(`[DataService] Retrieved ${cachedData.length} ${entityName} from local cache`);
-    
-    // Se online, atualiza cache em background (não bloqueia a UI)
-    if (this.isOnline && cachedData.length > 0) {
-      this.syncInBackground(entityName, filter, sort, limit);
-    }
+    console.log(`[DataService.read] Cache retornou ${cachedData.length} ${entityName}`);
     
     // Se não tem dados no cache e está online, busca do servidor
     if (cachedData.length === 0 && this.isOnline) {
       try {
+        console.log(`[DataService.read] Cache vazio, buscando do servidor...`);
         const hasFilter = Object.keys(filter).length > 0;
         const data = hasFilter 
           ? await base44.entities[entityName].filter(filter, sort, limit)
           : await base44.entities[entityName].list(sort, limit);
         
-        console.log(`[DataService] Fetched ${data.length} ${entityName} from server (cache was empty)`);
+        console.log(`[DataService.read] Servidor retornou ${data.length} ${entityName}`);
         
         // Atualiza cache local
         await this.cacheToLocal(entityName, data);
         return data;
       } catch (err) {
-        console.warn(`[DataService] Failed to fetch ${entityName} online:`, err);
+        console.warn(`[DataService.read] Erro ao buscar do servidor:`, err);
       }
     }
+    
+    // Se online e tem cache, atualiza em background (não bloqueia)
+    if (this.isOnline && cachedData.length > 0) {
+      this.syncInBackground(entityName, filter, sort, limit);
+    }
 
+    console.log(`[DataService.read] Retornando ${cachedData.length} ${entityName} do cache`);
     return cachedData;
   }
 
@@ -187,16 +191,25 @@ class DataServiceClass {
    */
   async readLocal(entityName, filter = {}) {
     const mapping = this.entityMappings[entityName];
-    if (!mapping) return [];
+    if (!mapping) {
+      console.warn(`[DataService.readLocal] Entidade ${entityName} não mapeada`);
+      return [];
+    }
 
-    let results = await db[mapping.local].toArray();
+    try {
+      let results = await db[mapping.local].toArray();
+      console.log(`[DataService.readLocal] IndexedDB retornou ${results.length} ${entityName}`);
 
-    // Aplica filtro simples
-    Object.entries(filter).forEach(([key, value]) => {
-      results = results.filter(item => item[key] === value);
-    });
+      // Aplica filtro simples
+      Object.entries(filter).forEach(([key, value]) => {
+        results = results.filter(item => item[key] === value);
+      });
 
-    return results;
+      return results;
+    } catch (error) {
+      console.error(`[DataService.readLocal] Erro ao ler ${entityName} do IndexedDB:`, error);
+      return [];
+    }
   }
 
   /**
@@ -209,13 +222,15 @@ class DataServiceClass {
     if (!Array.isArray(data)) data = [data];
 
     try {
+      console.log(`[DataService.cacheToLocal] Salvando ${data.length} ${entityName} no IndexedDB`);
       await db[mapping.local].bulkPut(data.map(item => ({
         ...item,
         _pending: false,
         _syncError: null
       })));
+      console.log(`[DataService.cacheToLocal] ✓ ${data.length} ${entityName} salvos com sucesso`);
     } catch (err) {
-      console.warn(`Failed to cache ${entityName}:`, err);
+      console.error(`[DataService.cacheToLocal] Erro ao salvar ${entityName}:`, err);
     }
   }
 
