@@ -437,7 +437,11 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
 
                     detsSorted.forEach((det) => {
                         const novoNumDet = `D${mapeamento.determinacoes[det.id]}`;
-                        const texto = det.descricao;
+                        const ncRelacionada = ncs.find(nc => nc.id === det.nao_conformidade_id);
+                        const numNCRelacionada = ncRelacionada ? `NC${mapeamento.ncs[ncRelacionada.id]}` : '';
+                        const prefixo = numNCRelacionada ? `Para Sanar a ${numNCRelacionada}, ` : '';
+                        const sufixo = det.prazo_dias ? ` Prazo: ${det.prazo_dias} dias.` : '';
+                        const texto = prefixo + det.descricao + sufixo;
                         const restLines = pdf.splitTextToSize(texto, tableWidth - 15);
                         const cellHeight = Math.max(rowHeight, restLines.length * 5 + 4);
 
