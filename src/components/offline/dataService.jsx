@@ -266,10 +266,13 @@ class DataServiceClass {
    */
   async addToSyncQueue(operation, entityName, data) {
     try {
-      if (!db.syncQueue) {
-        console.warn('[DataService] syncQueue not available');
+      // Verifica se syncQueue existe na definição do schema
+      const tables = db.tables;
+      if (!tables || !tables.find(t => t.name === 'syncQueue')) {
+        console.warn('[DataService] syncQueue table not available - offline operations will sync quando online');
         return;
       }
+      
       await db.syncQueue.add({
         operation,
         entityName,
@@ -278,8 +281,10 @@ class DataServiceClass {
         attempts: 0,
         status: 'pending'
       });
+      console.log('[DataService] Adicionado à fila de sincronização:', { operation, entityName });
     } catch (error) {
       console.warn('[DataService] Error adding to sync queue:', error);
+      // Não falha - sincronização é best-effort
     }
   }
 
