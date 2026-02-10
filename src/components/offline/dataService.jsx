@@ -293,7 +293,8 @@ class DataServiceClass {
    */
   async getPending(entityName = null) {
     try {
-      if (!db.syncQueue) {
+      const tables = db.tables;
+      if (!tables || !tables.find(t => t.name === 'syncQueue')) {
         console.warn('[DataService] syncQueue table not initialized');
         return [];
       }
