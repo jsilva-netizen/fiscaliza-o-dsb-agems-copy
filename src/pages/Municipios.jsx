@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+// REMOVIDO: import { base44 } from '@/api/base44Client'; <- Não é mais necessário
 import DataService from '@/lib/dataService';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card"; // Removido imports não usados (CardHeader, CardTitle)
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Search, MapPin } from 'lucide-react';
@@ -12,11 +12,11 @@ import { ArrowLeft, Search, MapPin } from 'lucide-react';
 export default function Municipios() {
     const [search, setSearch] = React.useState('');
 
-  const { data: municipios = [], isLoading } = useQuery({
-    queryKey: ['municipios'],
-    queryFn: () => DataService.getMunicipios(),
-    staleTime: 5 * 60 * 1000,
-});
+    const { data: municipios = [], isLoading } = useQuery({
+        queryKey: ['municipios'],
+        queryFn: () => DataService.getMunicipios(),
+        staleTime: 5 * 60 * 1000,
+    });
 
     const filteredMunicipios = municipios.filter(m => 
         m.nome.toLowerCase().includes(search.toLowerCase()) ||
