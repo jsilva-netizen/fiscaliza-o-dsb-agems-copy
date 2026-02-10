@@ -48,12 +48,12 @@ export default function OfflineSyncButton() {
 
   return (
     <>
-      <div className="relative">
+      <div className="relative inline-block">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsOpen(true)}
-          className="relative hover:bg-gray-100"
+          className="relative hover:bg-gray-100 z-10"
           title={isOnline ? 'Online' : 'Offline'}
         >
           {isOnline ? (
@@ -66,7 +66,7 @@ export default function OfflineSyncButton() {
         {/* Badge de pendentes */}
         {pendingCount > 0 && (
           <Badge
-            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 h-6 w-6 flex items-center justify-center p-0 text-xs font-bold"
+            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 h-6 w-6 flex items-center justify-center p-0 text-xs font-bold pointer-events-none"
           >
             {pendingCount}
           </Badge>
