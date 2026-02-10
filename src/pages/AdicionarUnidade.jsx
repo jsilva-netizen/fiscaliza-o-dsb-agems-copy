@@ -29,27 +29,30 @@ export default function AdicionarUnidade() {
     const { data: fiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', fiscalizacaoId],
         queryFn: async () => {
-            const result = await db.table('fiscalizacoes').get(fiscalizacaoId);
+            const result = await DataService.getFiscalizacaoById(fiscalizacaoId);
             return result || null;
         },
-        enabled: !!fiscalizacaoId
+        enabled: !!fiscalizacaoId,
+        staleTime: 5000
     });
 
     const { data: tipos = [] } = useQuery({
         queryKey: ['tipos-unidade'],
         queryFn: async () => {
-            const result = await db.table('tipos_unidade').toArray();
+            const result = await DataService.getTiposUnidade();
             return Array.isArray(result) ? result : [];
-        }
+        },
+        staleTime: 60000
     });
 
     const { data: unidadesExistentes = [] } = useQuery({
         queryKey: ['unidades-existentes', fiscalizacaoId],
         queryFn: async () => {
-            const result = await db.table('unidades_fiscalizadas').where('fiscalizacao_id').equals(fiscalizacaoId).toArray();
+            const result = await DataService.getUnidades(fiscalizacaoId);
             return Array.isArray(result) ? result : [];
         },
-        enabled: !!fiscalizacaoId
+        enabled: !!fiscalizacaoId,
+        staleTime: 5000
     });
 
     // Obter GPS e endereço
