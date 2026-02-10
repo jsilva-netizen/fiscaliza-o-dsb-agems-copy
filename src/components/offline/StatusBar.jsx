@@ -47,7 +47,7 @@ export default function StatusBar() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2 flex items-center justify-between">
+      <div className="bg-white border-t border-gray-200 px-4 py-2 flex items-center justify-between mt-8">
         <div className="flex items-center gap-2">
           {isOnline ? (
             <>
