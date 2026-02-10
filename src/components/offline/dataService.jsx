@@ -106,30 +106,39 @@ class DataServiceClass {
 
     let result;
 
-    // Se online, cria no servidor
+    // Se online, tenta criar no servidor
     if (this.isOnline) {
       try {
         result = await base44.entities[entityName].create(data);
         // Atualiza cache local
         await db[mapping.local].put(result);
+        console.log(`[DataService.create] ${entityName} criado online:`, result.id);
         return result;
       } catch (err) {
-        console.error(`Failed to create ${entityName} online:`, err);
-        // Fallback: salva localmente e marca para sync
+        console.warn(`[DataService.create] Falha ao criar ${entityName} online (fallback para offline):`, err.message);
+        // Marca como offline para fallback
+        this.isOnline = false;
       }
     }
 
-    // Salva localmente com ID temporário
+    // Salva localmente com ID temporário (offline ou fallback do erro)
     const tempId = `temp_${Date.now()}_${Math.random()}`;
     result = {
       id: tempId,
       ...data,
       _pending: true,
-      _syncError: null
+      _syncError: null,
+      created_date: new Date().toISOString()
     };
 
-    await db[mapping.local].put(result);
-    await this.addToSyncQueue('create', entityName, result);
+    try {
+      await db[mapping.local].put(result);
+      await this.addToSyncQueue('create', entityName, result);
+      console.log(`[DataService.create] ${entityName} salvo localmente (ID temp):`, tempId);
+    } catch (err) {
+      console.error(`[DataService.create] Erro ao salvar localmente:`, err);
+      throw err;
+    }
 
     return result;
   }
