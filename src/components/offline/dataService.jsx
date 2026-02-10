@@ -46,9 +46,12 @@ class DataServiceClass {
     const mapping = this.entityMappings[entityName];
     if (!mapping) throw new Error(`Entity ${entityName} not mapped`);
 
-    try {
-      // Tenta online
-      if (this.isOnline) {
+    // Sempre tenta ler do cache local primeiro
+    const cachedData = await this.readLocal(entityName, filter);
+    
+    // Se estiver online, busca dados atualizados em background
+    if (this.isOnline) {
+      try {
         const hasFilter = Object.keys(filter).length > 0;
         const data = hasFilter 
           ? await base44.entities[entityName].filter(filter, sort, limit)
@@ -56,13 +59,15 @@ class DataServiceClass {
         // Atualiza cache local em background
         this.cacheToLocal(entityName, data);
         return data;
+      } catch (err) {
+        console.warn(`Failed to fetch ${entityName} online, using cache:`, err);
+        // Retorna dados em cache se falhar online
+        return cachedData;
       }
-    } catch (err) {
-      console.warn(`Failed to fetch ${entityName} online:`, err);
     }
 
-    // Fallback: dados locais
-    return this.readLocal(entityName, filter);
+    // Se offline, retorna dados em cache
+    return cachedData;
   }
 
   /**
