@@ -161,15 +161,7 @@ export default function SyncPanel({ isOpen, onClose }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold">Sincronização</h2>
-          <button 
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
-        </div>
+        <h2 className="text-lg font-semibold mb-1">Sincronização</h2>
         
         <p className="text-sm text-gray-600 mb-4">
           {isOnline ? 'Você está online. Escolha o tipo de sincronização.' : 'Você está offline. Conecte-se para sincronizar.'}
