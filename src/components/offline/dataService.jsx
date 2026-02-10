@@ -510,6 +510,13 @@ class DataServiceClass {
 
   // Criação de resposta com NC e determinação
   async createRespostaComNCeDeterminacao(unidadeId, itemId, item, data) {
+    console.log('[DataService] createRespostaComNCeDeterminacao iniciado:', {
+      unidadeId,
+      itemId,
+      item,
+      data
+    });
+
     const resposta = await this.create('RespostaChecklist', {
       unidade_fiscalizada_id: unidadeId,
       item_checklist_id: itemId,
@@ -519,6 +526,7 @@ class DataServiceClass {
       numero_constatacao: data.numeroConstatacao,
       observacao: data.observacao
     });
+    console.log('[DataService] Resposta criada:', resposta);
 
     const nc = await this.create('NaoConformidade', {
       unidade_fiscalizada_id: unidadeId,
@@ -527,26 +535,30 @@ class DataServiceClass {
       artigo_portaria: item.artigo_portaria,
       descricao: item.texto_nc || data.textoConstatacao
     });
+    console.log('[DataService] NC criada:', nc);
 
     if (item.texto_determinacao) {
-      await this.create('Determinacao', {
+      const det = await this.create('Determinacao', {
         unidade_fiscalizada_id: unidadeId,
         nao_conformidade_id: nc.id,
         numero_determinacao: data.numeroDeterminacao,
         descricao: item.texto_determinacao,
         status: 'pendente'
       });
+      console.log('[DataService] Determinação criada:', det);
     }
 
     if (item.texto_recomendacao) {
-      await this.create('Recomendacao', {
+      const rec = await this.create('Recomendacao', {
         unidade_fiscalizada_id: unidadeId,
         numero_recomendacao: data.numeroRecomendacao,
         descricao: item.texto_recomendacao,
         origem: 'checklist'
       });
+      console.log('[DataService] Recomendação criada:', rec);
     }
 
+    console.log('[DataService] createRespostaComNCeDeterminacao concluído');
     return resposta;
   }
 

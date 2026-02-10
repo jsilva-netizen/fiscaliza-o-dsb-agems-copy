@@ -170,6 +170,13 @@ export default function VistoriarUnidade() {
             if (!item) return;
 
             const resposta = respostasExistentes.find(r => r.item_checklist_id === itemId);
+            
+            console.log('[VistoriarUnidade] Salvando resposta:', {
+                itemId,
+                data,
+                item,
+                respostaExistente: resposta
+            });
 
             if (resposta?.id) {
                 // Atualizar resposta existente
@@ -190,6 +197,8 @@ export default function VistoriarUnidade() {
                    observacao: data.observacao || '',
                    pergunta: textoConstatacao || ''
                  });
+                 
+                console.log('[VistoriarUnidade] Resposta atualizada');
             } else {
                 // Nova resposta
                 const proximaNumeracao = await DataService.calcularProximaNumeracao(unidadeId);
@@ -210,7 +219,10 @@ export default function VistoriarUnidade() {
 
                 const numeroConstatacao = temTextoConstatacao ? `C${proximaNumeracao.C}` : null;
 
+                console.log('[VistoriarUnidade] Nova resposta - gera_nc:', item.gera_nc, 'resposta:', data.resposta);
+
                 if (item.gera_nc && data.resposta === 'NAO') {
+                    console.log('[VistoriarUnidade] Criando NC/D...');
                     await DataService.createRespostaComNCeDeterminacao(
                         unidadeId,
                         itemId,
@@ -225,7 +237,9 @@ export default function VistoriarUnidade() {
                             observacao: data.observacao
                         }
                     );
+                    console.log('[VistoriarUnidade] NC/D criados');
                 } else {
+                    console.log('[VistoriarUnidade] Criando resposta simples');
                     await DataService.create('RespostaChecklist', {
                         unidade_fiscalizada_id: unidadeId,
                         item_checklist_id: itemId,
@@ -235,6 +249,7 @@ export default function VistoriarUnidade() {
                         numero_constatacao: numeroConstatacao,
                         observacao: data.observacao
                     });
+                    console.log('[VistoriarUnidade] Resposta criada');
                 }
             }
 

@@ -54,7 +54,7 @@ export default function ChecklistItem({
                             size="sm"
                             className={cn("flex-1", getButtonStyle('SIM'))}
                             onClick={() => handleResposta('SIM')}
-                            disabled={desabilitado || (resposta?.resposta === 'SIM')}
+                            disabled={desabilitado}
                         >
                             <Check className="h-4 w-4 mr-1" />
                             SIM
@@ -64,7 +64,7 @@ export default function ChecklistItem({
                             size="sm"
                             className={cn("flex-1", getButtonStyle('NAO'))}
                             onClick={() => handleResposta('NAO')}
-                            disabled={desabilitado || (resposta?.resposta === 'NAO')}
+                            disabled={desabilitado}
                         >
                             <X className="h-4 w-4 mr-1" />
                             NÃO
@@ -74,7 +74,7 @@ export default function ChecklistItem({
                             size="sm"
                             className={cn("flex-1", getButtonStyle('NA'))}
                             onClick={() => handleResposta('NA')}
-                            disabled={desabilitado || (resposta?.resposta === 'NA')}
+                            disabled={desabilitado}
                         >
                             <Minus className="h-4 w-4 mr-1" />
                             N/A
