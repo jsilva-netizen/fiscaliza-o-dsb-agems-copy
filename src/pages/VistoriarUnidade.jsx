@@ -701,17 +701,83 @@ export default function VistoriarUnidade() {
                 onSave={async (data) => {
                     try {
                         const proximaNumeracao = await DataService.calcularProximaNumeracao(unidadeId);
-                        await DataService.create('ConstatacaoManual', {
+                        const constatacao = await DataService.create('ConstatacaoManual', {
                             unidade_fiscalizada_id: unidadeId,
                             numero_constatacao: `C${proximaNumeracao.C}`,
                             descricao: data.descricao,
                             gera_nc: data.gera_nc || false,
                             ordem: proximaNumeracao.C
                         });
+                        
                         queryClient.invalidateQueries({ queryKey: ['constatacoes-manuais', unidadeId] });
-                        setShowAddConstatacao(false);
+                        
+                        // Se marcou "gera NC", abre modal para editar NC
+                        if (data.gera_nc) {
+                            setConstatacaoParaNC(constatacao);
+                            setNumerosParaNC({
+                                C: proximaNumeracao.C,
+                                NC: proximaNumeracao.NC,
+                                D: proximaNumeracao.D,
+                                R: proximaNumeracao.R
+                            });
+                            setShowAddConstatacao(false);
+                            setShowEditarNC(true);
+                        } else {
+                            setShowAddConstatacao(false);
+                        }
                     } catch (error) {
                         alert('Erro ao adicionar constatação: ' + error.message);
+                    }
+                }}
+            />
+
+            {/* Dialog Editar NC (de constatação manual) */}
+            <EditarNCModal
+                open={showEditarNC}
+                onOpenChange={setShowEditarNC}
+                numeroNC={`NC${numerosParaNC?.NC || ''}`}
+                numeroDeterminacao={`D${numerosParaNC?.D || ''}`}
+                numeroRecomendacao={`R${numerosParaNC?.R || ''}`}
+                numeroConstatacao={`C${numerosParaNC?.C || ''}`}
+                constatacaoTexto={constatacaoParaNC?.descricao || ''}
+                isSaving={false}
+                onSave={async (data) => {
+                    try {
+                        // Criar NC a partir da constatação manual
+                        const nc = await DataService.create('NaoConformidade', {
+                            unidade_fiscalizada_id: unidadeId,
+                            numero_nc: `NC${numerosParaNC?.NC}`,
+                            artigo_portaria: data.artigo_portaria,
+                            descricao: data.texto_nc
+                        });
+
+                        // Criar Determinação se marcado
+                        if (data.gera_determinacao) {
+                            await DataService.create('Determinacao', {
+                                unidade_fiscalizada_id: unidadeId,
+                                nao_conformidade_id: nc.id,
+                                numero_determinacao: `D${numerosParaNC?.D}`,
+                                descricao: data.texto_determinacao,
+                                status: 'pendente'
+                            });
+                        }
+
+                        // Criar Recomendação se marcado
+                        if (data.gera_recomendacao) {
+                            await DataService.create('Recomendacao', {
+                                unidade_fiscalizada_id: unidadeId,
+                                numero_recomendacao: `R${numerosParaNC?.R}`,
+                                descricao: data.texto_recomendacao,
+                                origem: 'manual'
+                            });
+                        }
+
+                        queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+                        queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+                        queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
+                        setShowEditarNC(false);
+                    } catch (error) {
+                        alert('Erro ao salvar NC: ' + error.message);
                     }
                 }}
             />
