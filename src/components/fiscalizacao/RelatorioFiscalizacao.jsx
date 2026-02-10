@@ -258,7 +258,6 @@ export default function RelatorioFiscalizacao({ fiscalizacao }) {
                 const mapeamento = mapeamentosNumeracao[idx];
 
                 pdf.addPage();
-                addTimbradoToPage(pdf, timbradoBase64);
                 yPos = topMargin;
 
                 pdf.setFontSize(9);
