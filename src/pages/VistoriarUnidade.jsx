@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { 
     ArrowLeft, ClipboardCheck, Camera, AlertTriangle, FileText, 
-    CheckCircle2, Loader2, Plus, Save, AlertCircle, Pencil, Trash2
+    CheckCircle2, Loader2, Plus, Save, AlertCircle, Pencil, Trash2, AlertCircle as AlertCircleIcon
 } from 'lucide-react';
 import ChecklistItem from '@/components/fiscalizacao/ChecklistItem';
 import PhotoGrid from '@/components/fiscalizacao/PhotoGrid';
