@@ -72,9 +72,6 @@ export default function StatusBar() {
         </Button>
       </div>
 
-      {/* Padding no final da página para a barra não sobrepor */}
-      <div className="h-12" />
-
       <SyncPanel 
         isOpen={isOpen} 
         onClose={() => {
