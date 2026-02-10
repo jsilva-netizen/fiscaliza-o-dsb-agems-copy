@@ -1,11 +1,12 @@
 import Dexie from 'dexie';
 
-console.log('>>> [OFFLINE DB] Inicializando IndexedDB...');
+console.log('>>> [OFFLINE DB] Inicializando IndexedDB com Dexie...');
 
 let db = null;
 let dbInitialized = false;
 let initializationPromise = null;
 
+// Verificar disponibilidade do IndexedDB
 const checkIndexedDBAvailable = async () => {
   try {
     const testDb = new Dexie('__test__' + Date.now());
@@ -20,6 +21,7 @@ const checkIndexedDBAvailable = async () => {
   }
 };
 
+// Fallback para localStorage
 const createLocalStorageFallback = () => {
   console.log('>>> [OFFLINE DB] Usando localStorage como fallback');
   const prefix = 'agems_';
@@ -84,12 +86,14 @@ const createLocalStorageFallback = () => {
   };
 };
 
+// Inicializar banco de dados
 const initializeDatabase = async () => {
   if (dbInitialized) return db;
 
   const hasIndexedDB = await checkIndexedDBAvailable();
 
   if (hasIndexedDB) {
+    // Usar Dexie/IndexedDB
     db = new Dexie('AgemsFiscalizacaoOffline');
     
     db.version(10).stores({
@@ -111,21 +115,25 @@ const initializeDatabase = async () => {
     });
 
     await db.open();
-    console.log('>>> [OFFLINE DB] ✓ Dexie/IndexedDB inicializado');
+    console.log('>>> [OFFLINE DB] ✓✓✓ Dexie/IndexedDB inicializado com sucesso!');
   } else {
+    // Usar fallback localStorage
     db = createLocalStorageFallback();
     await db.open();
-    console.warn('>>> [OFFLINE DB] ⚠️ Usando localStorage');
+    console.warn('>>> [OFFLINE DB] ⚠️ Usando localStorage (IndexedDB indisponível)');
   }
   
   dbInitialized = true;
   return db;
 };
 
+// Iniciar inicialização
 initializationPromise = initializeDatabase();
 
+// Export da Promise de inicialização
 export const dbReady = initializationPromise;
 
+// Wrapper para acesso às tabelas
 const dbWrapper = {
   get municipios() { return db?.municipios || db?.table('municipios'); },
   get prestadores_servico() { return db?.prestadores_servico || db?.table('prestadores_servico'); },
