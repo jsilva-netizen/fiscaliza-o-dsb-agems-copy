@@ -419,7 +419,26 @@ class DataServiceClass {
   async getFiscalizacaoById(id) {
     const mapping = this.entityMappings['Fiscalizacao'];
     
-    // SEMPRE tenta o cache primeiro
+    console.log('[DataService.getFiscalizacaoById] Buscando:', id, 'online:', this.isOnline);
+    
+    // Se é um ID temporário, busca direto do IndexedDB sem filtro complexo
+    if (id && id.toString().startsWith('temp_')) {
+      try {
+        console.log('[DataService.getFiscalizacaoById] Buscando ID temporário direto do IndexedDB');
+        const all = await db[mapping.local].toArray();
+        const found = all.find(f => f.id === id);
+        console.log('[DataService.getFiscalizacaoById] Busca em array:', found ? 'encontrado' : 'não encontrado', 'total:', all.length);
+        if (found) return found;
+      } catch (error) {
+        console.error('[DataService.getFiscalizacaoById] Erro ao buscar ID temporário:', error);
+      }
+      
+      // Se não achou um ID temporário offline, retorna null
+      console.log('[DataService.getFiscalizacaoById] ID temporário não encontrado, retornando null');
+      return null;
+    }
+    
+    // Para IDs normais, usa get() do Dexie
     try {
       const cached = await db[mapping.local].get(id);
       console.log('[DataService.getFiscalizacaoById] Cache lookup:', id, 'encontrado:', !!cached);
