@@ -161,104 +161,91 @@ export default function SyncPanel({ isOpen, onClose }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Sincronização Offline</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4">
-          {/* Status de Conexão */}
-          <Alert
-            className={isOnline ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-semibold">Sincronização</h2>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
           >
-            <AlertCircle className={`h-4 w-4 ${isOnline ? 'text-green-600' : 'text-amber-600'}`} />
-            <AlertDescription className={isOnline ? 'text-green-800' : 'text-amber-800'}>
-              {isOnline ? '✓ Conectado à internet' : '⚠ Modo offline'}
-            </AlertDescription>
-          </Alert>
+            ✕
+          </button>
+        </div>
+        
+        <p className="text-sm text-gray-600 mb-4">
+          {isOnline ? 'Você está online. Escolha o tipo de sincronização.' : 'Você está offline. Conecte-se para sincronizar.'}
+        </p>
 
-          {/* Contadores */}
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="bg-red-50 p-3 rounded border border-red-200">
-              <p className="text-red-600 font-semibold">{pendingCount}</p>
-              <p className="text-red-700 text-xs">pendentes</p>
+        <div className="space-y-3">
+          {/* Status Conectado */}
+          {isOnline && (
+            <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-3 rounded">
+              <Wifi className="w-4 h-4" />
+              <span>Conectado ao servidor</span>
             </div>
-            <div className="bg-orange-50 p-3 rounded border border-orange-200">
-              <p className="text-orange-600 font-semibold">{failedCount}</p>
-              <p className="text-orange-700 text-xs">falhados</p>
+          )}
+
+          {/* Botão Download - Azul */}
+          <Button
+            onClick={handleDownload}
+            disabled={!isOnline || isDownloading}
+            className="w-full gap-2 bg-blue-600 hover:bg-blue-700 text-white py-6 flex flex-col items-start justify-start h-auto"
+          >
+            <div className="flex items-center gap-2">
+              <Download className="h-5 w-5" />
+              <span className="font-semibold">Carregar dados do servidor</span>
             </div>
-          </div>
+            <span className="text-xs text-blue-100 ml-7">Municípios, Checklists, etc.</span>
+          </Button>
 
-          {/* Download Dados */}
-          <div className="space-y-2">
-            <Button
-              onClick={handleDownload}
-              disabled={!isOnline || isDownloading}
-              className="w-full gap-2"
-              variant="outline"
-            >
-              {isDownloading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Baixando...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4" />
-                  Baixar Dados do Servidor
-                </>
-              )}
-            </Button>
-            {isDownloading && (
-              <Progress value={downloadProgress} className="h-2" />
-            )}
-            {downloadStatus && (
-              <Alert className={`bg-${downloadStatus.type}-50 border-${downloadStatus.type}-200`}>
-                <AlertDescription className={`text-${downloadStatus.type}-800`}>
-                  {downloadStatus.message}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+          {/* Botão Upload - Verde */}
+          <Button
+            onClick={handleUpload}
+            disabled={!isOnline || isUploading}
+            className="w-full gap-2 bg-green-500 hover:bg-green-600 text-white py-6 flex flex-col items-start justify-start h-auto"
+          >
+            <div className="flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              <span className="font-semibold">Enviar dados para o servidor</span>
+            </div>
+            <span className="text-xs text-green-100 ml-7">{pendingCount} pendente{pendingCount !== 1 ? 's' : ''}</span>
+          </Button>
 
-          {/* Upload Dados */}
-          <div className="space-y-2">
-            <Button
-              onClick={handleUpload}
-              disabled={!isOnline || isUploading || pendingCount === 0}
-              className="w-full gap-2"
-              variant="outline"
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4" />
-                  Enviar Pendentes ({pendingCount})
-                </>
-              )}
-            </Button>
-            {isUploading && (
-              <Progress value={uploadProgress} className="h-2" />
-            )}
-            {uploadStatus && (
-              <Alert className={`bg-${uploadStatus.type}-50 border-${uploadStatus.type}-200`}>
-                <AlertDescription className={`text-${uploadStatus.type}-800`}>
-                  {uploadStatus.message}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+          {/* Botão Sincronização Completa - Cinza */}
+          <Button
+            onClick={async () => {
+              await handleDownload();
+              await new Promise(r => setTimeout(r, 1000));
+              await handleUpload();
+            }}
+            disabled={!isOnline || isDownloading || isUploading}
+            variant="outline"
+            className="w-full gap-2 py-6 flex flex-col items-start justify-start h-auto"
+          >
+            <div className="flex items-center gap-2">
+              <RefreshCw className="h-5 w-5" />
+              <span className="font-semibold">Sincronização completa</span>
+            </div>
+            <span className="text-xs text-gray-600 ml-7">Enviar + Receber</span>
+          </Button>
 
-          {/* Mensagem offline */}
-          {!isOnline && (
-            <Alert className="bg-amber-50 border-amber-200">
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800">
-                Conecte-se à internet para sincronizar dados
-              </AlertDescription>
+          {/* Status Messages */}
+          {downloadStatus && (
+            <Alert className={`text-sm ${
+              downloadStatus.type === 'success' ? 'bg-green-50 border-green-200' :
+              downloadStatus.type === 'error' ? 'bg-red-50 border-red-200' :
+              'bg-yellow-50 border-yellow-200'
+            }`}>
+              <AlertDescription>{downloadStatus.message}</AlertDescription>
+            </Alert>
+          )}
+          
+          {uploadStatus && (
+            <Alert className={`text-sm ${
+              uploadStatus.type === 'success' ? 'bg-green-50 border-green-200' :
+              uploadStatus.type === 'error' ? 'bg-red-50 border-red-200' :
+              'bg-yellow-50 border-yellow-200'
+            }`}>
+              <AlertDescription>{uploadStatus.message}</AlertDescription>
             </Alert>
           )}
         </div>
