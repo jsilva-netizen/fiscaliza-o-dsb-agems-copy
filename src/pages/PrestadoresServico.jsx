@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import DataService from '@/lib/dataService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,39 +28,46 @@ export default function PrestadoresServico() {
         cargo: ''
     });
 
-    const { data: prestadores = [], isLoading } = useQuery({
+   const { data: prestadores = [], isLoading } = useQuery({
         queryKey: ['prestadores'],
-        queryFn: () => base44.entities.PrestadorServico.list('nome', 200)
+        queryFn: () => DataService.getPrestadores(),
+        staleTime: 5 * 60 * 1000,
     });
 
     const { data: fiscalizacoes = [] } = useQuery({
         queryKey: ['fiscalizacoes-todos'],
-        queryFn: () => base44.entities.Fiscalizacao.list('data_inicio', 500)
+        queryFn: () => DataService.getFiscalizacoes(),
+        staleTime: 5 * 60 * 1000,
     });
 
     const { data: unidades = [] } = useQuery({
         queryKey: ['unidades-todas'],
-        queryFn: () => base44.entities.UnidadeFiscalizada.list('id', 500)
+        queryFn: () => DataService.getUnidades(),
+        staleTime: 5 * 60 * 1000,
     });
 
     const { data: ncs = [] } = useQuery({
         queryKey: ['ncs-todos'],
-        queryFn: () => base44.entities.NaoConformidade.list('id', 500)
+        queryFn: () => DataService.getNaoConformidades(),
+        staleTime: 5 * 60 * 1000,
     });
 
     const { data: determinacoes = [] } = useQuery({
         queryKey: ['determinacoes-todos'],
-        queryFn: () => base44.entities.Determinacao.list('id', 500)
+        queryFn: () => DataService.getDeterminacoes(),
+        staleTime: 5 * 60 * 1000,
     });
 
     const { data: autos = [] } = useQuery({
         queryKey: ['autos-todos'],
-        queryFn: () => base44.entities.AutoInfracao.list('id', 500)
+        queryFn: () => DataService.getAutosInfracao(),
+        staleTime: 5 * 60 * 1000,
     });
 
     const { data: recomendacoes = [] } = useQuery({
         queryKey: ['recomendacoes-todas'],
-        queryFn: () => base44.entities.Recomendacao.list('id', 500)
+        queryFn: () => DataService.getRecomendacoes(),
+        staleTime: 5 * 60 * 1000,
     });
 
     const getStatsForPrestador = (prestadorId) => {
