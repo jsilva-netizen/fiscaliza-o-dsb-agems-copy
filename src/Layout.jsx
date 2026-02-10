@@ -37,9 +37,7 @@ export default function Layout({ children, currentPageName }) {
             <PushNotificationInitializer />
             <NotificationListener />
             <StatusBar />
-            <div className="min-h-screen bg-gray-50">
-                {children}
-            </div>
+            {children}
         </>
     );
 }
