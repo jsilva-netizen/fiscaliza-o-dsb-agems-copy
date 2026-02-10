@@ -40,33 +40,33 @@ class DataServiceClass {
   // ========== MÉTODOS GENÉRICOS ==========
 
   /**
-   * Lê dados - tenta online primeiro, fallback para local
+   * Lê dados - tenta online primeiro, depois fallback para local
    */
   async read(entityName, filter = {}, sort = '-created_date', limit = 100) {
     const mapping = this.entityMappings[entityName];
     if (!mapping) throw new Error(`Entity ${entityName} not mapped`);
 
-    // Sempre tenta ler do cache local primeiro
-    const cachedData = await this.readLocal(entityName, filter);
-    
-    // Se estiver online, busca dados atualizados em background
+    // Se estiver online, busca do servidor
     if (this.isOnline) {
       try {
         const hasFilter = Object.keys(filter).length > 0;
         const data = hasFilter 
           ? await base44.entities[entityName].filter(filter, sort, limit)
           : await base44.entities[entityName].list(sort, limit);
-        // Atualiza cache local em background
-        this.cacheToLocal(entityName, data);
+        
+        console.log(`[DataService] Fetched ${data.length} ${entityName} from server`);
+        
+        // Atualiza cache local
+        await this.cacheToLocal(entityName, data);
         return data;
       } catch (err) {
-        console.warn(`Failed to fetch ${entityName} online, using cache:`, err);
-        // Retorna dados em cache se falhar online
-        return cachedData;
+        console.warn(`[DataService] Failed to fetch ${entityName} online:`, err);
       }
     }
 
-    // Se offline, retorna dados em cache
+    // Fallback: dados locais
+    const cachedData = await this.readLocal(entityName, filter);
+    console.log(`[DataService] Retrieved ${cachedData.length} ${entityName} from cache`);
     return cachedData;
   }
 
