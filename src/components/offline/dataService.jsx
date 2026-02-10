@@ -49,7 +49,10 @@ class DataServiceClass {
     try {
       // Tenta online
       if (this.isOnline) {
-        const data = await base44.entities[entityName].filter(filter, sort, limit);
+        const hasFilter = Object.keys(filter).length > 0;
+        const data = hasFilter 
+          ? await base44.entities[entityName].filter(filter, sort, limit)
+          : await base44.entities[entityName].list(sort, limit);
         // Atualiza cache local em background
         this.cacheToLocal(entityName, data);
         return data;
