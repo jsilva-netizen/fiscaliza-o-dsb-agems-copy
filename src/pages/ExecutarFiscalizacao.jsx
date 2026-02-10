@@ -45,11 +45,13 @@ export default function ExecutarFiscalizacao() {
     const { data: fiscalizacao, isLoading: loadingFiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', fiscalizacaoId],
         queryFn: async () => {
+            console.log('[ExecutarFiscalizacao] Buscando fiscalização:', fiscalizacaoId);
             const result = await DataService.getFiscalizacaoById(fiscalizacaoId);
+            console.log('[ExecutarFiscalizacao] Fiscalização encontrada:', result);
             return result || null;
         },
         enabled: !!fiscalizacaoId,
-        staleTime: 60000,
+        staleTime: 1000,
         gcTime: 300000
     });
 
