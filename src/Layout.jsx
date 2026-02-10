@@ -36,8 +36,10 @@ export default function Layout({ children, currentPageName }) {
         <>
             <PushNotificationInitializer />
             <NotificationListener />
+            <div className="pb-16">
+                {children}
+            </div>
             <StatusBar />
-            {children}
         </>
     );
 }
