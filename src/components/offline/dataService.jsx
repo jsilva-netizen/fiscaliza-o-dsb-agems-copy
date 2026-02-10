@@ -700,6 +700,59 @@ class DataServiceClass {
   // ========== MÉTODOS DE SINCRONIZAÇÃO ==========
 
   /**
+   * Limpa todo o cache local e redownload dados do servidor
+   * Deve ser chamado após sincronizar para garantir que dados deletados online sejam removidos localmente
+   */
+  async clearAndRefreshCache() {
+    if (!this.isOnline) {
+      throw new Error('Sem conexão com a internet');
+    }
+
+    console.log('[DataService.clearAndRefreshCache] Iniciando limpeza e refresh do cache...');
+
+    try {
+      // Limpa todos os dados do cache local
+      console.log('[DataService.clearAndRefreshCache] Limpando cache local...');
+      await this.clearCache();
+
+      // Redownload de dados de referência
+      console.log('[DataService.clearAndRefreshCache] Redownloading dados de referência...');
+      const referenceEntities = [
+        'Municipio',
+        'TipoUnidade',
+        'PrestadorServico',
+        'ItemChecklist'
+      ];
+
+      for (const entityName of referenceEntities) {
+        try {
+          const data = await base44.entities[entityName].list('-created_date', 1000);
+          await this.cacheToLocal(entityName, data);
+          console.log(`[DataService.clearAndRefreshCache] ✓ ${entityName}: ${data.length} registros`);
+        } catch (error) {
+          console.warn(`[DataService.clearAndRefreshCache] Erro ao redownload ${entityName}:`, error);
+        }
+      }
+
+      // Redownload de fiscalizações (sem filtro para pegar tudo)
+      console.log('[DataService.clearAndRefreshCache] Redownloading fiscalizações...');
+      try {
+        const fiscalizacoes = await base44.entities.Fiscalizacao.list('-created_date', 1000);
+        await this.cacheToLocal('Fiscalizacao', fiscalizacoes);
+        console.log(`[DataService.clearAndRefreshCache] ✓ Fiscalizações: ${fiscalizacoes.length} registros`);
+      } catch (error) {
+        console.warn('[DataService.clearAndRefreshCache] Erro ao redownload Fiscalizações:', error);
+      }
+
+      console.log('[DataService.clearAndRefreshCache] ✓ Cache limpo e atualizado com sucesso');
+      return { success: true };
+    } catch (error) {
+      console.error('[DataService.clearAndRefreshCache] Erro fatal:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Baixa todos os dados de referência do servidor
    */
   async downloadAllReferenceData() {
