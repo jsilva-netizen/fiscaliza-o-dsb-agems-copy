@@ -488,6 +488,68 @@ class DataServiceClass {
     return this.delete('Recomendacao', id);
   }
 
+  // Numeração
+  async calcularProximaNumeracao(unidadeId) {
+    const respostas = await this.getRespostasChecklist(unidadeId);
+    const ncs = await this.getNaoConformidades(unidadeId);
+    const determinacoes = await this.getDeterminacoes(unidadeId);
+    const recomendacoes = await this.getRecomendacoes(unidadeId);
+    const constatacoesManuais = await this.getConstatacoesManuais(unidadeId);
+
+    const totalConstatacoes = respostas.filter(r => 
+      (r.resposta === 'SIM' || r.resposta === 'NAO') && r.pergunta && r.pergunta.trim()
+    ).length + constatacoesManuais.length;
+
+    return {
+      C: totalConstatacoes + 1,
+      NC: ncs.length + 1,
+      D: determinacoes.length + 1,
+      R: recomendacoes.length + 1
+    };
+  }
+
+  // Criação de resposta com NC e determinação
+  async createRespostaComNCeDeterminacao(unidadeId, itemId, item, data) {
+    const resposta = await this.create('RespostaChecklist', {
+      unidade_fiscalizada_id: unidadeId,
+      item_checklist_id: itemId,
+      pergunta: data.textoConstatacao,
+      resposta: data.resposta,
+      gera_nc: item.gera_nc,
+      numero_constatacao: data.numeroConstatacao,
+      observacao: data.observacao
+    });
+
+    const nc = await this.create('NaoConformidade', {
+      unidade_fiscalizada_id: unidadeId,
+      resposta_checklist_id: resposta.id,
+      numero_nc: data.numeroNC,
+      artigo_portaria: item.artigo_portaria,
+      descricao: item.texto_nc || data.textoConstatacao
+    });
+
+    if (item.texto_determinacao) {
+      await this.create('Determinacao', {
+        unidade_fiscalizada_id: unidadeId,
+        nao_conformidade_id: nc.id,
+        numero_determinacao: data.numeroDeterminacao,
+        descricao: item.texto_determinacao,
+        status: 'pendente'
+      });
+    }
+
+    if (item.texto_recomendacao) {
+      await this.create('Recomendacao', {
+        unidade_fiscalizada_id: unidadeId,
+        numero_recomendacao: data.numeroRecomendacao,
+        descricao: item.texto_recomendacao,
+        origem: 'checklist'
+      });
+    }
+
+    return resposta;
+  }
+
   // Autos de Infração
   async getAutosInfracao(fiscalizacaoId = null) {
     const filter = fiscalizacaoId ? { fiscalizacao_id: fiscalizacaoId } : {};
