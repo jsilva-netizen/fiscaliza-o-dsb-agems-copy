@@ -16,6 +16,7 @@ export function useInitializeReferenceData() {
       try {
         console.log('[useInitializeReferenceData] Carregando dados de referência...');
         
+        // Carrega dados de referência
         await Promise.all([
           DataService.getMunicipios(),
           DataService.getPrestadores(),
@@ -24,6 +25,15 @@ export function useInitializeReferenceData() {
         ]);
 
         console.log('[useInitializeReferenceData] Dados de referência carregados com sucesso');
+
+        // Sincroniza fiscalizações para manter apenas as que existem no banco online
+        console.log('[useInitializeReferenceData] Sincronizando fiscalizações...');
+        try {
+          const fiscalizacoesOnline = await DataService.read('Fiscalizacao', {}, '-created_date', 1000);
+          console.log(`[useInitializeReferenceData] ${fiscalizacoesOnline.length} fiscalizações no servidor`);
+        } catch (error) {
+          console.warn('[useInitializeReferenceData] Erro ao sincronizar fiscalizações:', error);
+        }
       } catch (error) {
         console.error('[useInitializeReferenceData] Erro ao carregar dados de referência:', error);
       }
