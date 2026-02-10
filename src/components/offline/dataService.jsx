@@ -746,6 +746,8 @@ class DataServiceClass {
 
     const pending = await this.getPending();
     const results = { success: 0, failed: 0, idMappings: {} };
+    const tables = db.tables;
+    const hasSyncQueue = tables && tables.find(t => t.name === 'syncQueue');
 
     for (const item of pending) {
       try {
@@ -783,23 +785,27 @@ class DataServiceClass {
           await base44.entities[item.entityName].delete(data.id);
         }
 
-        // Remove da fila
-        try {
-          await db.syncQueue.delete(item.id);
-        } catch (error) {
-          console.warn('[DataService] Error deleting from sync queue:', error);
+        // Remove da fila (se existe)
+        if (hasSyncQueue) {
+          try {
+            await db.syncQueue.delete(item.id);
+          } catch (error) {
+            console.warn('[DataService] Error deleting from sync queue:', error);
+          }
         }
         results.success++;
       } catch (error) {
         console.error(`Erro ao sincronizar ${item.entityName}:`, error);
-        // Marca como falho
-        try {
-          await db.syncQueue.update(item.id, {
-            status: 'failed',
-            attempts: (item.attempts || 0) + 1
-          });
-        } catch (err) {
-          console.warn('[DataService] Error updating sync queue:', err);
+        // Marca como falho (se existe)
+        if (hasSyncQueue) {
+          try {
+            await db.syncQueue.update(item.id, {
+              status: 'failed',
+              attempts: (item.attempts || 0) + 1
+            });
+          } catch (err) {
+            console.warn('[DataService] Error updating sync queue:', err);
+          }
         }
         results.failed++;
       }
