@@ -143,21 +143,23 @@ export default function NovaFiscalizacao() {
         try {
             console.log('[NovaFiscalizacao] Criando fiscalização:', fiscalizacaoData);
             const result = await DataService.create('Fiscalizacao', fiscalizacaoData);
-            console.log('[NovaFiscalizacao] Fiscalização criada com sucesso:', result);
+            console.log('[NovaFiscalizacao] ✓ Fiscalização criada:', result.id);
             
             // Aguarda um pequeno delay para garantir que foi salvo no IndexedDB
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 300));
             
             // Valida que a fiscalização foi salva
+            console.log('[NovaFiscalizacao] Validando fiscalização no cache...');
             const saved = await DataService.getFiscalizacaoById(result.id);
             if (!saved) {
+                console.error('[NovaFiscalizacao] ERRO: Fiscalização não foi salva!', result.id);
                 throw new Error('Fiscalização não foi salva corretamente no cache');
             }
             
-            console.log('[NovaFiscalizacao] Fiscalização validada no cache, navegando...');
+            console.log('[NovaFiscalizacao] ✓ Fiscalização validada, navegando...');
             navigate(createPageUrl('ExecutarFiscalizacao') + `?id=${result.id}`);
         } catch (error) {
-            console.error('Erro ao criar fiscalização:', error);
+            console.error('[NovaFiscalizacao] Erro ao criar fiscalização:', error);
             alert('Erro ao criar fiscalização: ' + error.message);
             setIsCreating(false);
         }
