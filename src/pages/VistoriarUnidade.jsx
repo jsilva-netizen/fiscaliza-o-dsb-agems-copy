@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import DataService from '@/components/offline/dataService';
-import db from '@/functions/offlineDb';
+import db from '@/components/offline/offlineDb';
 import OfflineSyncButton from '@/components/offline/OfflineSyncButton';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +49,7 @@ export default function VistoriarUnidade() {
     const { data: unidade, isLoading: loadingUnidade } = useQuery({
         queryKey: ['unidade', unidadeId],
         queryFn: async () => {
-            const result = await db.table('unidades_fiscalizadas').get(unidadeId);
+            const result = await DataService.getUnidadeById(unidadeId);
             return result || null;
         },
         enabled: !!unidadeId,
@@ -59,7 +59,7 @@ export default function VistoriarUnidade() {
     const { data: fiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', unidade?.fiscalizacao_id],
         queryFn: async () => {
-            const result = await db.table('fiscalizacoes').get(unidade?.fiscalizacao_id);
+            const result = await DataService.getFiscalizacaoById(unidade?.fiscalizacao_id);
             return result || null;
         },
         enabled: !!unidade?.fiscalizacao_id,
@@ -69,7 +69,7 @@ export default function VistoriarUnidade() {
     const { data: itensChecklist = [] } = useQuery({
         queryKey: ['itensChecklist', unidade?.tipo_unidade_id],
         queryFn: async () => {
-            const result = await db.table('item_checklist').where('tipo_unidade_id').equals(unidade?.tipo_unidade_id).toArray();
+            const result = await DataService.getItemsChecklist(unidade?.tipo_unidade_id);
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidade?.tipo_unidade_id,
@@ -79,7 +79,7 @@ export default function VistoriarUnidade() {
     const { data: respostasExistentes = [] } = useQuery({
         queryKey: ['respostas', unidadeId],
         queryFn: async () => {
-            const result = await db.table('respostas_checklist').where('unidade_fiscalizada_id').equals(unidadeId).toArray();
+            const result = await DataService.getRespostasChecklist(unidadeId);
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,
@@ -89,7 +89,7 @@ export default function VistoriarUnidade() {
     const { data: ncsExistentes = [] } = useQuery({
         queryKey: ['ncs', unidadeId],
         queryFn: async () => {
-            const result = await db.table('nao_conformidades').where('unidade_fiscalizada_id').equals(unidadeId).toArray();
+            const result = await DataService.getNaoConformidades(unidadeId);
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,
@@ -99,7 +99,7 @@ export default function VistoriarUnidade() {
     const { data: determinacoesExistentes = [] } = useQuery({
         queryKey: ['determinacoes', unidadeId],
         queryFn: async () => {
-            const result = await db.table('determinacoes').where('unidade_fiscalizada_id').equals(unidadeId).toArray();
+            const result = await DataService.getDeterminacoes(unidadeId);
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,
@@ -109,7 +109,7 @@ export default function VistoriarUnidade() {
     const { data: recomendacoesExistentes = [] } = useQuery({
         queryKey: ['recomendacoes', unidadeId],
         queryFn: async () => {
-            const result = await db.table('recomendacoes').where('unidade_fiscalizada_id').equals(unidadeId).toArray();
+            const result = await DataService.getRecomendacoes(unidadeId);
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,
@@ -119,7 +119,7 @@ export default function VistoriarUnidade() {
     const { data: constatacoesManuais = [] } = useQuery({
         queryKey: ['constatacoes-manuais', unidadeId],
         queryFn: async () => {
-            const result = await db.table('constatacoes_manuais').where('unidade_fiscalizada_id').equals(unidadeId).toArray();
+            const result = await DataService.getConstatacoesManuais(unidadeId);
             return Array.isArray(result) ? result : [];
         },
         enabled: !!unidadeId,

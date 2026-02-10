@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import db from '@/functions/offlineDb';
+import db from '@/components/offline/offlineDb';
 
 export default function ExecutarFiscalizacao() {
     const queryClient = useQueryClient();
@@ -45,7 +45,7 @@ export default function ExecutarFiscalizacao() {
     const { data: fiscalizacao, isLoading: loadingFiscalizacao } = useQuery({
         queryKey: ['fiscalizacao', fiscalizacaoId],
         queryFn: async () => {
-            const result = await db.table('fiscalizacoes').get(fiscalizacaoId);
+            const result = await DataService.getFiscalizacaoById(fiscalizacaoId);
             return result || null;
         },
         enabled: !!fiscalizacaoId,
@@ -56,7 +56,7 @@ export default function ExecutarFiscalizacao() {
     const { data: unidades = [], isLoading: loadingUnidades } = useQuery({
         queryKey: ['unidades-fiscalizacao', fiscalizacaoId],
         queryFn: async () => {
-            const result = await db.table('unidades_fiscalizadas').where('fiscalizacao_id').equals(fiscalizacaoId).toArray();
+            const result = await DataService.getUnidades(fiscalizacaoId);
             return Array.isArray(result) ? result : [];
         },
         enabled: !!fiscalizacaoId,
@@ -67,7 +67,7 @@ export default function ExecutarFiscalizacao() {
     const { data: tipos = [] } = useQuery({
         queryKey: ['tipos-unidade'],
         queryFn: async () => {
-            const result = await db.table('tipos_unidade').toArray();
+            const result = await DataService.getTiposUnidade();
             return Array.isArray(result) ? result : [];
         },
         staleTime: 3600000,
@@ -76,10 +76,8 @@ export default function ExecutarFiscalizacao() {
 
     const finalizarMutation = useMutation({
         mutationFn: async () => {
-            // Recarregar unidades do banco para validação precisa
-            const unidadesAtualizadas = await base44.entities.UnidadeFiscalizada.filter({ 
-                fiscalizacao_id: fiscalizacaoId 
-            });
+            // Recarregar unidades do banco para validação precisa (offline-first)
+            const unidadesAtualizadas = await DataService.getUnidades(fiscalizacaoId);
             
             // Verificar se todas as unidades estão completas
             for (const unidade of unidadesAtualizadas) {
@@ -92,7 +90,7 @@ export default function ExecutarFiscalizacao() {
             const dataFim = new Date();
             const ano = dataFim.getFullYear();
             
-            // Buscar fiscalizações finalizadas no mesmo ano
+            // Buscar fiscalizações finalizadas no mesmo ano (offline-first)
             const fiscalizacoesDoAno = await DataService.read('Fiscalizacao', { status: 'finalizada' }, '-data_fim', 1000);
             
             const fiscalizacoesAnoAtual = fiscalizacoesDoAno.filter(f => {
@@ -121,9 +119,8 @@ export default function ExecutarFiscalizacao() {
 
     const excluirUnidadeMutation = useMutation({
         mutationFn: async (unidadeId) => {
-            return await base44.functions.invoke('deleteUnidadeFiscalizadaComCascade', {
-                unidade_id: unidadeId
-            });
+            // Excluir com cascade offline-first
+            await DataService.deleteUnidade(unidadeId);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['unidades-fiscalizacao', fiscalizacaoId] });
