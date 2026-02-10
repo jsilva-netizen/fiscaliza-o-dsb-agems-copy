@@ -168,7 +168,7 @@ export default function SyncPanel({ isOpen, onClose }) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
-        <h2 className="text-lg font-semibold mb-1">Sincronização</h2>
+        <DialogTitle className="text-lg font-semibold mb-1">Sincronização</DialogTitle>
         
         <p className="text-sm text-gray-600 mb-4">
           {isOnline ? 'Você está online. Escolha o tipo de sincronização.' : 'Você está offline. Conecte-se para sincronizar.'}
