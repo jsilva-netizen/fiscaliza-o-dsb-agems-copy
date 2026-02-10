@@ -127,6 +127,13 @@ export default function SyncPanel({ isOpen, onClose }) {
           message: `✓ ${result.success} itens sincronizados com sucesso`,
         });
         
+        // Limpa e atualiza cache após upload bem-sucedido
+        if (result.success > 0) {
+          console.log('[SyncPanel] Iniciando refresh do cache...');
+          await DataService.clearAndRefreshCache();
+          console.log('[SyncPanel] Cache atualizado com sucesso');
+        }
+        
         // Invalida TODAS as queries para forçar refetch com IDs atualizados
         queryClient.invalidateQueries({ queryKey: ['fiscalizacoes'] });
         queryClient.invalidateQueries({ queryKey: ['fiscalizacao'] });
