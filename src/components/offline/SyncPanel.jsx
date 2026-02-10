@@ -67,11 +67,11 @@ export default function SyncPanel({ isOpen, onClose }) {
 
       setDownloadProgress(100);
       
-      // Invalida cache do React Query para forçar refetch na próxima vez
-      queryClient.invalidateQueries({ queryKey: ['municipios'] });
-      queryClient.invalidateQueries({ queryKey: ['prestadores'] });
-      queryClient.invalidateQueries({ queryKey: ['tipos_unidade'] });
-      queryClient.invalidateQueries({ queryKey: ['item_checklist'] });
+      // Remove completamente o cache e força refetch
+      queryClient.removeQueries({ queryKey: ['municipios'] });
+      queryClient.removeQueries({ queryKey: ['prestadores'] });
+      queryClient.removeQueries({ queryKey: ['tipos_unidade'] });
+      queryClient.removeQueries({ queryKey: ['item_checklist'] });
       
       if (result.failed.length === 0) {
         setDownloadStatus({
