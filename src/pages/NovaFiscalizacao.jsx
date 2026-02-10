@@ -50,7 +50,7 @@ export default function NovaFiscalizacao() {
 
     const { data: prestadores = [], isLoading: loadingPrestadores, error: errorPrestadores } = useQuery({
         queryKey: ['prestadores'],
-        queryFn: () => DataService.getPrestadores({ ativo: true }),
+        queryFn: () => DataService.getPrestadores(),
         staleTime: 1000 * 60 * 30,
         gcTime: 1000 * 60 * 60,
     });
