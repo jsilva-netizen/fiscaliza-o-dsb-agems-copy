@@ -87,7 +87,7 @@ export default function PrestadoresServico() {
     };
 
     const criarMutation = useMutation({
-        mutationFn: (data) => base44.entities.PrestadorServico.create(data),
+        mutationFn: (data) => DataService.savePrestador(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prestadores'] });
             resetForm();
@@ -96,7 +96,7 @@ export default function PrestadoresServico() {
     });
 
     const atualizarMutation = useMutation({
-        mutationFn: ({ id, data }) => base44.entities.PrestadorServico.update(id, data),
+        mutationFn: ({ id, data }) => DataService.savePrestador({ ...data, id }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prestadores'] });
             resetForm();
@@ -105,7 +105,8 @@ export default function PrestadoresServico() {
     });
 
     const deletarMutation = useMutation({
-        mutationFn: (id) => base44.entities.PrestadorServico.delete(id),
+        // Certifique-se que o DataService tem o método deletePrestador implementado
+        mutationFn: (id) => DataService.deletePrestador(id), 
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['prestadores'] });
             setDeleteConfirmation({ open: false, prestadorId: null, step: 1, inputValue: '' });
