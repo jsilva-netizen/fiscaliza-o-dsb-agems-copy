@@ -167,8 +167,35 @@ export default function ExecutarFiscalizacao() {
 
     if (!fiscalizacao) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p>Fiscalização não encontrada</p>
+            <div className="min-h-screen flex items-center justify-center bg-gray-100">
+                <Card className="max-w-sm">
+                    <CardContent className="p-6 text-center">
+                        <div className="mb-4">
+                            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto opacity-50" />
+                        </div>
+                        <h2 className="text-lg font-bold text-gray-900 mb-2">Fiscalização não encontrada</h2>
+                        <p className="text-sm text-gray-600 mb-4">
+                            ID: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{fiscalizacaoId}</code>
+                        </p>
+                        <p className="text-sm text-gray-600 mb-6">
+                            A fiscalização pode estar sincronizando. Aguarde alguns segundos e tente novamente.
+                        </p>
+                        <div className="flex gap-2">
+                            <Button 
+                                variant="outline" 
+                                className="flex-1"
+                                onClick={() => window.location.reload()}
+                            >
+                                Recarregar
+                            </Button>
+                            <Link to={createPageUrl('Fiscalizacoes')} className="flex-1">
+                                <Button variant="default" className="w-full">
+                                    Voltar
+                                </Button>
+                            </Link>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         );
     }
