@@ -46,6 +46,8 @@ export default function NovaFiscalizacao() {
         queryFn: () => DataService.getMunicipios(),
         staleTime: 1000 * 60 * 30,
         gcTime: 1000 * 60 * 60,
+        retry: false, // Não tenta fazer retry offline
+        networkMode: 'always', // Sempre executa mesmo offline
     });
 
     const { data: prestadores = [], isLoading: loadingPrestadores, error: errorPrestadores } = useQuery({
@@ -53,6 +55,8 @@ export default function NovaFiscalizacao() {
         queryFn: () => DataService.getPrestadores(),
         staleTime: 1000 * 60 * 30,
         gcTime: 1000 * 60 * 60,
+        retry: false, // Não tenta fazer retry offline
+        networkMode: 'always', // Sempre executa mesmo offline
     });
 
     useEffect(() => {
