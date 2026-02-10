@@ -47,10 +47,7 @@ export default function Fiscalizacoes() {
 
     const deletarFiscalizacaoMutation = useMutation({
         mutationFn: async (fiscalizacaoId) => {
-            const { data } = await base44.functions.invoke('deletarFiscalizacao', {
-                fiscalizacao_id: fiscalizacaoId
-            });
-            return data;
+            await DataService.delete('Fiscalizacao', fiscalizacaoId);
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['fiscalizacoes'] });
