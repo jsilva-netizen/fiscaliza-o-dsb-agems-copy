@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DataService from '@/components/offline/dataService';
 import db from '@/components/offline/offlineDb';
 import OfflineSyncButton from '@/components/offline/OfflineSyncButton';
@@ -24,6 +24,7 @@ import EditarNCModal from '@/components/fiscalizacao/EditarNCModal';
 
 export default function VistoriarUnidade() {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const urlParams = new URLSearchParams(window.location.search);
     const unidadeId = urlParams.get('id');
     const modoEdicao = urlParams.get('modo') === 'edicao';
@@ -258,6 +259,15 @@ export default function VistoriarUnidade() {
                 ...prev,
                 [itemId]: data
             }));
+
+            // Invalida queries para forçar recarregamento
+            queryClient.invalidateQueries({ queryKey: ['respostas', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
+            queryClient.invalidateQueries({ queryKey: ['constatacoes-manuais', unidadeId] });
+            
+            console.log('[VistoriarUnidade] Queries invalidadas');
         } catch (error) {
             console.error('Erro ao salvar resposta:', error);
             alert('Erro ao salvar resposta: ' + error.message);
@@ -614,6 +624,7 @@ export default function VistoriarUnidade() {
                                             descricao: novaRecomendacao,
                                             origem: 'manual'
                                         });
+                                        queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
                                         setNovaRecomendacao('');
                                         setShowAddRecomendacao(false);
                                     } catch (error) {
