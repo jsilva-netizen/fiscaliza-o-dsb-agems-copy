@@ -393,15 +393,23 @@ class DataServiceClass {
 
   async getFiscalizacaoById(id) {
     const mapping = this.entityMappings['Fiscalizacao'];
-    const cached = await db[mapping.local].get(id);
     
-    // Se encontrou no cache, retorna
-    if (cached) return cached;
+    // SEMPRE tenta o cache primeiro
+    try {
+      const cached = await db[mapping.local].get(id);
+      console.log('[DataService.getFiscalizacaoById] Cache lookup:', id, 'encontrado:', !!cached);
+      if (cached) return cached;
+    } catch (error) {
+      console.warn('[DataService.getFiscalizacaoById] Erro ao ler cache:', error);
+    }
     
-    // Se offline e não encontrou, retorna null
-    if (!this.isOnline) return null;
+    // Se não achou no cache e está offline, retorna null
+    if (!this.isOnline) {
+      console.log('[DataService.getFiscalizacaoById] Offline e não encontrado no cache:', id);
+      return null;
+    }
     
-    // Se online e não encontrou no cache, busca do servidor
+    // Se online e não achou no cache, busca do servidor
     try {
       console.log('[DataService.getFiscalizacaoById] Buscando do servidor:', id);
       const result = await base44.entities.Fiscalizacao.filter({ id }, '-created_date', 1);
