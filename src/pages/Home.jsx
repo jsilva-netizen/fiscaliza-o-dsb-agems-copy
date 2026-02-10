@@ -49,11 +49,14 @@ export default function Home() {
                 <div className="max-w-6xl mx-auto px-4 py-6">
                     <div className="flex items-center gap-4">
                         <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center p-2">
-                            <img 
-                                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69331445067a2821c02acff8/680310e1f_ChatGPTImage22dejande202609_12_54.png" 
-                                alt="Logo AGEMS" 
-                                className="w-full h-full object-contain"
-                            />
+                            <svg viewBox="0 0 200 200" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                                <rect fill="#1e40af" width="200" height="200"/>
+                                <circle cx="100" cy="80" r="35" fill="#3b82f6"/>
+                                <circle cx="70" cy="100" r="15" fill="#60a5fa"/>
+                                <circle cx="130" cy="100" r="15" fill="#60a5fa"/>
+                                <rect x="60" y="120" width="80" height="8" rx="4" fill="#93c5fd"/>
+                                <text x="100" y="170" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">AGEMS</text>
+                            </svg>
                         </div>
                         <div className="text-white">
                             <h1 className="text-2xl font-bold">Fiscalização AGEMS</h1>
