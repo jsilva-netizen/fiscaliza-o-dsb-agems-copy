@@ -96,14 +96,20 @@ export default function NovaFiscalizacao() {
     const [isCreating, setIsCreating] = useState(false);
 
     const handleCreateFiscalizacao = async (data) => {
+        // Aguarda user carregar antes de criar
+        if (!user) {
+            alert('Aguardando dados do usuário...');
+            return;
+        }
+
         const municipio = municipios.find(m => m.id === data.municipio_id);
         const prestador = prestadores.find(p => p.id === data.prestador_servico_id);
         const fiscalizacaoData = {
             ...data,
             municipio_nome: municipio?.nome,
             prestador_servico_nome: prestador?.nome,
-            fiscal_nome: user?.full_name || 'Fiscal',
-            fiscal_email: user?.email,
+            fiscal_nome: user.full_name,
+            fiscal_email: user.email,
             data_inicio: new Date().toISOString(),
             latitude_inicio: location?.lat,
             longitude_inicio: location?.lng,
@@ -326,7 +332,7 @@ export default function NovaFiscalizacao() {
                     <Button 
                         type="submit" 
                         className="w-full h-14 text-lg bg-green-600 hover:bg-green-700"
-                        disabled={isCreating || !formData.municipio_id || formData.servicos.length === 0 || !formData.prestador_servico_id}
+                        disabled={isCreating || !user || !formData.municipio_id || formData.servicos.length === 0 || !formData.prestador_servico_id}
                     >
                         {isCreating ? (
                             <>

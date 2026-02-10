@@ -542,7 +542,7 @@ class DataServiceClass {
     }
 
     const pending = await this.getPending();
-    const results = { success: 0, failed: 0 };
+    const results = { success: 0, failed: 0, idMappings: {} };
 
     for (const item of pending) {
       try {
@@ -551,9 +551,17 @@ class DataServiceClass {
 
         if (item.operation === 'create') {
           const result = await base44.entities[item.entityName].create(data);
+          
+          // Mapeia ID temporário para ID real
+          const tempId = data.id;
+          const realId = result.id;
+          results.idMappings[tempId] = realId;
+          
           // Atualiza registro local com ID real
-          await db[mapping.local].delete(data.id);
+          await db[mapping.local].delete(tempId);
           await db[mapping.local].put({ ...result, _pending: false });
+          
+          console.log(`[DataService] ID mapping: ${tempId} -> ${realId}`);
         } else if (item.operation === 'update') {
           await base44.entities[item.entityName].update(data.id, data);
           await db[mapping.local].update(data.id, { _pending: false });
