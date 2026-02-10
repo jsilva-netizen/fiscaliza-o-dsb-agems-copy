@@ -732,55 +732,63 @@ export default function VistoriarUnidade() {
             />
 
             {/* Dialog Editar NC (de constatação manual) */}
-            <EditarNCModal
-                open={showEditarNC}
-                onOpenChange={setShowEditarNC}
-                numeroNC={`NC${numerosParaNC?.NC || ''}`}
-                numeroDeterminacao={`D${numerosParaNC?.D || ''}`}
-                numeroRecomendacao={`R${numerosParaNC?.R || ''}`}
-                numeroConstatacao={`C${numerosParaNC?.C || ''}`}
-                constatacaoTexto={constatacaoParaNC?.descricao || ''}
-                isSaving={false}
-                onSave={async (data) => {
-                    try {
-                        // Criar NC a partir da constatação manual
-                        const nc = await DataService.create('NaoConformidade', {
-                            unidade_fiscalizada_id: unidadeId,
-                            numero_nc: `NC${numerosParaNC?.NC}`,
-                            artigo_portaria: data.artigo_portaria,
-                            descricao: data.texto_nc
-                        });
-
-                        // Criar Determinação se marcado
-                        if (data.gera_determinacao) {
-                            await DataService.create('Determinacao', {
+            {showEditarNC && (
+                <EditarNCModal
+                    open={showEditarNC}
+                    onOpenChange={setShowEditarNC}
+                    numeroNC={`NC${numerosParaNC?.NC || ''}`}
+                    numeroDeterminacao={`D${numerosParaNC?.D || ''}`}
+                    numeroRecomendacao={`R${numerosParaNC?.R || ''}`}
+                    numeroConstatacao={`C${numerosParaNC?.C || ''}`}
+                    constatacaoTexto={constatacaoParaNC?.descricao || ''}
+                    isSaving={false}
+                    onSave={async (data) => {
+                        try {
+                            console.log('[VistoriarUnidade] Salvando NC com dados:', data);
+                            // Criar NC a partir da constatação manual
+                            const nc = await DataService.create('NaoConformidade', {
                                 unidade_fiscalizada_id: unidadeId,
-                                nao_conformidade_id: nc.id,
-                                numero_determinacao: `D${numerosParaNC?.D}`,
-                                descricao: data.texto_determinacao,
-                                status: 'pendente'
+                                numero_nc: `NC${numerosParaNC?.NC}`,
+                                artigo_portaria: data.artigo_portaria,
+                                descricao: data.texto_nc
                             });
-                        }
+                            console.log('[VistoriarUnidade] NC criada:', nc);
 
-                        // Criar Recomendação se marcado
-                        if (data.gera_recomendacao) {
-                            await DataService.create('Recomendacao', {
-                                unidade_fiscalizada_id: unidadeId,
-                                numero_recomendacao: `R${numerosParaNC?.R}`,
-                                descricao: data.texto_recomendacao,
-                                origem: 'manual'
-                            });
-                        }
+                            // Criar Determinação se marcado
+                            if (data.gera_determinacao) {
+                                await DataService.create('Determinacao', {
+                                    unidade_fiscalizada_id: unidadeId,
+                                    nao_conformidade_id: nc.id,
+                                    numero_determinacao: `D${numerosParaNC?.D}`,
+                                    descricao: data.texto_determinacao,
+                                    status: 'pendente'
+                                });
+                                console.log('[VistoriarUnidade] Determinação criada');
+                            }
 
-                        queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
-                        queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
-                        queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
-                        setShowEditarNC(false);
-                    } catch (error) {
-                        alert('Erro ao salvar NC: ' + error.message);
-                    }
-                }}
-            />
+                            // Criar Recomendação se marcado
+                            if (data.gera_recomendacao) {
+                                await DataService.create('Recomendacao', {
+                                    unidade_fiscalizada_id: unidadeId,
+                                    numero_recomendacao: `R${numerosParaNC?.R}`,
+                                    descricao: data.texto_recomendacao,
+                                    origem: 'manual'
+                                });
+                                console.log('[VistoriarUnidade] Recomendação criada');
+                            }
+
+                            queryClient.invalidateQueries({ queryKey: ['ncs', unidadeId] });
+                            queryClient.invalidateQueries({ queryKey: ['determinacoes', unidadeId] });
+                            queryClient.invalidateQueries({ queryKey: ['recomendacoes', unidadeId] });
+                            setShowEditarNC(false);
+                            console.log('[VistoriarUnidade] NC finalizada');
+                        } catch (error) {
+                            console.error('[VistoriarUnidade] Erro ao salvar NC:', error);
+                            alert('Erro ao salvar NC: ' + error.message);
+                        }
+                    }}
+                />
+            )}
 
             {/* Dialog Confirmação Sem Fotos */}
             <Dialog open={showConfirmaSemFotos} onOpenChange={setShowConfirmaSemFotos}>
