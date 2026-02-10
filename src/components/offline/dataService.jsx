@@ -287,6 +287,10 @@ class DataServiceClass {
     return this.read('ItemChecklist', filter, 'ordem', 500);
   }
 
+  async getItemChecklist(tipoUnidadeId = null) {
+    return this.getItemsChecklist(tipoUnidadeId);
+  }
+
   // Fiscalizações
   async getFiscalizacoes() {
     return this.read('Fiscalizacao', {}, '-data_inicio', 500);
