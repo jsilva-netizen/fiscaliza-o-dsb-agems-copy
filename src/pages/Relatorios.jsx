@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import DataService from '@/components/offline/dataService';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,37 +30,54 @@ export default function Relatorios() {
 
     const { data: fiscalizacoes = [] } = useQuery({
         queryKey: ['fiscalizacoes'],
-        queryFn: () => base44.entities.Fiscalizacao.list('-created_date', 500)
+        queryFn: () => DataService.getFiscalizacoes(),
+        retry: false,
+        networkMode: 'always'
     });
 
     const { data: municipios = [] } = useQuery({
         queryKey: ['municipios'],
-        queryFn: () => base44.entities.Municipio.list('nome', 100)
+        queryFn: () => DataService.getMunicipios(),
+        retry: false,
+        networkMode: 'always'
     });
 
     const { data: ncs = [] } = useQuery({
         queryKey: ['todas-ncs'],
-        queryFn: () => base44.entities.NaoConformidade.list('-created_date', 1000)
+        queryFn: () => DataService.getNaoConformidades(),
+        retry: false,
+        networkMode: 'always'
     });
 
     const { data: unidades = [] } = useQuery({
         queryKey: ['todas-unidades'],
-        queryFn: () => base44.entities.UnidadeFiscalizada.list('-created_date', 2000)
+        queryFn: () => DataService.getUnidades(),
+        retry: false,
+        networkMode: 'always'
     });
 
     const { data: respostas = [] } = useQuery({
         queryKey: ['todas-respostas'],
-        queryFn: () => base44.entities.RespostaChecklist.list('-created_date', 5000)
+        queryFn: async () => {
+            const result = await DataService.read('RespostaChecklist', {}, '-created_date', 5000);
+            return Array.isArray(result) ? result : [];
+        },
+        retry: false,
+        networkMode: 'always'
     });
 
     const { data: determinacoes = [] } = useQuery({
         queryKey: ['todas-determinacoes'],
-        queryFn: () => base44.entities.Determinacao.list('-created_date', 2000)
+        queryFn: () => DataService.getDeterminacoes(),
+        retry: false,
+        networkMode: 'always'
     });
 
     const { data: recomendacoes = [] } = useQuery({
         queryKey: ['todas-recomendacoes'],
-        queryFn: () => base44.entities.Recomendacao.list('-created_date', 2000)
+        queryFn: () => DataService.getRecomendacoes(),
+        retry: false,
+        networkMode: 'always'
     });
 
     // Filtrar por ano
