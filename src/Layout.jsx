@@ -1,25 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import OfflineStatusBar from '@/components/offline/OfflineStatusBar';
 import OfflineSyncButton from '@/components/offline/OfflineSyncButton';
 import PushNotificationInitializer from '@/components/offline/PushNotificationInitializer';
 import NotificationListener from '@/components/offline/NotificationListener';
-import OfflineFallback from '@/components/offline/OfflineFallback';
 import { useInitializeReferenceData } from '@/components/hooks/useInitializeReferenceData';
 
 export default function Layout({ children, currentPageName }) {
-    const [isInitialized, setIsInitialized] = useState(false);
     useInitializeReferenceData();
-    
-    useEffect(() => {
-        // Marca como inicializado após render inicial
-        setIsInitialized(true);
-    }, []);
-
-    // Mostra fallback offline se: offline, não está na primeira renderização, e página requer dados
-    const requiresData = ['Home', 'NovaFiscalizacao', 'Fiscalizacoes', 'Municipios', 'TiposUnidade'].includes(currentPageName);
-    if (!navigator.onLine && isInitialized && requiresData) {
-        return <OfflineFallback />;
-    }
 
     // Páginas que não precisam de layout (fullscreen)
     const fullscreenPages = [
