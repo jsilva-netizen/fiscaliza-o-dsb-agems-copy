@@ -149,7 +149,7 @@ export default function NovaFiscalizacao() {
             }
             
             console.log('[NovaFiscalizacao] Fiscalização validada no cache, navegando...');
-            navigate(`/ExecutarFiscalizacao?id=${result.id}`);
+            navigate(createPageUrl('ExecutarFiscalizacao') + `?id=${result.id}`);
         } catch (error) {
             console.error('Erro ao criar fiscalização:', error);
             alert('Erro ao criar fiscalização: ' + error.message);
