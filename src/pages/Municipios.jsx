@@ -12,10 +12,11 @@ import { ArrowLeft, Search, MapPin } from 'lucide-react';
 export default function Municipios() {
     const [search, setSearch] = React.useState('');
 
-    const { data: municipios = [], isLoading } = useQuery({
-        queryKey: ['municipios'],
-        queryFn: () => base44.entities.Municipio.list('nome', 100)
-    });
+  const { data: municipios = [], isLoading } = useQuery({
+    queryKey: ['municipios'],
+    queryFn: () => DataService.getMunicipios(),
+    staleTime: 5 * 60 * 1000,
+});
 
     const filteredMunicipios = municipios.filter(m => 
         m.nome.toLowerCase().includes(search.toLowerCase()) ||
