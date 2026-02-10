@@ -223,27 +223,36 @@ class DataServiceClass {
    * Adiciona à fila de sincronização
    */
   async addToSyncQueue(operation, entityName, data) {
-    await db.syncQueue.add({
-      operation,
-      entityName,
-      data: JSON.stringify(data),
-      timestamp: new Date(),
-      attempts: 0,
-      status: 'pending'
-    });
+    try {
+      await db.syncQueue.add({
+        operation,
+        entityName,
+        data: JSON.stringify(data),
+        timestamp: new Date(),
+        attempts: 0,
+        status: 'pending'
+      });
+    } catch (error) {
+      console.warn('[DataService] Error adding to sync queue:', error);
+    }
   }
 
   /**
    * Obtém registros pendentes de sincronização
    */
   async getPending(entityName = null) {
-    let pending = await db.syncQueue.toArray();
+    try {
+      let pending = await db.syncQueue.toArray();
 
-    if (entityName) {
-      pending = pending.filter(item => item.entityName === entityName);
+      if (entityName) {
+        pending = pending.filter(item => item.entityName === entityName);
+      }
+
+      return pending.filter(item => item.status === 'pending');
+    } catch (error) {
+      console.warn('[DataService] Error getting pending items:', error);
+      return [];
     }
-
-    return pending.filter(item => item.status === 'pending');
   }
 
   /**
@@ -264,14 +273,23 @@ class DataServiceClass {
    * Retorna status de sincronização
    */
   async getSyncStatus() {
-    const pending = await db.syncQueue.where('status').equals('pending').count();
-    const failed = await db.syncQueue.where('status').equals('failed').count();
-    
-    return {
-      pendingCount: pending,
-      failedCount: failed,
-      isOnline: this.isOnline
-    };
+    try {
+      const pending = await db.syncQueue.where('status').equals('pending').count();
+      const failed = await db.syncQueue.where('status').equals('failed').count();
+      
+      return {
+        pendingCount: pending,
+        failedCount: failed,
+        isOnline: this.isOnline
+      };
+    } catch (error) {
+      console.warn('[DataService] Error getting sync status:', error);
+      return {
+        pendingCount: 0,
+        failedCount: 0,
+        isOnline: this.isOnline
+      };
+    }
   }
 
   // ========== MÉTODOS ESPECÍFICOS POR ENTIDADE ==========
@@ -510,15 +528,23 @@ class DataServiceClass {
         }
 
         // Remove da fila
-        await db.syncQueue.delete(item.id);
+        try {
+          await db.syncQueue.delete(item.id);
+        } catch (error) {
+          console.warn('[DataService] Error deleting from sync queue:', error);
+        }
         results.success++;
       } catch (error) {
         console.error(`Erro ao sincronizar ${item.entityName}:`, error);
         // Marca como falho
-        await db.syncQueue.update(item.id, {
-          status: 'failed',
-          attempts: (item.attempts || 0) + 1
-        });
+        try {
+          await db.syncQueue.update(item.id, {
+            status: 'failed',
+            attempts: (item.attempts || 0) + 1
+          });
+        } catch (err) {
+          console.warn('[DataService] Error updating sync queue:', err);
+        }
         results.failed++;
       }
     }
