@@ -63,12 +63,11 @@ export default function StatusBar() {
         </div>
 
         <Button
-          size="sm"
           variant="ghost"
           onClick={handleSync}
-          className="h-8 px-3 text-xs gap-2 hover:bg-gray-100"
+          className="h-10 px-4 text-sm gap-2 hover:bg-gray-100"
         >
-          <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
           Sincronizar
         </Button>
       </div>
