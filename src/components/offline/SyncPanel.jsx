@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, CheckCircle2, Loader2, Download, Upload } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Download, Upload, Wifi, RefreshCw } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import DataService from './dataService';
 import db from './offlineDb';
