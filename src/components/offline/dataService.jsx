@@ -435,41 +435,31 @@ class DataServiceClass {
     return this.read('Fiscalizacao', {}, '-data_inicio', 500);
   }
 
-  async getFiscalizacaoById(id) {
+  async getFiscalizacaoById(id, retryCount = 0, maxRetries = 3) {
     const mapping = this.entityMappings['Fiscalizacao'];
     
-    console.log('[DataService.getFiscalizacaoById] === INICIANDO BUSCA ===', { id, online: this.isOnline, table: mapping.local });
+    console.log('[DataService.getFiscalizacaoById] === INICIANDO BUSCA ===', { id, online: this.isOnline, retry: `${retryCount}/${maxRetries}` });
     
     // SEMPRE busca no IndexedDB primeiro
     try {
-      console.log('[DataService.getFiscalizacaoById] Tentando get() direto com ID:', id);
       const cached = await db[mapping.local].get(id);
       if (cached) {
-        console.log('[DataService.getFiscalizacaoById] ✓ ENCONTRADO com get():', cached.id);
+        console.log('[DataService.getFiscalizacaoById] ✓ ENCONTRADO:', cached.id);
         return cached;
       }
-      console.log('[DataService.getFiscalizacaoById] get() retornou undefined, tentando fallback...');
     } catch (error) {
-      console.error('[DataService.getFiscalizacaoById] ✗ ERRO ao usar get():', error);
+      console.error('[DataService.getFiscalizacaoById] ✗ ERRO ao buscar:', error);
     }
 
-    // Fallback: busca em array com debug
-    try {
-      console.log('[DataService.getFiscalizacaoById] Buscando em toArray()...');
-      const all = await db[mapping.local].toArray();
-      console.log(`[DataService.getFiscalizacaoById] toArray retornou ${all.length} registros:`, all.map(f => f.id));
-      
-      const found = all.find(f => f.id === id);
-      if (found) {
-        console.log('[DataService.getFiscalizacaoById] ✓ ENCONTRADO no array:', found.id);
-        return found;
-      }
-      console.log('[DataService.getFiscalizacaoById] ✗ Não encontrado no array com ID:', id);
-    } catch (error) {
-      console.error('[DataService.getFiscalizacaoById] ✗ ERRO ao buscar em array:', error);
+    // Se não encontrou e está offline com retries restantes, aguarda e tenta novamente
+    if (!this.isOnline && retryCount < maxRetries) {
+      const delay = 300 * (retryCount + 1); // 300ms, 600ms, 900ms
+      console.log(`[DataService.getFiscalizacaoById] Não encontrado, retry ${retryCount + 1}/${maxRetries} em ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return this.getFiscalizacaoById(id, retryCount + 1, maxRetries);
     }
     
-    // Se está offline, não tenta buscar do servidor
+    // Se está offline e esgotou retries, retorna null
     if (!this.isOnline) {
       console.log('[DataService.getFiscalizacaoById] === OFFLINE - NÃO ENCONTRADO ===', id);
       return null;
