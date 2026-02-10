@@ -410,6 +410,85 @@ class DataServiceClass {
     const filter = fiscalizacaoId ? { fiscalizacao_id: fiscalizacaoId } : {};
     return this.read('AutoInfracao', filter, '-created_date', 500);
   }
+
+  // ========== MÉTODOS DE SINCRONIZAÇÃO ==========
+
+  /**
+   * Baixa todos os dados de referência do servidor
+   */
+  async downloadAllReferenceData() {
+    if (!this.isOnline) {
+      throw new Error('Sem conexão com a internet');
+    }
+
+    const results = { success: [], failed: [] };
+
+    // Lista de entidades de referência para baixar
+    const referenceEntities = [
+      'Municipio',
+      'TipoUnidade',
+      'PrestadorServico',
+      'ItemChecklist'
+    ];
+
+    for (const entityName of referenceEntities) {
+      try {
+        const data = await this.read(entityName, {}, '-created_date', 1000);
+        await this.cacheToLocal(entityName, data);
+        results.success.push(entityName);
+      } catch (error) {
+        console.error(`Erro ao baixar ${entityName}:`, error);
+        results.failed.push({ entity: entityName, error: error.message });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Envia dados pendentes para o servidor
+   */
+  async uploadPendingData() {
+    if (!this.isOnline) {
+      throw new Error('Sem conexão com a internet');
+    }
+
+    const pending = await this.getPending();
+    const results = { success: 0, failed: 0 };
+
+    for (const item of pending) {
+      try {
+        const data = JSON.parse(item.data);
+        const mapping = this.entityMappings[item.entityName];
+
+        if (item.operation === 'create') {
+          const result = await base44.entities[item.entityName].create(data);
+          // Atualiza registro local com ID real
+          await db[mapping.local].delete(data.id);
+          await db[mapping.local].put({ ...result, _pending: false });
+        } else if (item.operation === 'update') {
+          await base44.entities[item.entityName].update(data.id, data);
+          await db[mapping.local].update(data.id, { _pending: false });
+        } else if (item.operation === 'delete') {
+          await base44.entities[item.entityName].delete(data.id);
+        }
+
+        // Remove da fila
+        await db.syncQueue.delete(item.id);
+        results.success++;
+      } catch (error) {
+        console.error(`Erro ao sincronizar ${item.entityName}:`, error);
+        // Marca como falho
+        await db.syncQueue.update(item.id, {
+          status: 'failed',
+          attempts: (item.attempts || 0) + 1
+        });
+        results.failed++;
+      }
+    }
+
+    return results;
+  }
 }
 
 const DataService = new DataServiceClass();
