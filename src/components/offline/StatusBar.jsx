@@ -51,25 +51,32 @@ export default function StatusBar() {
         <div className="flex items-center gap-2">
           {isOnline ? (
             <>
-              <Wifi className="w-5 h-5 text-blue-500" />
-              <span className="text-sm font-medium text-blue-500">Online</span>
+              <Wifi className="w-5 h-5 text-green-500" />
+              <span className="text-sm font-medium text-green-600">Online</span>
             </>
           ) : (
             <>
-              <WifiOff className="w-5 h-5 text-red-500" />
-              <span className="text-sm font-medium text-red-500">Offline</span>
+              <WifiOff className="w-5 h-5 text-amber-500" />
+              <span className="text-sm font-medium text-amber-600">Modo Offline</span>
             </>
+          )}
+          {pendingCount > 0 && (
+            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+              {pendingCount} pendente{pendingCount > 1 ? 's' : ''}
+            </span>
           )}
         </div>
 
-        <Button
-          variant="ghost"
-          onClick={handleSync}
-          className="h-10 px-4 text-sm gap-2 hover:bg-gray-100"
-        >
-          <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
-          Sincronizar
-        </Button>
+        {isOnline && (
+          <Button
+            variant="ghost"
+            onClick={handleSync}
+            className="h-10 px-4 text-sm gap-2 hover:bg-gray-100"
+          >
+            <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
+            Sincronizar
+          </Button>
+        )}
       </div>
 
       <SyncPanel 

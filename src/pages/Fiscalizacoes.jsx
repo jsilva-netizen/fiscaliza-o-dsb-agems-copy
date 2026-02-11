@@ -33,7 +33,19 @@ export default function Fiscalizacoes() {
 
     const { data: user } = useQuery({
         queryKey: ['user'],
-        queryFn: () => base44.auth.me()
+        queryFn: async () => {
+            const cached = localStorage.getItem('cached_user');
+            if (cached) return JSON.parse(cached);
+            if (navigator.onLine) {
+                const u = await base44.auth.me();
+                localStorage.setItem('cached_user', JSON.stringify(u));
+                return u;
+            }
+            return null;
+        },
+        staleTime: Infinity,
+        retry: false,
+        networkMode: 'always'
     });
 
     const { data: fiscalizacoes = [], isLoading } = useQuery({
