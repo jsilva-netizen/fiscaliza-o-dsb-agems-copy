@@ -437,8 +437,9 @@ class DataServiceClass {
 
   async getFiscalizacaoById(id, retryCount = 0, maxRetries = 3) {
     const mapping = this.entityMappings['Fiscalizacao'];
+    const isTemp = id.toString().startsWith('temp_');
     
-    console.log('[DataService.getFiscalizacaoById] === INICIANDO BUSCA ===', { id, online: this.isOnline, retry: `${retryCount}/${maxRetries}` });
+    console.log('[DataService.getFiscalizacaoById] === INICIANDO BUSCA ===', { id, isTemp, online: this.isOnline, retry: `${retryCount}/${maxRetries}` });
     
     // SEMPRE busca no IndexedDB primeiro
     try {
@@ -451,12 +452,19 @@ class DataServiceClass {
       console.error('[DataService.getFiscalizacaoById] ✗ ERRO ao buscar:', error);
     }
 
-    // Se não encontrou e está offline com retries restantes, aguarda e tenta novamente
-    if (!this.isOnline && retryCount < maxRetries) {
+    // Se não encontrou e tem retries restantes, aguarda e tenta novamente
+    // (IDs temporários NUNCA devem buscar do servidor)
+    if ((isTemp || !this.isOnline) && retryCount < maxRetries) {
       const delay = 300 * (retryCount + 1); // 300ms, 600ms, 900ms
       console.log(`[DataService.getFiscalizacaoById] Não encontrado, retry ${retryCount + 1}/${maxRetries} em ${delay}ms...`);
       await new Promise(resolve => setTimeout(resolve, delay));
       return this.getFiscalizacaoById(id, retryCount + 1, maxRetries);
+    }
+    
+    // Se é ID temporário, NÃO busca do servidor (nunca existe lá)
+    if (isTemp) {
+      console.log('[DataService.getFiscalizacaoById] === ID TEMPORÁRIO - NÃO ENCONTRADO ===', id);
+      return null;
     }
     
     // Se está offline e esgotou retries, retorna null
@@ -465,7 +473,7 @@ class DataServiceClass {
       return null;
     }
     
-    // Se online e não achou no cache, busca do servidor
+    // Se online e ID real, busca do servidor
     try {
       console.log('[DataService.getFiscalizacaoById] Online - buscando do servidor:', id);
       const result = await base44.entities.Fiscalizacao.filter({ id }, '-created_date', 1);
